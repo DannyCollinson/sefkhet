@@ -1,0 +1,14 @@
+include pyproject.toml
+include README.md
+include LICENSE.md
+include MANIFEST.in
+include CONTRIBUTING.md
+include CHANGELOG.md
+
+recursive-include src/snaplog *.py
+include src/snaplog/py.typed
+
+recursive-include docsrc *
+recursive-include tests *.py
+
+recursive-exclude docs *

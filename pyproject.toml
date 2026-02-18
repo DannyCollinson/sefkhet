@@ -1,0 +1,409 @@
+# Project Metadata
+################################################################################
+
+[project]
+name = "snaplog"
+dynamic = ["version"]
+description = "Python package that makes logging a snap."
+readme = "README.md"
+license-files = ["LICENSE.md"]
+authors = [{ name = "Danny Collinson", email = "danny@dannycollinson.com" }]
+maintainers = [{ name = "Danny Collinson", email = "danny@dannycollinson.com" }]
+requires-python = ">=3.12"
+dependencies = []
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Typing :: Typed",
+]
+keywords = ["log", "logging", "logging-library", "logs"]
+
+    [project.urls]
+    Homepage = "https://github.com/DannyCollinson/snaplog"
+    Documentation = "https://pages.github."
+    Issues = "https://github.com/DannyCollinson/snaplog/issues"
+    Repository = "https://github.com/DannyCollinson/snaplog"
+
+[dependency-groups]
+dev = [
+    "bandit[toml]>=1.9.3",
+    "build>=1.4.0",
+    "ipykernel>=7.2.0",
+    "mypy>=1.19.1",
+    "myst-parser>=4.0.1",
+    "nbsphinx>=0.9.8",
+    "pydoclint>=0.8.3",
+    "pylint>=4.0.4",
+    "pyright>=1.1.408",
+    "pytest-cov>=7.0.0",
+    "pytest>=9.0.2",
+    "ruff>=0.15.0",
+    "sphinx-rtd-theme>=3.1.0",
+    "sphinx>=8.1.3",
+    "twine>=6.2.0",
+]
+
+
+# Build configuration
+################################################################################
+
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+    [tool.setuptools.packages.find]
+    where = ["src"]
+    include = ["snaplog"]
+
+    [tool.setuptools.package-data]
+    "snaplog" = ["py.typed"]
+
+    [tool.setuptools.dynamic]
+    version = { attr = "snaplog._version.__version__" }
+
+
+    # Dev tool config
+    ################################################################################
+
+[tool.bandit]
+targets = ["*.ipynb", "*.py"]
+skips = ["B101"]              # assert-used (pytest)
+
+
+[tool.mypy]
+python_version = "3.12"
+disallow_any_generics = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+check_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unused_ignores = true
+warn_return_any = true
+warn_unreachable = true
+implicit_reexport = false
+strict_equality = true
+strict_equality_for_none = true
+strict_bytes = true
+local_partial_types = true
+allow_redefinition_new = true
+
+
+[tool.pydoclint]
+baseline = ".pydoclint-baseline.txt"
+style = "google"
+exclude = '__pycache__|\.coverage|\.git|\.nox|\.pytest_cache|\.ruff_cache|\.tox|\.venv|data|htmlcov|local_data|uv.lock'
+allow-init-docstring = true
+check-style-mismatch = true
+
+
+[tool.pylint.main]
+jobs = 2
+recursive = true
+ignore-patterns = [
+    ".pytest_cache",
+    "__pycache__",
+    "build",
+    "data",
+    "htmlcov",
+    "local_data",
+]
+load-plugins = [
+    "pylint.extensions.bad_builtin",
+    "pylint.extensions.broad_try_clause",
+    "pylint.extensions.code_style",
+    "pylint.extensions.comparison_placement",
+    "pylint.extensions.consider_refactoring_into_while_condition",
+    "pylint.extensions.dict_init_mutate",
+    "pylint.extensions.docparams",
+    "pylint.extensions.overlapping_exceptions",
+    "pylint.extensions.redefined_variable_type",
+    "pylint.extensions.typing",
+]
+
+[tool.pylint.format]
+max-line-length = 80
+expected-line-ending-format = "LF"
+
+[tool.pylint."messages control"]
+disable = "all"
+enable = [
+    # Errors
+    "E0110", # abstract-class-instantiated
+    "E0202", # method-hidden
+    "E0203", # access-member-before-definition
+    "E0211", # no-method-argument
+    "E0236", # invalid-slots-object
+    "E0238", # invalid-slots
+    "E0242", # class-variable-slots-conflict
+    "E0243", # invalid-class-object
+    "E0301", # non-iterator-returned
+    "E0306", # invalid-repr-returned
+    "E0310", # invalid-length-hint-returned
+    "E0311", # invalid-format-returned
+    "E0312", # invalid-getnewargs-returned
+    "E0313", # invalid-getnewargs-ex-returned
+    "E1101", # no-member
+    "E1102", # not-callable
+    "E1111", # assignment-from-no-return
+    "E1120", # no-value-for-parameter
+    "E1121", # too-many-function-args
+    "E1123", # unexpected-keyword-arg
+    "E1124", # redundant-keyword-arg
+    "E1125", # missing-kwoa
+    "E1126", # invalid-sequence-index
+    "E1127", # invalid-slice-index
+    "E1128", # assignment-from-none
+    "E1129", # not-context-manager
+    "E1130", # invalid-unary-operand-type
+    "E1131", # unsupported-binary-operation
+    "E1133", # not-an-iterable
+    "E1134", # not-a-mapping
+    "E1135", # unsupported-membership-test
+    "E1136", # unsubscriptable-object
+    "E1137", # unsupported-assignment-operation
+    "E1138", # unsupported-delete-operation
+    "E1139", # invalid-metaclass
+    "E1143", # unhashable-member
+    "E1144", # invalid-slice-step
+    "E1200", # logging-unsupported-format
+    "E1201", # logging-format-truncated
+    "E1701", # not-async-context-manager
+    # Warnings
+    "W0101", # unreachable
+    "W0124", # confusing-with-statement
+    "W0201", # attribute-defined-outside-init
+    "W0221", # arguments-differ
+    "W0222", # signature-differs
+    "W0223", # abstract-method
+    "W0231", # super-init-not-called
+    "W0233", # non-parent-init-called
+    "W0237", # arguments-renamed
+    "W0238", # unused-private-member
+    "W0239", # overridden-final-method
+    "W0240", # subclassed-final-class
+    "W0246", # useless-parent-delegation
+    "W0601", # global-variable-undefined
+    "W0631", # undefined-loop-variable
+    "W0632", # unbalanced-tuple-unpacking
+    "W0641", # possibly-unused-variable
+    "W1114", # arguments-out-of-order
+    "W1115", # non-str-assignment-to-dunder-name
+    "W1116", # isinstance-second-argument-not-valid-type
+    "W1306", # missing-format-attribute
+    "W1307", # invalid-format-index
+    "W1308", # duplicate-string-formatting-argument
+    # Convention
+    "C0104", # disallowed-name
+    "C0203", # bad-mcs-method-argument
+    "C0204", # bad-mcs-classmethod-argument
+    "C0327", # mixed-line-endings
+    "C0328", # unexpected-line-ending-format
+    "C2503", # bad-file-encoding
+    # Refactor
+    "R0022", # useless-option-value
+    "R0401", # cyclic-import
+    "R0901", # too-many-ancestors
+    "R0902", # too-many-instance-attributes
+    "R0903", # too-few-public-methods
+    # Code Style checker
+    "R6101", # consider-using-namedtuple-or-dataclass
+    "R6102", # consider-using-tuple
+    "R6105", # prefer-typing-namedtuple
+    "R6106", # consider-math-not-float
+    # Comparison-Placement checker
+    "C2201", # misplaced-comparison-constant
+    # Consider Refactoring Into While checker
+    "R3501", # consider-refactoring-into-while-condition
+    # Deprecated Builtins checker
+    "W0141", # bad-builtin
+    # Dict-Init-Mutate checker
+    "C3401", # dict-init-mutate
+    # Multiple Types checker
+    "R0204", # redefined-variable-type
+    # Overlap-Except checker
+    "W0714", # overlapping-except
+    # Parameter Documentation checker
+    "W9005", # multiple-constructor-doc
+    "W9018", # differing-type-doc
+    # Typing checker
+    "E6004", # broken-noreturn
+    "E6005", # broken-collections-callable
+    "R6003", # consider-alternative-union-syntax
+    "R6007", # unnecessary-default-type-args
+]
+
+
+[tool.pyright]
+typeCheckingMode = "strict"
+# Match Ruff/mypy setup
+reportMissingImports = true
+reportMissingTypeStubs = "warning"
+# Avoid duplicate warnings with Ruff
+reportUnusedImport = "none"
+reportUnusedExpression = "none"
+reportUnusedVariable = "none"
+reportDuplicateImport = "none"
+reportWildcardImportFromLibrary = "none"
+# Keep type-level correctness checks
+reportPrivateUsage = "warning"
+reportIncompatibleMethodOverride = "error"
+reportOverlappingOverload = "error"
+reportConstantRedefinition = "error"
+useLibraryCodeForTypes = true
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--cov=snaplog --cov-report=html --cov-branch"
+
+
+[tool.ruff]
+line-length = 80
+extend-exclude = [
+    "*.egg-info",
+    "*.in",
+    "*.md",
+    "*.rst",
+    "*.txt",
+    ".coverage",
+    ".pytest_cache",
+    "__pycache__",
+    "build",
+    "data",
+    "docs",
+    "htmlcov",
+]
+
+    [tool.ruff.format]
+    docstring-code-format = true
+    docstring-code-line-length = 72
+    line-ending = "lf"
+
+    [tool.ruff.lint]
+    select = [
+        "A",     # flake8-builtins
+        "AIR",   # Airflow
+        "ANN",   # flake8-annotations
+        "ARG",   # flake8-unused-arguments
+        "ASYNC", # flake8-async
+        "B",     # flake8-bugbear
+        "BLE",   # flake8-blind-except
+        "C4",    # flake8-comprehensions
+        "C90",   # mccabe
+        "COM",   # flake8-commas
+        "CPY",   # flake8-copyright
+        "D",     # pydocstyle
+        "DJ",    # flake8-django
+        "DOC",   # pydoclint
+        "DTZ",   # flake8-datetimez
+        "E",     # pycodestyle: Error
+        "EM",    # flake8-errmsg
+        "ERA",   # eradicate
+        "EXE",   # flake8-executable
+        "F",     # Pyflakes
+        "FA",    # flake8-future-annotations
+        "FAST",  # FastAPI
+        "FBT",   # flake8-boolean-trap
+        "FIX",   # flake8-fixme
+        "FLY",   # flynt
+        "FURB",  # refurb
+        "G",     # flake8-logging-format
+        "I",     # isort
+        "ICN",   # flake8-import-conventions
+        "INP",   # flake8-no-pep420
+        "INT",   # flake8-gettext
+        "ISC",   # flake8-implicit-str-concat
+        "LOG",   # flake8-logging
+        "N",     # pep8-naming
+        "NPY",   # Numpy-specific rules
+        "PD",    # pandas-vet
+        "PERF",  # Perflint
+        "PGH",   # pygrep-hooks
+        "PIE",   # flake8-pie
+        "PLC",   # Pylint: Convention
+        "PLE",   # Pylint: Error
+        "PLR",   # Pylint: Refactor
+        "PLW",   # Pylint: Warning
+        "PT",    # flake8-pytest-style
+        "PTH",   # flake8-use-pathlib
+        "PYI",   # flake8-pyi
+        "Q",     # flake8-quotes
+        "RET",   # flake8-return
+        "RSE",   # flake8-raise
+        "RUF",   # Ruff-specific rules
+        "S",     # flake8-bandit
+        "SIM",   # flake8-simplify
+        "SLF",   # flake8-self
+        "SLOT",  # flake8-slots
+        "T10",   # flake8-debugger
+        "T20",   # flake8-print
+        "TC",    # flake8-type-checking
+        "TD",    # flake8-todos
+        "TID",   # flake8-tidy-imports
+        "TRY",   # tryceratops
+        "UP",    # pyupgrade
+        "W",     # pycodestyle: Warning
+        "YTT",   # flake8-2020
+    ]
+    ignore = [
+        "ANN401", # any-type
+        "COM812", # missing-trailing-comma
+        "CPY",    # flake8-copyright: missing-copyright-notice
+        "D203",   # incorrect-blank-line-before-class
+        "D205",   # missing-blank-line-after-summary
+        "D212",   # multi-line-summary-first-line
+        "D215",   # overindented-section-underline
+        "D400",   # missing-trailing-period
+        "D401",   # non-imperative-mood
+        "D407",   # missing-dashed-underline-after-section
+        "D408",   # missing-section-underline-after-name
+        "D409",   # mismatched-section-underline-length
+        "D413",   # missing-blank-line-after-last-section
+        "N999",   # invalid-module-name
+        "S311",   # suspicious-non-cryptographic-random-usage
+        "T201",   # print
+        "TD002",  # missing-todo-author
+        "TD003",  # missing-todo-link
+    ]
+    preview = true
+
+        [tool.ruff.lint.isort]
+        case-sensitive = true
+        known-first-party = ["snaplog"]
+        lines-after-imports = 2
+
+        [tool.ruff.lint.per-file-ignores]
+        "*.ipynb" = ["ERA001", "PLR2004", "T20"]
+        "tests/**" = [
+            "ARG001",
+            "ARG002",
+            "ARG004",
+            "ARG005",
+            "N803",
+            "PLC0415",
+            "PLR2004",
+            "S101",
+        ]
+        "scratch/**" = ["D", "ERA001", "F401", "INP001"]
+
+        [tool.ruff.lint.pycodestyle]
+        max-line-length = 80
+        max-doc-length = 72
