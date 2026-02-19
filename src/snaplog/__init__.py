@@ -6,14 +6,14 @@ built-in `logging` package, making logging a snap.
 
 The main utilities are the `log` function and `SnapLogger` class.
 Getting started is as easy as importing and calling `log`:
-```py3
+```
 from snaplog import log
 
 log("I <3 snaplog!")
 ```
 
 You can also use the `SnapLogger` class for more fine-grained control:
-```py3
+```
 import snaplog
 
 logger = snaplog.SnapLogger(handlers="example.log")

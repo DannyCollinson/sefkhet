@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from snaplog._functional import (
-    _parse_log_level,  # pyright: ignore[reportPrivateUsage]
+    _parse_log_level,
     get_formatter,
     get_handler,
     get_logger,
@@ -14,11 +14,11 @@ from snaplog._functional import (
 )
 from snaplog._typing import (
     NoDefault,
-    _FilterSpec,  # pyright: ignore[reportPrivateUsage]
-    _FormatterSpec,  # pyright: ignore[reportPrivateUsage]
-    _HandlerSpec,  # pyright: ignore[reportPrivateUsage]
-    _LoggerSpec,  # pyright: ignore[reportPrivateUsage]
-    _NoDefaultType,  # pyright: ignore[reportPrivateUsage]
+    _FilterSpec,
+    _FormatterSpec,
+    _HandlerSpec,
+    _LoggerSpec,
+    _NoDefaultType,
 )
 
 
@@ -101,6 +101,7 @@ def configure_default_logger(  # noqa: PLR0913
         # Use thread lock to ensure only one default logger gets made
         with _lock:
             _default_logger = get_logger_from_spec(spec=spec)
+        return
 
     # Set arguments to snaplog defaults if not given
     name = "snaplogger" if isinstance(name, _NoDefaultType) else name

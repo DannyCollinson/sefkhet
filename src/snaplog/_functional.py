@@ -11,23 +11,23 @@ from typing import Any, TextIO
 
 from snaplog._typing import (
     NoDefault,
-    _FileHandlerKwargs,  # pyright: ignore[reportPrivateUsage]
-    _FilterSpec,  # pyright: ignore[reportPrivateUsage]
-    _FormatStyle,  # pyright: ignore[reportPrivateUsage]
-    _FormatterSpec,  # pyright: ignore[reportPrivateUsage]
-    _HandlerSpec,  # pyright: ignore[reportPrivateUsage]
-    _LoggerKwargs,  # pyright: ignore[reportPrivateUsage]
-    _LoggerSpec,  # pyright: ignore[reportPrivateUsage]
-    _NoDefaultType,  # pyright: ignore[reportPrivateUsage]
-    _StrOrPathLike,  # pyright: ignore[reportPrivateUsage]
-    _SupportsFilter,  # pyright: ignore[reportPrivateUsage]
-    _TextIOLike,  # pyright: ignore[reportPrivateUsage]
+    _FileHandlerKwargs,
+    _FilterSpec,
+    _FormatStyle,
+    _FormatterSpec,
+    _HandlerSpec,
+    _LoggerKwargs,
+    _LoggerSpec,
+    _NoDefaultType,
+    _StrOrPathLike,
+    _SupportsFilter,
+    _TextIOLike,
 )
 
 
-################################################################################
+########################################################################
 # Constants and helpers
-################################################################################
+########################################################################
 
 
 # Define log level mapping for log functions
@@ -140,9 +140,9 @@ def _parse_log_level(  # pyright: ignore[reportUnusedFunction]
     return level
 
 
-################################################################################
+########################################################################
 # Functional-style interface
-################################################################################
+########################################################################
 
 
 def get_formatter(  # noqa: PLR0913
@@ -502,7 +502,7 @@ def _parse_filters_arg(
         and isinstance(filters[0], logging.Filter)
         and isinstance(filters[1], bool)
     ):
-        return (filters,)  # type: ignore[return-value]
+        return (filters,)  # pyright: ignore[reportReturnType]
 
     # If here, have a sequence of filters, so make sure it's a tuple
     return tuple(filters)  # pyright: ignore[reportReturnType]
@@ -634,7 +634,7 @@ def get_handler(  # noqa: PLR0913
             that implements a compatible `filter` method. If the value
             is a `str`, then a `logging.Filter` is created with the
             value as the argument; if a `logging.Filter`, a deep copy of
-            the provided filter is is created; if a
+            the provided filter is created; if a
             `tuple[logging.Filter, bool]`, a deep copy of the provided
             filter is created if the `bool` is `True` and otherwise the
             original filter is used; if a compatible `Callable` or class
@@ -913,7 +913,7 @@ def get_logger(
     if formatter is not None:
         for handler in logger.handlers:
             # Only add formatter to handlers without one already
-            if handler.formatter is not None:
+            if handler.formatter is None:
                 handler.setFormatter(fmt=formatter)
 
     return logger

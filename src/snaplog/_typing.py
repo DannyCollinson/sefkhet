@@ -13,7 +13,7 @@ from typing import Any, Literal, Protocol, TextIO, TypedDict, runtime_checkable
 
 # Define type for arguments with no default
 # (stolen from typing typeshed)
-class _NoDefaultType: ...  # pylint: disable=too-few-public-methods
+class _NoDefaultType: ...  # pylint: disable=too-few-public-methods  # pragma: no branch
 
 
 # Define sentinel for having no default value
@@ -145,7 +145,7 @@ class _LoggerKwargs(TypedDict, total=False):
 type _LoggerSpec = (  # noqa: PYI047
     str  # Name only
     | int  # Level only
-    | tuple[str, int]  # Name and level
+    | tuple[str | None, int]  # Name and level
     | _LoggerKwargs  # Keyword arguments
     | tuple[str | None, _LoggerKwargs]  # Name and keyword arguments
     | tuple[int, _LoggerKwargs]  # Level and keyword arguments

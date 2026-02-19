@@ -336,9 +336,9 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         # Log message
         self.logger.log(level, msg, *args, **kwargs)
 
-    ############################################################################
+    ####################################################################
     # Replicate logging.Logger interface
-    ############################################################################
+    ####################################################################
 
     def critical(
         self,
@@ -515,17 +515,29 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         self.logger.handle(record=record)
 
     @_update_logger_attributes_hook
-    def addFilter(self, filter: _FilterType) -> None:  # noqa: A002,N802
+    def addFilter(self, filter: _FilterType) -> None:  # noqa: A002
         self.add_filters(filters=filter)
 
     @_update_logger_attributes_hook
-    def addHandler(self, hdlr: logging.Handler) -> None:  # noqa: N802
+    def addHandler(self, hdlr: logging.Handler) -> None:
         self.add_handlers(handlers=hdlr)
 
-    def callHandlers(self, record: logging.LogRecord) -> None:  # noqa: N802
+    @_update_logger_attributes_hook
+    def removeFilter(self, filter: _FilterType) -> None:  # noqa: A002
+        self.logger.removeFilter(filter=filter)
+
+    @_update_logger_attributes_hook
+    def removeHandler(self, hdlr: logging.Handler) -> None:
+        self.logger.removeHandler(hdlr=hdlr)
+
+    @_update_logger_attributes_hook
+    def setLevel(self, level: str | int) -> None:
+        self.logger.setLevel(level=level)
+
+    def callHandlers(self, record: logging.LogRecord) -> None:
         self.logger.callHandlers(record=record)
 
-    def findCaller(  # noqa: N802
+    def findCaller(
         self,
         stack_info: bool = False,  # noqa: FBT001,FBT002
         stacklevel: int = 1,
@@ -534,22 +546,22 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             stack_info=stack_info, stacklevel=stacklevel
         )
 
-    def getChild(self, suffix: str) -> logging.Logger:  # noqa: N802
+    def getChild(self, suffix: str) -> logging.Logger:
         return self.logger.getChild(suffix=suffix)
 
-    def getChildren(self) -> set[logging.Logger]:  # noqa: N802
+    def getChildren(self) -> set[logging.Logger]:
         return self.logger.getChildren()
 
-    def getEffectiveLevel(self) -> int:  # noqa: N802
+    def getEffectiveLevel(self) -> int:
         return self.logger.getEffectiveLevel()
 
-    def hasHandlers(self) -> bool:  # noqa: N802
+    def hasHandlers(self) -> bool:
         return self.logger.hasHandlers()
 
-    def isEnabledFor(self, level: int) -> bool:  # noqa: N802
+    def isEnabledFor(self, level: int) -> bool:
         return self.logger.isEnabledFor(level=level)
 
-    def makeRecord(  # noqa: N802, PLR0913, PLR0917
+    def makeRecord(  # noqa: PLR0913,PLR0917
         self,
         name: str,
         level: int,
@@ -574,15 +586,3 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             extra=extra,
             sinfo=sinfo,
         )
-
-    @_update_logger_attributes_hook
-    def removeFilter(self, filter: _FilterType) -> None:  # noqa: A002,N802
-        self.logger.removeFilter(filter=filter)
-
-    @_update_logger_attributes_hook
-    def removeHandler(self, hdlr: logging.Handler) -> None:  # noqa: N802
-        self.logger.removeHandler(hdlr=hdlr)
-
-    @_update_logger_attributes_hook
-    def setLevel(self, level: str | int) -> None:  # noqa: N802
-        self.logger.setLevel(level=level)

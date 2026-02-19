@@ -9,6 +9,9 @@ docs/
 # Pydoclint baseline
 .pydoclint-baseline.txt
 
+# Claude
+.claude
+
 ### Python template
 
 # Byte-compiled / optimized / DLL files

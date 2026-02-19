@@ -1,8 +1,8 @@
 # `snaplog`
 
-![PyPI](https://img.shields.io/pypi/v/my-package.svg)
-
 `snaplog` is a Python package that makes logging a snap.
+
+![PyPI](https://img.shields.io/pypi/v/my-package.svg)
 
 Check out the **[docs](https://dannycollinson.github.io/snaplog)** for in-depth information on `snaplog`, see the [demo](https://dannycollinson.github.io/snaplog/demos/DEMO.ipynb) for a demonstration of the package's functionality, or read below for how to get started!
 
