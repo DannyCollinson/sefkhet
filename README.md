@@ -4,7 +4,7 @@
 
 ![PyPI](https://img.shields.io/pypi/v/my-package.svg)
 
-Check out the **[docs](https://dannycollinson.github.io/snaplog)** for in-depth information on `snaplog`, see the [demo](https://dannycollinson.github.io/snaplog/demos/DEMO.ipynb) for a demonstration of the package's functionality, or read below for how to get started!
+Check out the **[docs](https://dannycollinson.github.io/snaplog)** for in-depth information on `snaplog`, see the [demo](https://dannycollinson.github.io/snaplog/demos/DEMO.html#) for a demonstration of the package's functionality, or read below for how to get started!
 
 ### Quick Links
 
