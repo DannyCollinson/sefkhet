@@ -7,6 +7,7 @@ import pathlib
 import pytest
 
 import snaplog
+from snaplog._color import ColorFormatter  # pyright: ignore[reportPrivateUsage]
 from snaplog._functional import (
     _maybe_create_handler,
     _maybe_create_special_string_handler,
@@ -1046,3 +1047,114 @@ class TestPublicApi:  # pylint: disable=too-few-public-methods
         """  # noqa: D200
         for name in snaplog.__all__:
             assert hasattr(snaplog, name), f"Missing export: {name}"
+
+
+class TestGetFormatterColor:
+    """Tests for the `color` parameter of `get_formatter`."""
+
+    @staticmethod
+    def test_color_full_returns_color_formatter() -> None:
+        """color='full' returns a ColorFormatter."""
+        result = get_formatter(color="full")
+        assert isinstance(result, ColorFormatter)
+
+    @staticmethod
+    def test_color_off_returns_plain_formatter() -> None:
+        """color='off' returns a plain logging.Formatter."""
+        result = get_formatter(color="off")
+        assert isinstance(result, logging.Formatter)
+        assert not isinstance(result, ColorFormatter)
+
+    @staticmethod
+    def test_color_none_returns_plain_formatter() -> None:
+        """color=None (default) returns a plain logging.Formatter."""
+        result = get_formatter(color=None)
+        assert isinstance(result, logging.Formatter)
+        assert not isinstance(result, ColorFormatter)
+
+    @staticmethod
+    def test_existing_formatter_ignores_color(
+        simple_formatter: logging.Formatter,
+    ) -> None:
+        """Passing an existing Formatter ignores the color param."""
+        result = get_formatter(fmt=simple_formatter, color="full")
+        assert result is simple_formatter
+
+
+class TestGetFormatterFromSpecColor:
+    """Tests for the `color` parameter of `get_formatter_from_spec`."""
+
+    @staticmethod
+    def test_dict_spec_with_color_key_uses_dict_color() -> None:
+        """Dict spec with 'color' key uses that color, not the param."""
+        result = get_formatter_from_spec({"color": "full"})
+        assert isinstance(result, ColorFormatter)
+
+    @staticmethod
+    def test_dict_spec_without_color_uses_param() -> None:
+        """Dict spec without 'color' key uses the color param."""
+        result = get_formatter_from_spec(
+            {"fmt": "%(message)s"}, color="full"
+        )
+        assert isinstance(result, ColorFormatter)
+
+    @staticmethod
+    def test_dict_spec_color_none_key_overrides_param() -> None:
+        """Dict spec with color=None overrides the color param."""
+        result = get_formatter_from_spec({"color": None}, color="full")
+        assert not isinstance(result, ColorFormatter)
+
+    @staticmethod
+    def test_str_spec_with_color_param() -> None:
+        """A string spec with color param creates a ColorFormatter."""
+        result = get_formatter_from_spec("%(message)s", color="full")
+        assert isinstance(result, ColorFormatter)
+
+
+class TestGetLoggerColor:
+    """Tests for the `color` parameter of `get_logger`."""
+
+    @staticmethod
+    def test_color_full_with_nodefault_formatter_creates_formatter() -> None:
+        """
+        color='full' + formatter=NoDefault auto-creates ColorFormatter.
+        """  # noqa: D200
+        logger = get_logger(
+            name="test_gl_color_full", handlers="null", color="full"
+        )
+        handler = logger.handlers[-1]
+        assert isinstance(handler.formatter, ColorFormatter)
+
+    @staticmethod
+    def test_color_none_with_nodefault_formatter_no_formatter() -> None:
+        """
+        color=None + formatter=NoDefault: handlers have no formatter.
+        """  # noqa: D200
+        logger = get_logger(
+            name="test_gl_color_none", handlers="null", color=None
+        )
+        handler = logger.handlers[-1]
+        assert handler.formatter is None
+
+    @staticmethod
+    def test_color_with_formatter_spec_uses_color() -> None:
+        """color='full' + formatter spec creates a ColorFormatter."""
+        logger = get_logger(
+            name="test_gl_color_spec",
+            handlers="null",
+            formatter="%(message)s",
+            color="full",
+        )
+        handler = logger.handlers[-1]
+        assert isinstance(handler.formatter, ColorFormatter)
+
+    @staticmethod
+    def test_color_off_with_nodefault_formatter_no_formatter() -> None:
+        """
+        color='off' + formatter=NoDefault: handlers have no formatter.
+        """  # noqa: D200
+        logger = get_logger(
+            name="test_gl_color_off", handlers="null", color="off"
+        )
+        handler = logger.handlers[-1]
+        assert handler.formatter is None

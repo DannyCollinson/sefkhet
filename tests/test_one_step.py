@@ -7,6 +7,7 @@ import logging
 from typing import cast
 
 import snaplog._one_step as _one_step_module
+from snaplog._color import ColorFormatter
 from snaplog._one_step import configure_default_logger, log
 
 
@@ -169,3 +170,25 @@ class TestLog:
     def test_int_level() -> None:
         """An integer level is accepted without error."""
         log("int level msg", level=logging.WARNING)
+
+
+class TestConfigureDefaultLoggerColor:
+    """Tests for the `color` parameter of `configure_default_logger`."""
+
+    @staticmethod
+    def test_color_full_uses_color_formatter() -> None:
+        """color='full' creates a ColorFormatter on the handler."""
+        configure_default_logger(color="full")
+        logger = _one_step_module._default_logger
+        assert logger is not None
+        assert len(logger.handlers) >= 1
+        assert isinstance(logger.handlers[-1].formatter, ColorFormatter)
+
+    @staticmethod
+    def test_color_none_uses_plain_formatter() -> None:
+        """color=None (default) creates a plain logging.Formatter."""
+        configure_default_logger(color=None)
+        logger = _one_step_module._default_logger
+        assert logger is not None
+        assert len(logger.handlers) >= 1
+        assert not isinstance(logger.handlers[-1].formatter, ColorFormatter)

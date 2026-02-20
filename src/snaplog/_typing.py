@@ -34,6 +34,9 @@ type _ArgsType = tuple[Any, ...] | Mapping[str, Any]  # noqa: PYI047
 # (stolen from logging typeshed)
 type _FormatStyle = Literal["%", "{", "$"]
 
+# Define type alias for color mode
+type _ColorMode = Literal["full", "partial", "level", "msg", "off"]
+
 
 # Define typed dict for specifying formatter keyword arguments
 class _FormatterKwargs(TypedDict, total=False):
@@ -43,6 +46,7 @@ class _FormatterKwargs(TypedDict, total=False):
     validate: bool
     defaults: Mapping[str, Any] | None
     copy: bool
+    color: _ColorMode | None
 
 
 # Define type alias for valid formatter specs
@@ -139,6 +143,7 @@ class _LoggerKwargs(TypedDict, total=False):
     handlers: _HandlerSpec | Sequence[_HandlerSpec]
     formatter: _FormatterSpec
     filters: _FilterSpec | Sequence[_FilterSpec]
+    color: _ColorMode | None
 
 
 # Define type alias for valid logger specs

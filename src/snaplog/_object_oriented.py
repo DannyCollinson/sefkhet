@@ -18,6 +18,7 @@ from snaplog._functional import (
 from snaplog._typing import (
     NoDefault,
     _ArgsType,  # pyright: ignore[reportPrivateUsage]
+    _ColorMode,  # pyright: ignore[reportPrivateUsage]
     _ExcInfoType,  # pyright: ignore[reportPrivateUsage]
     _FilterSpec,  # pyright: ignore[reportPrivateUsage]
     _FilterType,  # pyright: ignore[reportPrivateUsage]
@@ -47,7 +48,7 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
     _lock = threading.Lock()
     _counter = 0
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         name: str | _NoDefaultType | None = NoDefault,
         level: str | int = 20,
@@ -55,6 +56,7 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         handlers: _HandlerSpec | Sequence[_HandlerSpec] = None,
         formatter: _FormatterSpec | _NoDefaultType = NoDefault,
         filters: _FilterSpec | Sequence[_FilterSpec] = (),
+        color: _ColorMode | None = None,
     ) -> None:
         """
         The base logger class for `snaplog`.
@@ -103,6 +105,10 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
                 filter is the same as when using the
                 `snaplog.get_handler` inteface.
                 Defaults to `()` (no filters).
+            color (_ColorMode | None, optional): Color mode for the
+                formatter. Passed through to `get_logger`. If not
+                `None` and not `"off"`, a `ColorFormatter` is used.
+                Defaults to `None`.
         """
         # Call super init and create root logger
         super().__init__("root", level=0)
@@ -121,6 +127,7 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             handlers=handlers,
             formatter=formatter,
             filters=filters,
+            color=color,
         )
 
         # Save standard logging.Logger attributes

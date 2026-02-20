@@ -9,8 +9,12 @@ from io import TextIOBase
 from pathlib import Path
 from typing import Any, TextIO
 
+from snaplog._color import (  # pyright: ignore[reportPrivateUsage]
+    ColorFormatter,
+)
 from snaplog._typing import (
     NoDefault,
+    _ColorMode,  # pyright: ignore[reportPrivateUsage]
     _FileHandlerKwargs,
     _FilterSpec,
     _FormatStyle,
@@ -155,6 +159,7 @@ def get_formatter(  # noqa: PLR0913
     validate: bool = True,
     defaults: Mapping[str, Any] | None = None,
     copy: bool = False,
+    color: _ColorMode | None = None,
 ) -> logging.Formatter:
     """
     Returns a `logging.Formatter` configured
@@ -194,6 +199,11 @@ def get_formatter(  # noqa: PLR0913
             original instance of `fmt`; otherwise, returns the original
             instance. Ignored if `fmt` is not a `logging.Formatter`.
             Defaults to `False`.
+        color (_ColorMode | None, optional): Color mode for the
+            formatter. If not `None` and not `"off"`, a
+            `ColorFormatter` is returned instead of a plain
+            `logging.Formatter`. Ignored if `fmt` is a
+            `logging.Formatter`. Defaults to `None`.
 
     Returns:
         logging.Formatter: The specified `logging.Formatter`
@@ -201,6 +211,16 @@ def get_formatter(  # noqa: PLR0913
     # Return original or copy of existing formatter if one is passed
     if isinstance(fmt, logging.Formatter):
         return deepcopy(fmt) if copy else fmt
+    # Return a ColorFormatter if color mode is active
+    if color is not None and color != "off":
+        return ColorFormatter(
+            fmt=fmt,
+            datefmt=datefmt,
+            style=style,
+            validate=validate,
+            defaults=defaults,
+            color=color,
+        )
     # Otherwise create a new formatter with specified configuration
     return logging.Formatter(
         fmt=fmt,
@@ -211,21 +231,32 @@ def get_formatter(  # noqa: PLR0913
     )
 
 
-def get_formatter_from_spec(spec: _FormatterSpec) -> logging.Formatter:
+def get_formatter_from_spec(
+    spec: _FormatterSpec,
+    *,
+    color: _ColorMode | None = None,
+) -> logging.Formatter:
     """
     Returns a `logging.Formatter` configured using a `_FormatterSpec`.
 
     Args:
         spec (_FormatterSpec): Specification of formatter
+        color (_ColorMode | None, optional): Color mode for the
+            formatter. Passed through to `get_formatter` when the
+            dict spec does not already contain a ``"color"`` key.
+            Defaults to `None`.
 
     Returns:
         logging.Formatter: The specified formatter
     """
     # If a dict, specify as keyword arguments
     if isinstance(spec, dict):
+        # Dict's own color key takes precedence; only inject if absent
+        if "color" not in spec and color is not None:
+            return get_formatter(**spec, color=color)  # type: ignore[misc]
         return get_formatter(**spec)
     # If here, just pass spec as main argument
-    return get_formatter(fmt=spec)
+    return get_formatter(fmt=spec, color=color)
 
 
 def get_filter(
@@ -841,13 +872,14 @@ def set_formatter_for_logger(  # noqa: PLR0913
             handler.setFormatter(formatter)
 
 
-def get_logger(
+def get_logger(  # noqa: PLR0913
     name: str | None = "log",
     level: str | int = 20,
     *,
     handlers: _HandlerSpec | Sequence[_HandlerSpec] = (),
     formatter: _FormatterSpec | _NoDefaultType = NoDefault,
     filters: _FilterSpec | Sequence[_FilterSpec] = (),
+    color: _ColorMode | None = None,
 ) -> logging.Logger:
     """
     Returns a `logging.Logger` configured according
@@ -885,6 +917,12 @@ def get_logger(
             filter specifications. Specification of each filter is the
             same as when using the `snaplog.get_handler` inteface.
             Defaults to `()` (no filters).
+        color (_ColorMode | None, optional): Color mode to apply to
+            the formatter. When `formatter` is `NoDefault` and `color`
+            is not `None` and not `"off"`, a `ColorFormatter` is
+            automatically created and attached. When `formatter` is a
+            spec, `color` is passed through to
+            `get_formatter_from_spec`. Defaults to `None`.
 
     Returns:
         logging.Logger: The speficied `logging.Logger`
@@ -903,18 +941,24 @@ def get_logger(
     add_filters_to_target(target=logger, filters=filters)
 
     # Get formatter if applicable
-    formatter = (
-        None
-        if isinstance(formatter, _NoDefaultType)
-        else get_formatter_from_spec(spec=formatter)
-    )
+    resolved_formatter: logging.Formatter | None
+    if isinstance(formatter, _NoDefaultType):
+        # Only auto-create a formatter when color mode is active
+        if color is not None and color != "off":
+            resolved_formatter = get_formatter(color=color)
+        else:
+            resolved_formatter = None
+    else:
+        resolved_formatter = get_formatter_from_spec(
+            spec=formatter, color=color
+        )
 
     # Set formatter for handlers as applicable
-    if formatter is not None:
+    if resolved_formatter is not None:
         for handler in logger.handlers:
             # Only add formatter to handlers without one already
             if handler.formatter is None:
-                handler.setFormatter(fmt=formatter)
+                handler.setFormatter(fmt=resolved_formatter)
 
     return logger
 

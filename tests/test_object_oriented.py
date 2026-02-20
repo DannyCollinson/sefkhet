@@ -5,6 +5,7 @@ import logging
 
 import pytest
 
+from snaplog._color import ColorFormatter  # pyright: ignore[reportPrivateUsage]
 from snaplog._object_oriented import SnapLogger
 
 
@@ -479,3 +480,21 @@ class TestSnapLoggerDelegateMethods:
         snap.setLevel(logging.ERROR)
         assert snap.level == logging.ERROR
         assert snap.level == snap.logger.level
+
+
+class TestSnapLoggerColor:
+    """Tests for the `color` parameter of `SnapLogger.__init__`."""
+
+    @staticmethod
+    def test_color_full_creates_color_formatter() -> None:
+        """color='full' gives the handler a ColorFormatter."""
+        snap = SnapLogger(name="test_oo_color_full", color="full")
+        assert len(snap.handlers) >= 1
+        assert isinstance(snap.handlers[-1].formatter, ColorFormatter)
+
+    @staticmethod
+    def test_color_none_no_formatter_on_handler() -> None:
+        """color=None does not add a formatter automatically."""
+        snap = SnapLogger(name="test_oo_color_none", color=None)
+        assert len(snap.handlers) >= 1
+        assert snap.handlers[-1].formatter is None

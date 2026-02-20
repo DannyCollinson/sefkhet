@@ -22,6 +22,7 @@ logger.log("I <3 snaplog!")
 """
 
 # Make top-level utilities available
+from snaplog._color import ColorFormatter, get_level_color
 from snaplog._functional import (
     add_filters_to_target,
     add_handlers_to_logger,
@@ -44,6 +45,7 @@ __all__ = [  # noqa: RUF022
     # Metadata
     "__version__",
     # Classes
+    "ColorFormatter",
     "SnapLogger",
     # Functions
     "add_filters_to_target",
@@ -52,6 +54,7 @@ __all__ = [  # noqa: RUF022
     "get_filter",
     "get_formatter",
     "get_handler",
+    "get_level_color",
     "get_log_level_map",
     "get_log_levels",
     "get_logger",
