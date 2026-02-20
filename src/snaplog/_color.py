@@ -13,13 +13,14 @@ from snaplog._typing import _ColorMode  # pyright: ignore[reportPrivateUsage]
 
 
 _ANSI_RESET = "\033[0m"
-_PINK = "\033[95m"
+_PINK = "\033[38;5;212m"
 _BLUE = "\033[94m"
-_GREEN = "\033[92m"
-_CYAN = "\033[96m"
+_GREEN = "\033[32m"
+_CYAN = "\033[38;5;123m"
 _YELLOW = "\033[93m"
-_ORANGE = "\033[38;5;208m"
+_ORANGE = "\033[38;5;214m"
 _RED = "\033[91m"
+_MAGENTA = "\033[35m"
 
 
 ########################################################################
@@ -33,13 +34,14 @@ def get_level_color(level: int) -> str:  # noqa: PLR0911
 
     The mapping from level to color is:
 
-    - ``<= 0``: pink
-    - ``1-9``: blue
-    - ``10-19``: green
-    - ``20-29``: cyan
-    - ``30-39``: yellow
-    - ``40-49``: orange
-    - ``>= 50``: red
+    - `<= 0` : pink
+    - `1-9`  : blue
+    - `10-19`: green
+    - `20-29`: cyan
+    - `30-39`: yellow
+    - `40-49`: orange
+    - `50-59`: red
+    - `>= 59`: magenta
 
     Args:
         level (int): Integer log level
@@ -59,7 +61,9 @@ def get_level_color(level: int) -> str:  # noqa: PLR0911
         return _YELLOW
     if level <= 49:  # noqa: PLR2004
         return _ORANGE
-    return _RED
+    if level <= 59:  # noqa: PLR2004
+        return _RED
+    return _MAGENTA
 
 
 class ColorFormatter(logging.Formatter):

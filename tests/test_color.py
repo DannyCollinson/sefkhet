@@ -48,7 +48,24 @@ class TestGetLevelColor:
     @staticmethod
     def test_does_not_return_reset() -> None:
         """Never returns the bare reset code."""
-        for level in (-1, 0, 1, 9, 10, 19, 20, 29, 30, 39, 40, 49, 50, 51):
+        for level in (
+            -1,
+            0,
+            1,
+            9,
+            10,
+            19,
+            20,
+            29,
+            30,
+            39,
+            40,
+            49,
+            50,
+            59,
+            60,
+            61,
+        ):
             assert get_level_color(level) != _ANSI_RESET
 
     @staticmethod
@@ -177,9 +194,7 @@ class TestColorFormatter:
     @staticmethod
     def test_level_mode_restores_levelname() -> None:
         """Mode 'level' restores record.levelname after formatting."""
-        colored = ColorFormatter(
-            "%(levelname)s | %(message)s", color="level"
-        )
+        colored = ColorFormatter("%(levelname)s | %(message)s", color="level")
         record = _make_record(level=logging.ERROR)
         orig_levelname = record.levelname
         colored.format(record)
