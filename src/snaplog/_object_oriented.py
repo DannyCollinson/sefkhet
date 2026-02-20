@@ -39,7 +39,7 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
     """
     The base logger class for `snaplog`.
 
-    An `SnapLogger` adds an intuitive interface to the `logging`
+    A `SnapLogger` adds an intuitive interface to the `logging`
     library and makes logging a snap. It includes helpful default
     configurations and implements the standard `logging.Logger`
     interface for compatibility.
@@ -62,7 +62,7 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         """
         The base logger class for `snaplog`.
 
-        An `SnapLogger` adds an intuitive interface to the `logging`
+        A `SnapLogger` adds an intuitive interface to the `logging`
         library and makes logging a snap. It includes helpful default
         configurations and implements the standard `logging.Logger`
         interface for compatibility.
