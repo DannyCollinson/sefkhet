@@ -12,7 +12,7 @@ from typing import Any, TextIO
 from snaplog._color import ColorFormatter
 from snaplog._typing import (
     NoDefault,
-    _ColorMode,
+    _ColorSpec,
     _FileHandlerKwargs,
     _FilterSpec,
     _FormatStyle,
@@ -155,7 +155,7 @@ def get_formatter(  # noqa: PLR0913
     validate: bool = True,
     defaults: Mapping[str, Any] | None = None,
     copy: bool = False,
-    color: _ColorMode = "level",
+    color: _ColorSpec = "level",
 ) -> logging.Formatter:
     """
     Returns a `logging.Formatter` configured
@@ -195,10 +195,12 @@ def get_formatter(  # noqa: PLR0913
             original instance of `fmt`; otherwise, returns the original
             instance. Ignored if `fmt` is not a `logging.Formatter`.
             Defaults to `False`.
-        color (_ColorMode, optional): Color mode for the
-            formatter. If not not `"off"`, a `ColorFormatter` is
-            returned instead of a plain `logging.Formatter`. Ignored if
-            `fmt` is a `logging.Formatter`. Defaults to `"level"`.
+        color (_ColorSpec, optional): Color mode for the
+            formatter. Either a bare `_ColorMode` string or a
+            tuple of `(_ColorMode, colormap)` for per-level color
+            overrides. If the mode is not `"off"`, a
+            `ColorFormatter` is returned. Ignored if `fmt` is a
+            `logging.Formatter`. Defaults to `"level"`.
 
     Returns:
         logging.Formatter: The specified `logging.Formatter`
@@ -227,16 +229,17 @@ def get_formatter(  # noqa: PLR0913
 
 
 def get_formatter_from_spec(
-    spec: _FormatterSpec, *, color: _ColorMode = "level"
+    spec: _FormatterSpec, *, color: _ColorSpec = "level"
 ) -> logging.Formatter:
     """
     Returns a `logging.Formatter` configured using a `_FormatterSpec`.
 
     Args:
         spec (_FormatterSpec): Specification of formatter
-        color (_ColorMode, optional): Color mode for the formatter.
-            Passed through to `get_formatter` when the dict spec does
-            not already contain a `"color"` key. Defaults to `"level"`.
+        color (_ColorSpec, optional): Color mode for the formatter.
+            Passed through to `get_formatter` when the dict spec
+            does not already contain a `"color"` key.
+            Defaults to `"level"`.
 
     Returns:
         logging.Formatter: The specified formatter
@@ -874,7 +877,7 @@ def get_logger(  # noqa: PLR0913
     handlers: _HandlerSpec | Sequence[_HandlerSpec] = (),
     formatter: _FormatterSpec | _NoDefaultType = NoDefault,
     filters: _FilterSpec | Sequence[_FilterSpec] = (),
-    color: _ColorMode = "level",
+    color: _ColorSpec = "level",
 ) -> logging.Logger:
     """
     Returns a `logging.Logger` configured according
@@ -912,11 +915,13 @@ def get_logger(  # noqa: PLR0913
             filter specifications. Specification of each filter is the
             same as when using the `snaplog.get_handler` inteface.
             Defaults to `()` (no filters).
-        color (_ColorMode, optional): Color mode to apply to the
-            formatter. When `formatter` is `NoDefault` and `color`
-            is not `"off"`, a `ColorFormatter` is automatically created
-            and attached. When `formatter` is a spec, `color` is passed
-            through to `get_formatter_from_spec`. Defaults to `"level"`.
+        color (_ColorSpec, optional): Color mode to apply to the
+            formatter. Either a bare `_ColorMode` string or a
+            tuple of `(_ColorMode, colormap)` for per-level color
+            overrides. When `formatter` is `NoDefault` and the
+            mode is not `"off"`, a `ColorFormatter` is created.
+            When `formatter` is a spec, `color` is passed through
+            to `get_formatter_from_spec`. Defaults to `"level"`.
 
     Returns:
         logging.Logger: The speficied `logging.Logger`

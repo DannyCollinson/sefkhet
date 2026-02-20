@@ -170,13 +170,22 @@ class TestLog:
         log("int level msg", level=logging.WARNING)
 
 
-class TestConfigureDefaultLoggerColor:  # pylint: disable=too-few-public-methods
+class TestConfigureDefaultLoggerColor:
     """Tests for the `color` parameter of `configure_default_logger`."""
 
     @staticmethod
     def test_color_full_uses_color_formatter() -> None:
         """color='full' creates a ColorFormatter on the handler."""
         configure_default_logger(color="full")
+        logger = _one_step_module._default_logger
+        assert logger is not None
+        assert len(logger.handlers) >= 1
+        assert isinstance(logger.handlers[-1].formatter, ColorFormatter)
+
+    @staticmethod
+    def test_tuple_color_creates_color_formatter() -> None:
+        """Tuple color with callable creates a ColorFormatter."""
+        configure_default_logger(color=("full", lambda _: "\033[99m"))
         logger = _one_step_module._default_logger
         assert logger is not None
         assert len(logger.handlers) >= 1

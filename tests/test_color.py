@@ -7,6 +7,7 @@ from snaplog._color import (
     _LEVELNAME_WIDTH,
     ColorFormatter,
     _get_display_levelname,
+    _parse_color_spec,
     get_level_color,
 )
 
@@ -136,7 +137,7 @@ class TestGetLevelColor:
         assert get_level_color(40) == get_level_color(49)
 
 
-class TestColorFormatter:
+class TestColorFormatter:  # noqa: PLR0904
     """Tests for `ColorFormatter`."""
 
     @staticmethod
@@ -320,9 +321,7 @@ class TestColorFormatter:
     @staticmethod
     def test_partial_mode_restores_levelname() -> None:
         """Mode 'partial' restores record.levelname after formatting."""
-        colored = ColorFormatter(
-            "%(levelname)s | %(message)s", color="partial"
-        )
+        colored = ColorFormatter("%(levelname)s | %(message)s", color="partial")
         record = _make_record(level=logging.DEBUG)
         orig_levelname = record.levelname
         colored.format(record)
@@ -345,13 +344,112 @@ class TestColorFormatter:
             result2 = colored.format(record)
             assert result1 == result2, f"mode={mode!r} differs on second call"
 
+    @staticmethod
+    def test_custom_callable_colormap_full_mode() -> None:
+        """Custom callable colormap is used in 'full' mode."""
+        sentinel = "\033[99m"
+        colored = ColorFormatter(
+            "%(levelname)s | %(message)s",
+            color=("full", lambda _: sentinel),
+        )
+        record = _make_record(level=logging.INFO)
+        result = colored.format(record)
+        assert result.startswith(sentinel)
+
+    @staticmethod
+    def test_custom_callable_colormap_level_mode() -> None:
+        """Custom callable colormap wraps levelname in 'level' mode."""
+        sentinel = "\033[99m"
+        colored = ColorFormatter(
+            "%(levelname)s | %(message)s",
+            color=("level", lambda _: sentinel),
+        )
+        record = _make_record(level=logging.INFO)
+        result = colored.format(record)
+        assert sentinel in result
+        assert result.index(sentinel) < result.index(_ANSI_RESET)
+
+    @staticmethod
+    def test_custom_mapping_colormap_full_mode() -> None:
+        """Mapping colormap maps a matched level in 'full' mode."""
+        sentinel = "\033[99m"
+        colored = ColorFormatter(
+            "%(levelname)s | %(message)s",
+            color=("full", {logging.INFO: sentinel}),
+        )
+        record = _make_record(level=logging.INFO)
+        result = colored.format(record)
+        assert result.startswith(sentinel)
+
+    @staticmethod
+    def test_custom_mapping_fallback_for_unmapped_level() -> None:
+        """Mapping colormap falls back to default for unmapped level."""
+        sentinel = "\033[99m"
+        colored = ColorFormatter(
+            "%(levelname)s | %(message)s",
+            color=("full", {logging.INFO: sentinel}),
+        )
+        record = _make_record(level=logging.DEBUG)
+        result = colored.format(record)
+        default_color = get_level_color(logging.DEBUG)
+        assert result.startswith(default_color)
+        assert not result.startswith(sentinel)
+
+
+class TestParseColorSpec:
+    """Tests for `_parse_color_spec`."""
+
+    @staticmethod
+    def test_bare_mode_returns_default_fn() -> None:
+        """A bare mode string returns get_level_color as the fn."""
+        mode, fn = _parse_color_spec("level")
+        assert mode == "level"
+        assert fn is get_level_color
+
+    @staticmethod
+    def test_tuple_callable_returned_as_is() -> None:
+        """A callable colormap is passed through directly."""
+        sentinel = "\033[99m"
+
+        def my_fn(_: int) -> str:
+            return sentinel
+
+        mode, fn = _parse_color_spec(("full", my_fn))
+        assert mode == "full"
+        assert fn is my_fn
+        assert fn(logging.INFO) == sentinel
+
+    @staticmethod
+    def test_tuple_mapping_returns_mapped_value() -> None:
+        """Mapping colormap returns the mapped value for matched key."""
+        sentinel = "\033[99m"
+        mode, fn = _parse_color_spec(("level", {logging.INFO: sentinel}))
+        assert mode == "level"
+        assert fn(logging.INFO) == sentinel
+
+    @staticmethod
+    def test_tuple_mapping_falls_back_for_missing_key() -> None:
+        """Mapping falls back to get_level_color for absent key."""
+        sentinel = "\033[99m"
+        _, fn = _parse_color_spec(("level", {logging.INFO: sentinel}))
+        assert fn(logging.DEBUG) == get_level_color(logging.DEBUG)
+
+    @staticmethod
+    def test_tuple_empty_mapping_always_falls_back() -> None:
+        """An empty mapping always falls back to get_level_color."""
+        _, fn = _parse_color_spec(("full", {}))
+        for level in (logging.DEBUG, logging.INFO, logging.WARNING):
+            assert fn(level) == get_level_color(level)
+
 
 class TestGetDisplayLevelname:
     """Tests for `_get_display_levelname`."""
 
     @staticmethod
     def test_registered_levels_padded_to_width() -> None:
-        """Registered level names are right-padded to _LEVELNAME_WIDTH."""
+        """
+        Registered level names are right-padded to _LEVELNAME_WIDTH.
+        """  # noqa: D200
         for name in ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"):
             result = _get_display_levelname(name)
             assert len(result) == _LEVELNAME_WIDTH
@@ -365,7 +463,9 @@ class TestGetDisplayLevelname:
 
     @staticmethod
     def test_unregistered_level_padded_to_width() -> None:
-        """Unregistered level names are also padded to _LEVELNAME_WIDTH."""
+        """
+        Unregistered level names are also padded to _LEVELNAME_WIDTH.
+        """  # noqa: D200
         result = _get_display_levelname("Level 5")
         assert len(result) == _LEVELNAME_WIDTH
         assert result.startswith("LEVEL_5")

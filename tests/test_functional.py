@@ -3,6 +3,7 @@
 import io
 import logging
 import pathlib
+from typing import Any
 
 import pytest
 
@@ -543,11 +544,12 @@ class TestParseFiltersArg:
     @staticmethod
     def test_callable_input() -> None:
         """A callable covers the `callable(filters)` branch."""
-        filt = lambda record: True  # pyright: ignore[reportUnknownLambdaType,reportUnknownVariableType] # noqa: E731
-        result = _parse_filters_arg(
-            filt  # pyright: ignore[reportUnknownArgumentType]
-        )
-        assert result == (filt,)
+
+        def _filt(*args: Any, **kwargs: Any) -> bool:
+            return True  # pragma: no cover
+
+        result = _parse_filters_arg(_filt)
+        assert result == (_filt,)
 
     @staticmethod
     def test_supports_filter_protocol_input(
@@ -624,11 +626,11 @@ class TestAddFiltersToTarget:
     def test_callable_filter_on_logger() -> None:
         """A callable is added directly (else/callable branch)."""
         logger = logging.getLogger("test_aft_callable")
-        filt = lambda record: True  # pyright: ignore[reportUnknownLambdaType,reportUnknownVariableType] # noqa: E731
-        add_filters_to_target(
-            logger,
-            filt,  # pyright: ignore[reportUnknownArgumentType]
-        )
+
+        def _filt(*args: Any, **kwargs: Any) -> bool:
+            return True  # pragma: no cover
+
+        add_filters_to_target(logger, _filt)
         assert len(logger.filters) == 1
 
     @staticmethod
@@ -940,7 +942,7 @@ class TestGetLogger:
         outer_fmt = "%(levelname)s %(message)s"
         logger = get_logger(
             name="test_gl_fmt_not_overwrite",
-            handlers=("null", {"formatter": inner_fmt}),
+            handlers=("null", _HandlerKwargs({"formatter": inner_fmt})),
             formatter=outer_fmt,
         )
         handler = logger.handlers[-1]
@@ -1060,6 +1062,18 @@ class TestGetFormatterColor:
         result = get_formatter(fmt=simple_formatter, color="full")
         assert result is simple_formatter
 
+    @staticmethod
+    def test_tuple_callable_colormap_returns_color_formatter() -> None:
+        """Tuple color with callable colormap returns ColorFormatter."""
+        result = get_formatter(color=("full", lambda _: "\033[99m"))
+        assert isinstance(result, ColorFormatter)
+
+    @staticmethod
+    def test_tuple_mapping_colormap_returns_color_formatter() -> None:
+        """Tuple color with mapping colormap returns ColorFormatter."""
+        result = get_formatter(color=("level", {20: "\033[99m"}))
+        assert isinstance(result, ColorFormatter)
+
 
 class TestGetFormatterFromSpecColor:
     """Tests for the `color` parameter of `get_formatter_from_spec`."""
@@ -1080,6 +1094,14 @@ class TestGetFormatterFromSpecColor:
     def test_str_spec_with_color_param() -> None:
         """A string spec with color param creates a ColorFormatter."""
         result = get_formatter_from_spec("%(message)s", color="full")
+        assert isinstance(result, ColorFormatter)
+
+    @staticmethod
+    def test_tuple_color_with_str_spec_returns_color_formatter() -> None:
+        """Tuple color with string spec creates a ColorFormatter."""
+        result = get_formatter_from_spec(
+            "%(message)s", color=("full", lambda _: "\033[99m")
+        )
         assert isinstance(result, ColorFormatter)
 
 
@@ -1119,3 +1141,14 @@ class TestGetLoggerColor:
         )
         handler = logger.handlers[-1]
         assert handler.formatter is None
+
+    @staticmethod
+    def test_tuple_color_creates_color_formatter() -> None:
+        """Tuple color with callable creates a ColorFormatter."""
+        logger = get_logger(
+            name="test_gl_color_tuple",
+            handlers="null",
+            color=("full", lambda _: "\033[99m"),
+        )
+        handler = logger.handlers[-1]
+        assert isinstance(handler.formatter, ColorFormatter)

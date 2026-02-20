@@ -18,7 +18,7 @@ from snaplog._functional import (
 from snaplog._typing import (
     NoDefault,
     _ArgsType,
-    _ColorMode,
+    _ColorSpec,
     _ExcInfoType,
     _FilterSpec,
     _FilterType,
@@ -57,7 +57,7 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         handlers: _HandlerSpec | Sequence[_HandlerSpec] = None,
         formatter: _FormatterSpec | _NoDefaultType = NoDefault,
         filters: _FilterSpec | Sequence[_FilterSpec] = (),
-        color: _ColorMode = "level",
+        color: _ColorSpec = "level",
     ) -> None:
         """
         The base logger class for `snaplog`.
@@ -106,9 +106,11 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
                 filter is the same as when using the
                 `snaplog.get_handler` inteface.
                 Defaults to `()` (no filters).
-            color (_ColorMode, optional): Color mode for the formatter.
-                Passed through to `get_logger`. If not `"off"`, a
-                `ColorFormatter` is used. Defaults to `"level"`.
+            color (_ColorSpec, optional): Color mode for the formatter.
+                Either a bare `_ColorMode` string or a tuple of
+                `(_ColorMode, colormap)` for per-level color overrides.
+                Passed through to `get_logger`. If mode is not `"off"`,
+                a `ColorFormatter` is used. Defaults to `"level"`.
         """
         # Call super init and create root logger
         super().__init__("root", level=0)
