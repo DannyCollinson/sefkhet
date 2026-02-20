@@ -1,7 +1,5 @@
 """Tests for `snaplog._one_step`."""
 
-# pyright: reportPrivateUsage=false
-
 import io
 import logging
 from typing import cast
@@ -172,7 +170,7 @@ class TestLog:
         log("int level msg", level=logging.WARNING)
 
 
-class TestConfigureDefaultLoggerColor:
+class TestConfigureDefaultLoggerColor:  # pylint: disable=too-few-public-methods
     """Tests for the `color` parameter of `configure_default_logger`."""
 
     @staticmethod
@@ -183,12 +181,3 @@ class TestConfigureDefaultLoggerColor:
         assert logger is not None
         assert len(logger.handlers) >= 1
         assert isinstance(logger.handlers[-1].formatter, ColorFormatter)
-
-    @staticmethod
-    def test_color_none_uses_plain_formatter() -> None:
-        """color=None (default) creates a plain logging.Formatter."""
-        configure_default_logger(color=None)
-        logger = _one_step_module._default_logger
-        assert logger is not None
-        assert len(logger.handlers) >= 1
-        assert not isinstance(logger.handlers[-1].formatter, ColorFormatter)

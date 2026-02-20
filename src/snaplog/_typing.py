@@ -46,7 +46,7 @@ class _FormatterKwargs(TypedDict, total=False):
     validate: bool
     defaults: Mapping[str, Any] | None
     copy: bool
-    color: _ColorMode | None
+    color: _ColorMode
 
 
 # Define type alias for valid formatter specs
@@ -139,11 +139,14 @@ type _HandlerSpec = (
 
 # Define typed dict for specifying logger keyword arguments
 class _LoggerKwargs(TypedDict, total=False):
-    # All special keywords
+    # Regular keywords, overriden if provided separately
+    name: str
+    level: int
+    # Special keywords
     handlers: _HandlerSpec | Sequence[_HandlerSpec]
     formatter: _FormatterSpec
     filters: _FilterSpec | Sequence[_FilterSpec]
-    color: _ColorMode | None
+    color: _ColorMode
 
 
 # Define type alias for valid logger specs

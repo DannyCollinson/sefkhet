@@ -14,7 +14,7 @@ from snaplog._functional import (
 )
 from snaplog._typing import (
     NoDefault,
-    _ColorMode,  # pyright: ignore[reportPrivateUsage]
+    _ColorMode,
     _FilterSpec,
     _FormatterSpec,
     _HandlerSpec,
@@ -42,7 +42,7 @@ def configure_default_logger(  # noqa: PLR0913
     filters: _FilterSpec | Sequence[_FilterSpec] | _NoDefaultType = NoDefault,
     spec: _LoggerSpec | _NoDefaultType = NoDefault,
     force: bool = False,
-    color: _ColorMode | None = None,
+    color: _ColorMode = "level",
 ) -> None:
     """
     Configures the default logger used by `snaplog`.
@@ -87,9 +87,9 @@ def configure_default_logger(  # noqa: PLR0913
             the default logger will not be reconfigured. Ignored if the
             default logger has not already been configured.
             Defaults to `False`.
-        color (_ColorMode | None, optional): Color mode for the
-            formatter. Passed through to `get_logger` in the
-            non-spec path. Defaults to `None`.
+        color (_ColorMode, optional): Color mode for the formatter.
+            Passed through to `get_logger` in the non-spec path.
+            Defaults to `"level"`.
     """  # noqa: E501,W505
     # Make sure function operates on the module-level default logger
     global _default_logger  # noqa: PLW0603

@@ -260,7 +260,6 @@ reportUnusedVariable = "none"
 reportDuplicateImport = "none"
 reportWildcardImportFromLibrary = "none"
 # Keep type-level correctness checks
-# reportPrivateUsage = "warning"
 reportIncompatibleMethodOverride = "error"
 reportOverlappingOverload = "error"
 reportConstantRedefinition = "error"

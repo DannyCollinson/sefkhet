@@ -5,8 +5,9 @@ import logging
 
 import pytest
 
-from snaplog._color import ColorFormatter  # pyright: ignore[reportPrivateUsage]
+from snaplog._color import ColorFormatter
 from snaplog._object_oriented import SnapLogger
+from snaplog._typing import _HandlerKwargs
 
 
 class TestSnapLoggerInit:
@@ -156,7 +157,7 @@ class TestSnapLoggerSetFormatter:
         """force=True replaces a handler's existing formatter."""
         snap = SnapLogger(
             name="test_oo_sf_force",
-            handlers=("null", {"formatter": "%(message)s"}),
+            handlers=("null", _HandlerKwargs({"formatter": "%(message)s"})),
         )
         original_fmt = snap.handlers[-1].formatter
         snap.set_formatter("%(levelname)s %(message)s", force=True)
@@ -169,7 +170,7 @@ class TestSnapLoggerSetFormatter:
         """  # noqa: D200
         snap = SnapLogger(
             name="test_oo_sf_no_force",
-            handlers=("null", {"formatter": "%(message)s"}),
+            handlers=("null", _HandlerKwargs({"formatter": "%(message)s"})),
         )
         original_fmt = snap.handlers[-1].formatter
         snap.set_formatter("%(levelname)s %(message)s", force=False)
@@ -206,7 +207,7 @@ class TestSnapLoggerLog:
             # Pass tuple spec so get_handler sets level=DEBUG on handler
             handlers=(
                 logging.StreamHandler(string_io_stream),
-                {"level": logging.DEBUG},
+                _HandlerKwargs({"level": logging.DEBUG}),
             ),
             formatter="%(message)s",
         )
@@ -233,7 +234,7 @@ class TestSnapLoggerLog:
             level=logging.DEBUG,
             handlers=(
                 logging.StreamHandler(string_io_stream),
-                {"level": logging.DEBUG},
+                _HandlerKwargs({"level": logging.DEBUG}),
             ),
             formatter="%(message)s",
         )
@@ -262,7 +263,7 @@ class TestSnapLoggerLoggingMethods:
             # Pass tuple spec so get_handler sets level=DEBUG on handler
             handlers=(
                 logging.StreamHandler(string_io_stream),
-                {"level": logging.DEBUG},
+                _HandlerKwargs({"level": logging.DEBUG}),
             ),
             formatter="%(message)s",
         )
@@ -482,7 +483,7 @@ class TestSnapLoggerDelegateMethods:
         assert snap.level == snap.logger.level
 
 
-class TestSnapLoggerColor:
+class TestSnapLoggerColor:  # pylint: disable=too-few-public-methods
     """Tests for the `color` parameter of `SnapLogger.__init__`."""
 
     @staticmethod
@@ -491,10 +492,3 @@ class TestSnapLoggerColor:
         snap = SnapLogger(name="test_oo_color_full", color="full")
         assert len(snap.handlers) >= 1
         assert isinstance(snap.handlers[-1].formatter, ColorFormatter)
-
-    @staticmethod
-    def test_color_none_no_formatter_on_handler() -> None:
-        """color=None does not add a formatter automatically."""
-        snap = SnapLogger(name="test_oo_color_none", color=None)
-        assert len(snap.handlers) >= 1
-        assert snap.handlers[-1].formatter is None

@@ -7,7 +7,7 @@ from functools import wraps
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from snaplog._functional import (
-    _parse_log_level,  # pyright: ignore[reportPrivateUsage]
+    _parse_log_level,
     add_filters_to_target,
     add_handlers_to_logger,
     get_formatter,
@@ -17,16 +17,16 @@ from snaplog._functional import (
 )
 from snaplog._typing import (
     NoDefault,
-    _ArgsType,  # pyright: ignore[reportPrivateUsage]
-    _ColorMode,  # pyright: ignore[reportPrivateUsage]
-    _ExcInfoType,  # pyright: ignore[reportPrivateUsage]
-    _FilterSpec,  # pyright: ignore[reportPrivateUsage]
-    _FilterType,  # pyright: ignore[reportPrivateUsage]
-    _FormatStyle,  # pyright: ignore[reportPrivateUsage]
-    _FormatterSpec,  # pyright: ignore[reportPrivateUsage]
-    _HandlerSpec,  # pyright: ignore[reportPrivateUsage]
-    _NoDefaultType,  # pyright: ignore[reportPrivateUsage]
-    _SysExcInfoType,  # pyright: ignore[reportPrivateUsage]
+    _ArgsType,
+    _ColorMode,
+    _ExcInfoType,
+    _FilterSpec,
+    _FilterType,
+    _FormatStyle,
+    _FormatterSpec,
+    _HandlerSpec,
+    _NoDefaultType,
+    _SysExcInfoType,
 )
 
 
@@ -56,7 +56,7 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         handlers: _HandlerSpec | Sequence[_HandlerSpec] = None,
         formatter: _FormatterSpec | _NoDefaultType = NoDefault,
         filters: _FilterSpec | Sequence[_FilterSpec] = (),
-        color: _ColorMode | None = None,
+        color: _ColorMode = "level",
     ) -> None:
         """
         The base logger class for `snaplog`.
@@ -105,10 +105,9 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
                 filter is the same as when using the
                 `snaplog.get_handler` inteface.
                 Defaults to `()` (no filters).
-            color (_ColorMode | None, optional): Color mode for the
-                formatter. Passed through to `get_logger`. If not
-                `None` and not `"off"`, a `ColorFormatter` is used.
-                Defaults to `None`.
+            color (_ColorMode, optional): Color mode for the formatter.
+                Passed through to `get_logger`. If not `"off"`, a
+                `ColorFormatter` is used. Defaults to `"level"`.
         """
         # Call super init and create root logger
         super().__init__("root", level=0)

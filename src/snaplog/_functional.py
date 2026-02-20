@@ -9,12 +9,10 @@ from io import TextIOBase
 from pathlib import Path
 from typing import Any, TextIO
 
-from snaplog._color import (  # pyright: ignore[reportPrivateUsage]
-    ColorFormatter,
-)
+from snaplog._color import ColorFormatter
 from snaplog._typing import (
     NoDefault,
-    _ColorMode,  # pyright: ignore[reportPrivateUsage]
+    _ColorMode,
     _FileHandlerKwargs,
     _FilterSpec,
     _FormatStyle,
@@ -103,9 +101,7 @@ def get_log_levels() -> set[str]:
     return set(get_log_level_map())
 
 
-def _parse_log_level(  # pyright: ignore[reportUnusedFunction]
-    level: str | int, *, quiet: bool = False
-) -> int:
+def _parse_log_level(level: str | int, *, quiet: bool = False) -> int:
     """
     Returns the `int` representation of the log level
     specified by `level` and `quiet`.
@@ -159,7 +155,7 @@ def get_formatter(  # noqa: PLR0913
     validate: bool = True,
     defaults: Mapping[str, Any] | None = None,
     copy: bool = False,
-    color: _ColorMode | None = None,
+    color: _ColorMode = "level",
 ) -> logging.Formatter:
     """
     Returns a `logging.Formatter` configured
@@ -199,11 +195,10 @@ def get_formatter(  # noqa: PLR0913
             original instance of `fmt`; otherwise, returns the original
             instance. Ignored if `fmt` is not a `logging.Formatter`.
             Defaults to `False`.
-        color (_ColorMode | None, optional): Color mode for the
-            formatter. If not `None` and not `"off"`, a
-            `ColorFormatter` is returned instead of a plain
-            `logging.Formatter`. Ignored if `fmt` is a
-            `logging.Formatter`. Defaults to `None`.
+        color (_ColorMode, optional): Color mode for the
+            formatter. If not not `"off"`, a `ColorFormatter` is
+            returned instead of a plain `logging.Formatter`. Ignored if
+            `fmt` is a `logging.Formatter`. Defaults to `"level"`.
 
     Returns:
         logging.Formatter: The specified `logging.Formatter`
@@ -212,7 +207,7 @@ def get_formatter(  # noqa: PLR0913
     if isinstance(fmt, logging.Formatter):
         return deepcopy(fmt) if copy else fmt
     # Return a ColorFormatter if color mode is active
-    if color is not None and color != "off":
+    if color != "off":
         return ColorFormatter(
             fmt=fmt,
             datefmt=datefmt,
@@ -232,19 +227,16 @@ def get_formatter(  # noqa: PLR0913
 
 
 def get_formatter_from_spec(
-    spec: _FormatterSpec,
-    *,
-    color: _ColorMode | None = None,
+    spec: _FormatterSpec, *, color: _ColorMode = "level"
 ) -> logging.Formatter:
     """
     Returns a `logging.Formatter` configured using a `_FormatterSpec`.
 
     Args:
         spec (_FormatterSpec): Specification of formatter
-        color (_ColorMode | None, optional): Color mode for the
-            formatter. Passed through to `get_formatter` when the
-            dict spec does not already contain a ``"color"`` key.
-            Defaults to `None`.
+        color (_ColorMode, optional): Color mode for the formatter.
+            Passed through to `get_formatter` when the dict spec does
+            not already contain a `"color"` key. Defaults to `"level"`.
 
     Returns:
         logging.Formatter: The specified formatter
@@ -252,8 +244,11 @@ def get_formatter_from_spec(
     # If a dict, specify as keyword arguments
     if isinstance(spec, dict):
         # Dict's own color key takes precedence; only inject if absent
-        if "color" not in spec and color is not None:
-            return get_formatter(**spec, color=color)  # type: ignore[misc]
+        if "color" not in spec and color:
+            return get_formatter(  # pyright: ignore[reportUnknownVariableType]
+                **spec,
+                color=color,  # pyright: ignore[reportCallIssue]
+            )
         return get_formatter(**spec)
     # If here, just pass spec as main argument
     return get_formatter(fmt=spec, color=color)
@@ -879,7 +874,7 @@ def get_logger(  # noqa: PLR0913
     handlers: _HandlerSpec | Sequence[_HandlerSpec] = (),
     formatter: _FormatterSpec | _NoDefaultType = NoDefault,
     filters: _FilterSpec | Sequence[_FilterSpec] = (),
-    color: _ColorMode | None = None,
+    color: _ColorMode = "level",
 ) -> logging.Logger:
     """
     Returns a `logging.Logger` configured according
@@ -917,12 +912,11 @@ def get_logger(  # noqa: PLR0913
             filter specifications. Specification of each filter is the
             same as when using the `snaplog.get_handler` inteface.
             Defaults to `()` (no filters).
-        color (_ColorMode | None, optional): Color mode to apply to
-            the formatter. When `formatter` is `NoDefault` and `color`
-            is not `None` and not `"off"`, a `ColorFormatter` is
-            automatically created and attached. When `formatter` is a
-            spec, `color` is passed through to
-            `get_formatter_from_spec`. Defaults to `None`.
+        color (_ColorMode, optional): Color mode to apply to the
+            formatter. When `formatter` is `NoDefault` and `color`
+            is not `"off"`, a `ColorFormatter` is automatically created
+            and attached. When `formatter` is a spec, `color` is passed
+            through to `get_formatter_from_spec`. Defaults to `"level"`.
 
     Returns:
         logging.Logger: The speficied `logging.Logger`
@@ -944,7 +938,7 @@ def get_logger(  # noqa: PLR0913
     resolved_formatter: logging.Formatter | None
     if isinstance(formatter, _NoDefaultType):
         # Only auto-create a formatter when color mode is active
-        if color is not None and color != "off":
+        if color != "off":
             resolved_formatter = get_formatter(color=color)
         else:
             resolved_formatter = None
@@ -1001,13 +995,25 @@ def get_logger_from_spec(spec: _LoggerSpec) -> logging.Logger:
         )
     else:
         kwargs = spec[1]
+    # Remove name/level from keyword args
+    kwargs.pop("name", None)
+    kwargs.pop("level", None)
 
     # Return based on tuple items
     if isinstance(name, _NoDefaultType):
-        return get_logger(
-            level=level,  # pyright: ignore[reportArgumentType]
-            **kwargs,
+        # Make sure level is not in keyword arguments
+        kwargs.pop("level", None)
+        return get_logger(  # pyright: ignore[reportUnknownVariableType]
+            level=level,
+            **kwargs,  # pyright: ignore[reportCallIssue]
         )
     if level is None:
-        return get_logger(name=name, **kwargs)
-    return get_logger(name=name, level=level, **kwargs)
+        return get_logger(  # pyright: ignore[reportUnknownVariableType]
+            name=name,
+            **kwargs,  # pyright: ignore[reportCallIssue]
+        )
+    return get_logger(  # pyright: ignore[reportUnknownVariableType]
+        name=name,
+        level=level,
+        **kwargs,  # pyright: ignore[reportCallIssue]
+    )

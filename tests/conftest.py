@@ -216,5 +216,5 @@ def log_file(tmp_path: pytest.TempPathFactory) -> str:
         str: Path string for temporary log file
     """
     return str(
-        tmp_path / "test.log"  # type: ignore[operator] # pyright: ignore[reportOperatorIssue, reportUnknownArgumentType]
+        tmp_path / "test.log"  # type: ignore[operator] # pyright: ignore[reportOperatorIssue,reportUnknownArgumentType]
     )

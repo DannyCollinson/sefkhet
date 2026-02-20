@@ -4,7 +4,7 @@ import logging
 from collections.abc import Mapping
 from typing import Any
 
-from snaplog._typing import _ColorMode  # pyright: ignore[reportPrivateUsage]
+from snaplog._typing import _ColorMode, _FormatStyle
 
 
 ########################################################################
@@ -71,21 +71,21 @@ class ColorFormatter(logging.Formatter):
     A `logging.Formatter` subclass that applies ANSI color codes
     to log output based on the log record's level.
 
-    The scope of colorization is controlled by the ``color`` mode:
+    The scope of colorization is controlled by the `color` mode:
 
-    - ``"off"``: no colorization; output is identical to
+    - `"off"`: no colorization; output is identical to
       `logging.Formatter`
-    - ``"full"``: the entire formatted line is wrapped in color
-    - ``"level"``: only the level name is wrapped in color
-    - ``"msg"``: only the message is wrapped in color
-    - ``"partial"``: everything except the message is colored
+    - `"full"`: the entire formatted line is wrapped in color
+    - `"level"`: only the level name is wrapped in color
+    - `"msg"`: only the message is wrapped in color
+    - `"partial"`: everything except the message is colored
     """
 
     def __init__(  # noqa: PLR0913
         self,
         fmt: str | None = None,
         datefmt: str | None = None,
-        style: str = "%",
+        style: _FormatStyle = "%",
         validate: bool = True,  # noqa: FBT001,FBT002
         *,
         defaults: Mapping[str, Any] | None = None,
@@ -99,19 +99,20 @@ class ColorFormatter(logging.Formatter):
                 `None`.
             datefmt (str | None, optional): Date format string.
                 Defaults to `None`.
-            style (str, optional): Format style. Defaults to `"%"`.
+            style (_FormatStyle, optional): Format style.
+                Defaults to `"%"`.
             validate (bool, optional): If `True`, validates the format
                 string. Defaults to `True`.
             defaults (Mapping[str, Any] | None, optional): Default
                 values for string interpolation. Defaults to `None`.
             color (_ColorMode): Color mode controlling the scope of
-                colorization. One of ``"off"``, ``"full"``,
-                ``"level"``, ``"msg"``, or ``"partial"``.
+                colorization. One of `"off"`, `"full"`, `"level"`,
+                `"msg"`, or `"partial"`.
         """
         super().__init__(
             fmt=fmt,
             datefmt=datefmt,
-            style=style,  # type: ignore[arg-type]
+            style=style,
             validate=validate,
             defaults=defaults,
         )
@@ -120,7 +121,7 @@ class ColorFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         """
         Formats the log record with ANSI color codes applied
-        according to ``self._color_mode``.
+        according to `self._color_mode`.
 
         Args:
             record (logging.LogRecord): Log record to format
