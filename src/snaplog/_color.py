@@ -24,6 +24,20 @@ _MAGENTA = "\033[35m"
 
 
 ########################################################################
+# Levelname formatting
+########################################################################
+
+
+_LEVELNAME_WIDTH = 8
+
+
+def _get_display_levelname(levelname: str) -> str:
+    if levelname.startswith("Level ") and levelname[6:].isdigit():
+        levelname = "LEVEL_" + levelname[6:]
+    return levelname.ljust(_LEVELNAME_WIDTH)
+
+
+########################################################################
 # Public utilities
 ########################################################################
 
@@ -131,16 +145,23 @@ class ColorFormatter(logging.Formatter):
         """
         color = get_level_color(record.levelno)
         reset = _ANSI_RESET
+        orig_levelname = record.levelname
+        display_levelname = _get_display_levelname(orig_levelname)
 
         if self._color_mode == "off":
-            return super().format(record)
+            record.levelname = display_levelname
+            result = super().format(record)
+            record.levelname = orig_levelname
+            return result
 
         if self._color_mode == "full":
-            return f"{color}{super().format(record)}{reset}"
+            record.levelname = display_levelname
+            result = f"{color}{super().format(record)}{reset}"
+            record.levelname = orig_levelname
+            return result
 
         if self._color_mode == "level":
-            orig_levelname = record.levelname
-            record.levelname = f"{color}{orig_levelname}{reset}"
+            record.levelname = f"{color}{display_levelname}{reset}"
             result = super().format(record)
             record.levelname = orig_levelname
             return result
@@ -148,19 +169,23 @@ class ColorFormatter(logging.Formatter):
         if self._color_mode == "msg":
             orig_msg = record.msg
             orig_args = record.args
+            record.levelname = display_levelname
             record.msg = f"{color}{record.getMessage()}{reset}"
             record.args = None
             result = super().format(record)
             record.msg = orig_msg
             record.args = orig_args
+            record.levelname = orig_levelname
             return result
 
         # "partial": color everything except the message
         orig_msg = record.msg
         orig_args = record.args
+        record.levelname = display_levelname
         record.msg = f"{reset}{record.getMessage()}{color}"
         record.args = None
         result = f"{color}{super().format(record)}{reset}"
         record.msg = orig_msg
         record.args = orig_args
+        record.levelname = orig_levelname
         return result

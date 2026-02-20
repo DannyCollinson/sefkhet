@@ -4,7 +4,9 @@ import logging
 
 from snaplog._color import (
     _ANSI_RESET,
+    _LEVELNAME_WIDTH,
     ColorFormatter,
+    _get_display_levelname,
     get_level_color,
 )
 
@@ -138,13 +140,16 @@ class TestColorFormatter:
     """Tests for `ColorFormatter`."""
 
     @staticmethod
-    def test_off_mode_matches_plain_formatter() -> None:
-        """Mode 'off' produces identical output to logging.Formatter."""
+    def test_off_mode_pads_levelname() -> None:
+        """Mode 'off' pads the levelname and does not match plain."""
         fmt = "%(levelname)s | %(message)s"
         plain = logging.Formatter(fmt)
         colored = ColorFormatter(fmt, color="off")
         record = _make_record(level=logging.WARNING)
-        assert colored.format(record) == plain.format(record)
+        result = colored.format(record)
+        plain_out = plain.format(record)
+        assert "WARNING " in result
+        assert result != plain_out
 
     @staticmethod
     def test_full_mode_starts_with_color_ends_with_reset() -> None:
@@ -157,15 +162,13 @@ class TestColorFormatter:
         assert result.endswith(_ANSI_RESET)
 
     @staticmethod
-    def test_full_mode_contains_plain_content() -> None:
-        """Mode 'full' output contains the plain-formatted string."""
+    def test_full_mode_contains_padded_levelname() -> None:
+        """Mode 'full' output contains the padded levelname."""
         fmt = "%(levelname)s | %(message)s"
-        plain = logging.Formatter(fmt)
         colored = ColorFormatter(fmt, color="full")
         record = _make_record(level=logging.DEBUG)
-        plain_out = plain.format(record)
         result = colored.format(record)
-        assert plain_out in result
+        assert "DEBUG   " in result
 
     @staticmethod
     def test_level_mode_wraps_levelname() -> None:
@@ -175,7 +178,7 @@ class TestColorFormatter:
         record = _make_record(level=logging.WARNING)
         color = get_level_color(record.levelno)
         result = colored.format(record)
-        wrapped_level = f"{color}WARNING{_ANSI_RESET}"
+        wrapped_level = f"{color}WARNING {_ANSI_RESET}"
         assert wrapped_level in result
 
     @staticmethod
@@ -288,6 +291,44 @@ class TestColorFormatter:
         assert "n=5" in result
 
     @staticmethod
+    def test_off_mode_restores_levelname() -> None:
+        """Mode 'off' restores record.levelname after formatting."""
+        colored = ColorFormatter("%(levelname)s | %(message)s", color="off")
+        record = _make_record(level=logging.WARNING)
+        orig_levelname = record.levelname
+        colored.format(record)
+        assert record.levelname == orig_levelname
+
+    @staticmethod
+    def test_full_mode_restores_levelname() -> None:
+        """Mode 'full' restores record.levelname after formatting."""
+        colored = ColorFormatter("%(levelname)s | %(message)s", color="full")
+        record = _make_record(level=logging.INFO)
+        orig_levelname = record.levelname
+        colored.format(record)
+        assert record.levelname == orig_levelname
+
+    @staticmethod
+    def test_msg_mode_restores_levelname() -> None:
+        """Mode 'msg' restores record.levelname after formatting."""
+        colored = ColorFormatter("%(levelname)s | %(message)s", color="msg")
+        record = _make_record(level=logging.ERROR)
+        orig_levelname = record.levelname
+        colored.format(record)
+        assert record.levelname == orig_levelname
+
+    @staticmethod
+    def test_partial_mode_restores_levelname() -> None:
+        """Mode 'partial' restores record.levelname after formatting."""
+        colored = ColorFormatter(
+            "%(levelname)s | %(message)s", color="partial"
+        )
+        record = _make_record(level=logging.DEBUG)
+        orig_levelname = record.levelname
+        colored.format(record)
+        assert record.levelname == orig_levelname
+
+    @staticmethod
     def test_no_side_effects_across_calls() -> None:
         """
         Formatting the same record twice produces consistent results
@@ -303,3 +344,41 @@ class TestColorFormatter:
             result1 = colored.format(record)
             result2 = colored.format(record)
             assert result1 == result2, f"mode={mode!r} differs on second call"
+
+
+class TestGetDisplayLevelname:
+    """Tests for `_get_display_levelname`."""
+
+    @staticmethod
+    def test_registered_levels_padded_to_width() -> None:
+        """Registered level names are right-padded to _LEVELNAME_WIDTH."""
+        for name in ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"):
+            result = _get_display_levelname(name)
+            assert len(result) == _LEVELNAME_WIDTH
+            assert result.startswith(name)
+
+    @staticmethod
+    def test_unregistered_level_produces_level_x_format() -> None:
+        """'Level 25' becomes 'LEVEL_25', not the Python default."""
+        result = _get_display_levelname("Level 25")
+        assert result.startswith("LEVEL_25")
+
+    @staticmethod
+    def test_unregistered_level_padded_to_width() -> None:
+        """Unregistered level names are also padded to _LEVELNAME_WIDTH."""
+        result = _get_display_levelname("Level 5")
+        assert len(result) == _LEVELNAME_WIDTH
+        assert result.startswith("LEVEL_5")
+
+    @staticmethod
+    def test_non_level_string_unchanged_except_padding() -> None:
+        """Strings that don't match 'Level N' are only padded."""
+        result = _get_display_levelname("CUSTOM")
+        assert result == "CUSTOM  "
+        assert len(result) == _LEVELNAME_WIDTH
+
+    @staticmethod
+    def test_level_prefix_without_digit_not_transformed() -> None:
+        """'Level X' where X is not a digit is not transformed."""
+        result = _get_display_levelname("Level AB")
+        assert result.startswith("Level AB")
