@@ -995,14 +995,12 @@ def get_logger_from_spec(spec: _LoggerSpec) -> logging.Logger:
         )
     else:
         kwargs = spec[1]
-    # Remove name/level from keyword args
+    # Remove name/level from keyword args if included
     kwargs.pop("name", None)
     kwargs.pop("level", None)
 
     # Return based on tuple items
     if isinstance(name, _NoDefaultType):
-        # Make sure level is not in keyword arguments
-        kwargs.pop("level", None)
         return get_logger(  # pyright: ignore[reportUnknownVariableType]
             level=level,
             **kwargs,  # pyright: ignore[reportCallIssue]

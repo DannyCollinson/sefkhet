@@ -140,7 +140,7 @@ type _HandlerSpec = (
 # Define typed dict for specifying logger keyword arguments
 class _LoggerKwargs(TypedDict, total=False):
     # Regular keywords, overriden if provided separately
-    name: str
+    name: str | None
     level: int
     # Special keywords
     handlers: _HandlerSpec | Sequence[_HandlerSpec]
