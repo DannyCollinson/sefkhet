@@ -30,7 +30,12 @@ from snaplog._functional import (
     set_formatter_for_handler,
     set_formatter_for_logger,
 )
-from snaplog._typing import NoDefault, _HandlerKwargs, _SupportsFilter
+from snaplog._typing import (
+    NoDefault,
+    _HandlerKwargs,
+    _LoggerKwargs,
+    _SupportsFilter,
+)
 
 
 class TestGetLogLevelMap:
@@ -1008,19 +1013,23 @@ class TestGetLoggerFromSpec:
     @staticmethod
     def test_tuple_str_dict() -> None:
         """(str, dict) covers the level is None return path."""
-        result = get_logger_from_spec(("test_glfs_str_dict", {"handlers": ()}))
+        result = get_logger_from_spec(
+            ("test_glfs_str_dict", _LoggerKwargs({"handlers": ()}))
+        )
         assert result.name == "test_glfs_str_dict"
 
     @staticmethod
     def test_tuple_none_dict() -> None:
         """(None, dict) covers None name with kwargs."""
-        result = get_logger_from_spec((None, {"handlers": ()}))
+        result = get_logger_from_spec((None, _LoggerKwargs({"handlers": ()})))
         assert result is logging.root
 
     @staticmethod
     def test_tuple_int_dict() -> None:
         """(int, dict) covers the name=NoDefault branch."""
-        result = get_logger_from_spec((logging.DEBUG, {"handlers": ()}))
+        result = get_logger_from_spec(
+            (logging.DEBUG, _LoggerKwargs({"handlers": ()}))
+        )
         assert result.level == logging.DEBUG
 
 

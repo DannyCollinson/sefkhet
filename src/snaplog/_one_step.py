@@ -208,6 +208,6 @@ def log(
     level = _parse_log_level(level=level, quiet=quiet)
 
     # Log to indicated level
-    logger.log(  # pyright: ignore[reportOptionalMemberAccess]
+    logger.log(  # type: ignore[union-attr] # pyright: ignore[reportOptionalMemberAccess]
         level, msg, *args, **kwargs
     )
