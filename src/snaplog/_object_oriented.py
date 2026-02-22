@@ -304,16 +304,70 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         """
         add_filters_to_target(filters=filters, target=self.logger)
 
-    def log(
+    ####################################################################
+    # Main logging methods
+    ####################################################################
+
+    def log(  # noqa: PLR0913
+        self,
+        level: str | int,
+        msg: object,
+        *args: Any,
+        exc_info: _ExcInfoType = None,
+        stack_info: bool = False,
+        stacklevel: int = 1,
+        extra: Mapping[str, object] | None = None,
+    ) -> None:
+        """
+        Log a message using the standard `logging` API
+        (plus support for `str` logging levels).
+
+        Args:
+            level (str | int): Valid log levels include a log level
+                string from the options provided by
+                `snaplog.get_log_levels()`, the `int` equivalents of
+                those log levels as defined by the `logging` library, or
+                any other `int`.
+            msg (object): Message to log
+            *args (Any): Arguments other than `msg` to pass to the
+                `loggingLogger`'s `log` method. This might be used to
+                provide variables to interpolate into `msg`.
+            exc_info (_ExcInfoType, optional): See `logging.Logger`'s
+                method `log` for details. Defaults to `None`.
+            stack_info (bool, optional): See `logging.Logger`'s
+                method `log` for details. Defaults to `False`.
+            stacklevel (int, optional): See `logging.Logger`'s
+                method `log` for details. Defaults to `1`.
+            extra (Mapping[str, object] | None, optional): See
+                `logging.Logger`'s method `log` for details.
+                Defaults to `None`.
+        """
+        # Determine level
+        level = _parse_log_level(level=level, quiet=False)
+        # Log message
+        self.logger.log(
+            level,
+            msg,
+            *args,
+            exc_info=exc_info,
+            stack_info=stack_info,
+            stacklevel=stacklevel,
+            extra=extra,
+        )
+
+    def record(  # noqa: PLR0913
         self,
         msg: object,
         *args: Any,
         level: str | int = "debug",
         quiet: bool = False,
-        **kwargs: Any,
+        exc_info: _ExcInfoType = None,
+        stack_info: bool = False,
+        stacklevel: int = 1,
+        extra: Mapping[str, object] | None = None,
     ) -> None:
         """
-        Log a message.
+        Log/record a message using the `snaplog` API.
 
         *Note that this function's API differs from that of the
         `logging.Logger`'s `log` method: this function requires that
@@ -336,14 +390,84 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             quiet (bool, optional): If `True`, forces the log to the
                 `logging.DEBUG` level; otherwise, the `level` argument
                 sets the log level. Defaults to `False`.
-            **kwargs (Any): Keyword arguments to pass to the
-                `logging.Logger`'s `log` method. This might be used to
-                pass exception information.
+            exc_info (_ExcInfoType, optional): See `logging.Logger`'s
+                method `log` for details. Defaults to `None`.
+            stack_info (bool, optional): See `logging.Logger`'s
+                method `log` for details. Defaults to `False`.
+            stacklevel (int, optional): See `logging.Logger`'s
+                method `log` for details. Defaults to `1`.
+            extra (Mapping[str, object] | None, optional): See
+                `logging.Logger`'s method `log` for details.
+                Defaults to `None`.
         """
         # Determine level
         level = _parse_log_level(level=level, quiet=quiet)
-        # Log message
-        self.logger.log(level, msg, *args, **kwargs)
+        # Delegate to log method
+        self.log(
+            level,
+            msg,
+            *args,
+            exc_info=exc_info,
+            stack_info=stack_info,
+            stacklevel=stacklevel,
+            extra=extra,
+        )
+
+    def rec(  # noqa: PLR0913
+        self,
+        msg: object,
+        *args: Any,
+        level: str | int = "debug",
+        quiet: bool = False,
+        exc_info: _ExcInfoType = None,
+        stack_info: bool = False,
+        stacklevel: int = 1,
+        extra: Mapping[str, object] | None = None,
+    ) -> None:
+        """
+        Log/record a message using the `snaplog` API. Alias of `record`.
+
+        *Note that this function's API differs from that of the
+        `logging.Logger`'s `log` method: this function requires that
+        `level` be provided as a keyword argument instead of as the
+        first positional argument, and the `quiet` keyword argument
+        is added.*
+
+        Args:
+            msg (object): Message to log
+            *args (Any): Arguments other than `msg` to pass to the
+                `loggingLogger`'s `log` method. This might be used to
+                provide variables to interpolate into `msg`.
+            level (str | int, optional): Logging level to use if
+                `quiet` is `False`. Valid log levels include a log level
+                string from the options provided by
+                `snaplog.get_log_levels()`, the `int` equivalents of
+                those log levels as defined by the `logging` library, or
+                any other `int`. Overriden by the `quiet` argument if it
+                is `True`. Defaults to `"debug"`.
+            quiet (bool, optional): If `True`, forces the log to the
+                `logging.DEBUG` level; otherwise, the `level` argument
+                sets the log level. Defaults to `False`.
+            exc_info (_ExcInfoType, optional): See `logging.Logger`'s
+                method `log` for details. Defaults to `None`.
+            stack_info (bool, optional): See `logging.Logger`'s
+                method `log` for details. Defaults to `False`.
+            stacklevel (int, optional): See `logging.Logger`'s
+                method `log` for details. Defaults to `1`.
+            extra (Mapping[str, object] | None, optional): See
+                `logging.Logger`'s method `log` for details.
+                Defaults to `None`.
+        """
+        self.record(
+            msg,
+            *args,
+            level=level,
+            quiet=quiet,
+            exc_info=exc_info,
+            stack_info=stack_info,
+            stacklevel=stacklevel,
+            extra=extra,
+        )
 
     ####################################################################
     # Replicate logging.Logger interface
@@ -555,7 +679,7 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             stack_info=stack_info, stacklevel=stacklevel
         )
 
-    def getChild(self, suffix: str) -> logging.Logger:
+    def getChild(self, suffix: str) -> logging.Logger:  # type: ignore[override]
         return self.logger.getChild(suffix=suffix)
 
     def getChildren(self) -> set[logging.Logger]:

@@ -2,7 +2,7 @@
 
 import logging
 import threading
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from snaplog._functional import (
@@ -15,6 +15,7 @@ from snaplog._functional import (
 from snaplog._typing import (
     NoDefault,
     _ColorSpec,
+    _ExcInfoType,
     _FilterSpec,
     _FormatterSpec,
     _HandlerSpec,
@@ -138,16 +139,102 @@ def configure_default_logger(  # noqa: PLR0913
         )
 
 
-def log(
+def log(  # noqa: PLR0913
+    level: int | str,
+    msg: object,
+    *args: Any,
+    exc_info: _ExcInfoType = None,
+    stack_info: bool = False,
+    stacklevel: int = 1,
+    extra: Mapping[str, object] | None = None,
+    logger: logging.Logger | _LoggerSpec | _NoDefaultType = NoDefault,
+) -> None:
+    """
+    Log a message according to the `logging.log` API
+    using the default or a provided logger.
+
+    *A logger to use can also be specified using either a
+    `logging.Logger` instance or a logger specification.*
+
+    Args:
+        level (str | int): Logging level to log message at. Valid log
+            levels include a log level string from the options provided
+            by `snaplog.get_log_levels()`, the `int` equivalents of
+            those log levels as defined by the `logging`library, or any
+            other `int`.
+        msg (object): Message to log
+        *args (Any): Arguments other than `msg` to pass to the
+            `loggingLogger`'s `log` method. This might be used to
+            provide variables to interpolate into `msg`.
+        exc_info (_ExcInfoType, optional): See `logging.Logger`'s
+            method `log` for details. Defaults to `None`.
+        stack_info (bool, optional): See `logging.Logger`'s
+            method `log` for details. Defaults to `False`.
+        stacklevel (int, optional): See `logging.Logger`'s
+            method `log` for details. Defaults to `1`.
+        extra (Mapping[str, object] | None, optional): See
+            `logging.Logger`'s method `log` for details.
+            Defaults to `None`.
+        logger (logging.Logger | _LoggerSpec | _NoDefaultType, optional):
+            Specification of the `logging.Logger` to use to log the
+            message. If a `logging.Logger`, then that logger will be
+            used; if the `snaplog` default logger is still `None` at the
+            time of calling, the default logger will be instantiated
+            using `logger` as the `spec` argument to
+            `configure_default_logger`, which uses the default
+            configuration if `logger` is `NoDefault`; if `NoDefault`,
+            the default logger will be used, and it will be instantiated
+            with the defaults if it has not been already; and if the
+            default logger has already been instantiated but `logger`
+            is a `_LoggerSpec`, a separate logger will be created
+            according to the specification and used to log the message.
+            Defaults to `NoDefault`.
+    """  # noqa: W505
+    # Decide which logger to use if none given
+    if not isinstance(logger, logging.Logger):
+        # Use default logger if no spec provided
+        if isinstance(logger, _NoDefaultType):
+            # Make sure default logger is instantiated
+            configure_default_logger()
+            logger = _default_logger
+        # If no logger given and default logger is still None,
+        # configure default logger using provided spec
+        elif _default_logger is None:
+            configure_default_logger(spec=logger)
+            logger = _default_logger
+        # Otherwise, create separate logger using spec
+        else:
+            logger = get_logger_from_spec(logger)
+
+    # Parse provided level
+    level = _parse_log_level(level=level, quiet=False)
+
+    # Log to indicated level
+    logger.log(  # type: ignore[union-attr] # pyright: ignore[reportOptionalMemberAccess]
+        level,
+        msg,
+        *args,
+        exc_info=exc_info,
+        stack_info=stack_info,
+        stacklevel=stacklevel,
+        extra=extra,
+    )
+
+
+def record(  # noqa: PLR0913
     msg: object,
     *args: Any,
     level: str | int = "debug",
     quiet: bool = False,
     logger: logging.Logger | _LoggerSpec | _NoDefaultType = NoDefault,
-    **kwargs: Any,
+    exc_info: _ExcInfoType = None,
+    stack_info: bool = False,
+    stacklevel: int = 1,
+    extra: Mapping[str, object] | None = None,
 ) -> None:
     """
-    Log a message using the default or a provided logger.
+    Log a message according to the `snaplog` API
+    using the default or a provided logger.
 
     *Note that this function's API differs from that of the
     `logging.Logger`'s `log` method: this function requires that
@@ -184,30 +271,99 @@ def log(
             is a `_LoggerSpec`, a separate logger will be created
             according to the specification and used to log the message.
             Defaults to `NoDefault`.
-        **kwargs (Any): Keyword arguments to pass to the
-            `logging.Logger`'s `log` method. This might be used to pass
-            exception information.
+        exc_info (_ExcInfoType, optional): See `logging.Logger`'s
+            method `log` for details. Defaults to `None`.
+        stack_info (bool, optional): See `logging.Logger`'s
+            method `log` for details. Defaults to `False`.
+        stacklevel (int, optional): See `logging.Logger`'s
+            method `log` for details. Defaults to `1`.
+        extra (Mapping[str, object] | None, optional): See
+            `logging.Logger`'s method `log` for details.
+            Defaults to `None`.
     """  # noqa: W505
-    # Decide which logger to use if none given
-    if not isinstance(logger, logging.Logger):
-        # Use default logger if no spec provided
-        if isinstance(logger, _NoDefaultType):
-            # Make sure default logger is instantiated
-            configure_default_logger()
-            logger = _default_logger
-        # If no logger given and default logger is still None,
-        # configure default logger using provided spec
-        elif _default_logger is None:
-            configure_default_logger(spec=logger)
-            logger = _default_logger
-        # Otherwise, create separate logger using spec
-        else:
-            logger = get_logger_from_spec(logger)
-
     # Parse provided level
     level = _parse_log_level(level=level, quiet=quiet)
+    # Delegate to log function
+    log(
+        level,
+        msg,
+        *args,
+        exc_info=exc_info,
+        stack_info=stack_info,
+        stacklevel=stacklevel,
+        extra=extra,
+        logger=logger,
+    )
 
-    # Log to indicated level
-    logger.log(  # type: ignore[union-attr] # pyright: ignore[reportOptionalMemberAccess]
-        level, msg, *args, **kwargs
+
+def rec(  # noqa: PLR0913
+    msg: object,
+    *args: Any,
+    level: str | int = "debug",
+    quiet: bool = False,
+    exc_info: _ExcInfoType = None,
+    stack_info: bool = False,
+    stacklevel: int = 1,
+    extra: Mapping[str, object] | None = None,
+    logger: logging.Logger | _LoggerSpec | _NoDefaultType = NoDefault,
+) -> None:
+    """
+    Log a message according to the `snaplog` API
+    using the default or a provided logger.
+
+    *Note that this function's API differs from that of the
+    `logging.Logger`'s `log` method: this function requires that
+    `level` be provided as a keyword argument instead of as the
+    first positional argument, and the `quiet` keyword argument
+    is added. A logger to use can also be specified using either a
+    `logging.Logger` instance or a logger specification.*
+
+    Args:
+        msg (object): Message to log
+        *args (Any): Arguments other than `msg` to pass to the
+            `loggingLogger`'s `log` method. This might be used to
+            provide variables to interpolate into `msg`.
+        level (str | int, optional): Logging level to log message at.
+            Valid log levels include a log level string from the options
+            provided by `snaplog.get_log_levels()`, the `int`
+            equivalents of those log levels as defined by the `logging`
+            library, or any other `int`. Overriden by the `quiet`
+            argument if it is `True`. Defaults to `"debug"`.
+        quiet (bool, optional): If `True`, forces the log to the
+            `logging.DEBUG` level; otherwise, the `level` argument sets
+            the log level. Defaults to `False`.
+        exc_info (_ExcInfoType, optional): See `logging.Logger`'s
+            method `log` for details. Defaults to `None`.
+        stack_info (bool, optional): See `logging.Logger`'s
+            method `log` for details. Defaults to `False`.
+        stacklevel (int, optional): See `logging.Logger`'s
+            method `log` for details. Defaults to `1`.
+        extra (Mapping[str, object] | None, optional): See
+            `logging.Logger`'s method `log` for details.
+            Defaults to `None`.
+        logger (logging.Logger | _LoggerSpec | _NoDefaultType, optional):
+            Specification of the `logging.Logger` to use to log the
+            message. If a `logging.Logger`, then that logger will be
+            used; if the `snaplog` default logger is still `None` at the
+            time of calling, the default logger will be instantiated
+            using `logger` as the `spec` argument to
+            `configure_default_logger`, which uses the default
+            configuration if `logger` is `NoDefault`; if `NoDefault`,
+            the default logger will be used, and it will be instantiated
+            with the defaults if it has not been already; and if the
+            default logger has already been instantiated but `logger`
+            is a `_LoggerSpec`, a separate logger will be created
+            according to the specification and used to log the message.
+            Defaults to `NoDefault`.
+    """  # noqa: W505
+    record(
+        msg,
+        *args,
+        level=level,
+        quiet=quiet,
+        exc_info=exc_info,
+        stack_info=stack_info,
+        stacklevel=stacklevel,
+        extra=extra,
+        logger=logger,
     )

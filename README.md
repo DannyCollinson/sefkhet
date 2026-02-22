@@ -37,20 +37,22 @@ import snaplog
 ```
 
 
-### `log`
+### `record`/`rec`
 
 After import, you can immediately start logging with the default configuration using
 
 ```py3
-snaplog.log("I <3 snaplog!")
+snaplog.record("I <3 snaplog!")
+# or
+snaplog.rec("I <3 snaplog!")
 ```
 
-Or, if you only need the `log` function, you can do
+Or, if you only need the `record`/`rec` function, you can do
 
 ```py3
-from snaplog import log
+from snaplog import record
 
-log("I <3 snaplog!")
+record("I <3 snaplog!")
 ```
 
 
@@ -60,7 +62,10 @@ You can also use the `SnapLogger` class as follows:
 
 ```py3
 logger = snaplog.SnapLogger()
-logger.log("I <3 snaplog!")
+# then
+logger.record("I <3 snaplog!")
+# or
+logger.rec("I <3 snaplog!")
 ```
 
 
@@ -79,4 +84,4 @@ If you have questions that are still unanswered or run into any issues while usi
 
 
 ## Thanks for checking out `snaplog`!
-##
+###

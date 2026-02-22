@@ -4,12 +4,12 @@ Logging for Python in a snap.
 The `snaplog` package aims to enable one-step configuration of the
 built-in `logging` package, making logging a snap.
 
-The main utilities are the `log` function and `SnapLogger` class.
-Getting started is as easy as importing and calling `log`:
+The main utilities are the `record`/`rec` function and `SnapLogger` class.
+Getting started is as easy as importing and calling `record`:
 ```
-from snaplog import log
+from snaplog import record
 
-log("I <3 snaplog!")
+record("I <3 snaplog!")
 ```
 
 You can also use the `SnapLogger` class for more fine-grained control:
@@ -34,7 +34,7 @@ from snaplog._functional import (
     get_logger,
 )
 from snaplog._object_oriented import SnapLogger
-from snaplog._one_step import configure_default_logger, log
+from snaplog._one_step import configure_default_logger, log, rec, record
 
 # Make version number available
 from snaplog._version import __version__
@@ -59,4 +59,6 @@ __all__ = [  # noqa: RUF022
     "get_log_levels",
     "get_logger",
     "log",
+    "rec",
+    "record",
 ]
