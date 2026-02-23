@@ -6,7 +6,7 @@ from typing import cast
 
 import snaplog._one_step as _one_step_module
 from snaplog._color import ColorFormatter
-from snaplog._one_step import configure_default_logger, log
+from snaplog._one_step import configure_default_logger, log, rec, record
 
 
 class TestConfigureDefaultLogger:
@@ -99,20 +99,20 @@ class TestConfigureDefaultLogger:
 
 
 class TestLog:
-    """Tests for `log`."""
+    """Tests for `log` (standard `logging.Logger.log` API)."""
 
     @staticmethod
     def test_logger_nodefault_creates_default() -> None:
         """First call with no logger creates the default logger."""
-        log("msg")
+        log("debug", "msg")
         assert _one_step_module._default_logger is not None
 
     @staticmethod
     def test_logger_nodefault_reuses_default() -> None:
         """Subsequent calls reuse the same default logger."""
-        log("first")
+        log("debug", "first")
         first_logger = _one_step_module._default_logger
-        log("second")
+        log("debug", "second")
         assert _one_step_module._default_logger is first_logger
 
     @staticmethod
@@ -127,7 +127,7 @@ class TestLog:
         handler.setFormatter(logging.Formatter("%(message)s"))
         explicit.addHandler(handler)
 
-        log("explicit msg", logger=explicit)
+        log("debug", "explicit msg", logger=explicit)
 
         assert "explicit msg" in stream.getvalue()
 
@@ -138,7 +138,9 @@ class TestLog:
         configure_default_logger(spec=...) is called.
         """
         assert _one_step_module._default_logger is None
-        _one_step_module.log("spec msg", logger="test_os_spec_no_default")
+        _one_step_module.log(
+            "debug", "spec msg", logger="test_os_spec_no_default"
+        )
         # MyPy cannot track that configure_default_logger assigns
         # a non-None value to the module-level _default_logger,
         # so cast it to logging.Logger for the type checker.
@@ -154,7 +156,73 @@ class TestLog:
         configure_default_logger(name="existing_default")
         existing = _one_step_module._default_logger
 
-        log("separate msg", logger="null")
+        log("debug", "separate msg", logger="null")
+
+        # Default logger is unchanged
+        assert _one_step_module._default_logger is existing
+
+    @staticmethod
+    def test_int_level() -> None:
+        """An integer level is accepted without error."""
+        log(logging.WARNING, "int level msg")
+
+
+class TestRecord:
+    """Tests for `record` (snap-style API)."""
+
+    @staticmethod
+    def test_creates_default_logger() -> None:
+        """First call creates the default logger."""
+        record("msg")
+        assert _one_step_module._default_logger is not None
+
+    @staticmethod
+    def test_reuses_default_logger() -> None:
+        """Subsequent calls reuse the same default logger."""
+        record("first")
+        first_logger = _one_step_module._default_logger
+        record("second")
+        assert _one_step_module._default_logger is first_logger
+
+    @staticmethod
+    def test_explicit_logger_instance() -> None:
+        """Passing a Logger instance uses that logger directly."""
+        stream = io.StringIO()
+        explicit = logging.getLogger("test_os_rec_explicit_inst")
+        explicit.setLevel(logging.DEBUG)
+        handler: logging.StreamHandler[io.StringIO] = logging.StreamHandler(
+            stream
+        )
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        explicit.addHandler(handler)
+
+        record("explicit msg", logger=explicit)
+
+        assert "explicit msg" in stream.getvalue()
+
+    @staticmethod
+    def test_spec_with_no_default_logger() -> None:
+        """
+        When no default logger exists and a spec is passed,
+        configure_default_logger(spec=...) is called.
+        """
+        assert _one_step_module._default_logger is None
+        _one_step_module.record(
+            "spec msg", logger="test_os_spec_r"
+        )
+        logger = cast("logging.Logger", _one_step_module._default_logger)
+        assert logger.name == "test_os_spec_r"
+
+    @staticmethod
+    def test_spec_with_existing_default_logger() -> None:
+        """
+        When a default logger already exists and a spec is passed,
+        a separate logger is created and the default is unchanged.
+        """
+        configure_default_logger(name="existing_default_r")
+        existing = _one_step_module._default_logger
+
+        record("separate msg", logger="null")
 
         # Default logger is unchanged
         assert _one_step_module._default_logger is existing
@@ -162,12 +230,21 @@ class TestLog:
     @staticmethod
     def test_quiet_mode() -> None:
         """quiet=True logs at DEBUG without error."""
-        log("quiet msg", level="critical", quiet=True)
+        record("quiet msg", level="critical", quiet=True)
 
     @staticmethod
-    def test_int_level() -> None:
-        """An integer level is accepted without error."""
-        log("int level msg", level=logging.WARNING)
+    def test_explicit_level() -> None:
+        """An explicit level kwarg is accepted without error."""
+        record("info msg", level="info")
+
+
+class TestRec:  # pylint: disable=too-few-public-methods
+    """Tests for `rec` (alias for `record`)."""
+
+    @staticmethod
+    def test_rec_is_alias() -> None:
+        """rec() delegates to record() without error."""
+        rec("msg")
 
 
 class TestConfigureDefaultLoggerColor:

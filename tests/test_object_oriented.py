@@ -196,41 +196,77 @@ class TestSnapLoggerAddFilters:
 
 
 class TestSnapLoggerLog:
-    """Tests for `SnapLogger.log`."""
+    """Tests for `SnapLogger.log` (standard `logging` API)."""
 
     @staticmethod
-    def test_default_level_debug(string_io_stream: io.StringIO) -> None:
-        """log() without level defaults to debug."""
+    def test_int_level(string_io_stream: io.StringIO) -> None:
+        """log(int_level, msg) logs the message."""
         snap = SnapLogger(
-            name="test_oo_log_debug",
+            name="test_oo_log_int",
             level=logging.DEBUG,
-            # Pass tuple spec so get_handler sets level=DEBUG on handler
             handlers=(
                 logging.StreamHandler(string_io_stream),
                 _HandlerKwargs({"level": logging.DEBUG}),
             ),
             formatter="%(message)s",
         )
-        snap.log("hello debug")
+        snap.log(logging.DEBUG, "hello debug")
+        assert "hello debug" in string_io_stream.getvalue()
+
+    @staticmethod
+    def test_str_level(string_io_stream: io.StringIO) -> None:
+        """log(str_level, msg) logs the message."""
+        snap = SnapLogger(
+            name="test_oo_log_str",
+            level=logging.DEBUG,
+            handlers=(
+                logging.StreamHandler(string_io_stream),
+                _HandlerKwargs({"level": logging.DEBUG}),
+            ),
+            formatter="%(message)s",
+        )
+        snap.log("info", "hello info")
+        assert "hello info" in string_io_stream.getvalue()
+
+
+class TestSnapLoggerRecord:
+    """Tests for `SnapLogger.record` (snap-style API)."""
+
+    @staticmethod
+    def test_default_level_debug(string_io_stream: io.StringIO) -> None:
+        """record() without level defaults to debug."""
+        snap = SnapLogger(
+            name="test_oo_rec_debug",
+            level=logging.DEBUG,
+            handlers=(
+                logging.StreamHandler(string_io_stream),
+                _HandlerKwargs({"level": logging.DEBUG}),
+            ),
+            formatter="%(message)s",
+        )
+        snap.record("hello debug")
         assert "hello debug" in string_io_stream.getvalue()
 
     @staticmethod
     def test_explicit_level(string_io_stream: io.StringIO) -> None:
-        """log() with an explicit level logs at that level."""
+        """record() with an explicit level logs at that level."""
         snap = SnapLogger(
-            name="test_oo_log_info",
+            name="test_oo_rec_info",
             level=logging.DEBUG,
-            handlers=logging.StreamHandler(string_io_stream),
+            handlers=(
+                logging.StreamHandler(string_io_stream),
+                _HandlerKwargs({"level": logging.DEBUG}),
+            ),
             formatter="%(message)s",
         )
-        snap.log("hello info", level="info")
+        snap.record("hello info", level="info")
         assert "hello info" in string_io_stream.getvalue()
 
     @staticmethod
     def test_quiet_overrides_level(string_io_stream: io.StringIO) -> None:
         """quiet=True logs at DEBUG regardless of level arg."""
         snap = SnapLogger(
-            name="test_oo_log_quiet",
+            name="test_oo_rec_quiet",
             level=logging.DEBUG,
             handlers=(
                 logging.StreamHandler(string_io_stream),
@@ -238,8 +274,26 @@ class TestSnapLoggerLog:
             ),
             formatter="%(message)s",
         )
-        snap.log("quiet msg", level="critical", quiet=True)
+        snap.record("quiet msg", level="critical", quiet=True)
         assert "quiet msg" in string_io_stream.getvalue()
+
+
+class TestSnapLoggerRec:  # pylint: disable=too-few-public-methods
+    """Tests for `SnapLogger.rec` (alias for `record`)."""
+
+    @staticmethod
+    def test_rec_is_alias(string_io_stream: io.StringIO) -> None:
+        """rec() delegates to record() without error."""
+        snap = SnapLogger(
+            name="test_oo_rec_alias",
+            level=logging.DEBUG,
+            handlers=(
+                logging.StreamHandler(string_io_stream),
+                _HandlerKwargs({"level": logging.DEBUG}),
+            ),
+            formatter="%(message)s",
+        )
+        snap.rec("msg")
 
 
 class TestSnapLoggerLoggingMethods:

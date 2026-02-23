@@ -4,7 +4,9 @@ Logging for Python in a snap.
 The `snaplog` package aims to enable one-step configuration of the
 built-in `logging` package, making logging a snap.
 
-The main utilities are the `record`/`rec` function and `SnapLogger` class.
+The main utilities are the `record`/`rec` function
+and the `SnapLogger` class.
+
 Getting started is as easy as importing and calling `record`:
 ```
 from snaplog import record
