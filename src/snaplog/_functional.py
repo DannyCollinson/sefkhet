@@ -19,7 +19,6 @@ if _TYPE_CHECKING:  # pragma: no cover
         _FormatterSpec,
         _HandlerSpec,
         _HandlerType,
-        _LoggerKwargs,
         _LoggerSpec,
         _NoDefaultType,
         _StrOrPathLike,
@@ -467,15 +466,17 @@ def _maybe_create_handler(  # noqa: PLR0913, C901
         filename = Path(os.fsdecode(core)).resolve()
         match handler_type:
             case "watched_file":
-                handler = logging.handlers.WatchedFileHandler(  # pylint: disable=R0204
-                    filename=filename,
-                    mode=mode,
-                    encoding=encoding,
-                    delay=delay,
-                    errors=errors,
+                handler = (  # pylint: disable=redefined-variable-type
+                    logging.handlers.WatchedFileHandler(
+                        filename=filename,
+                        mode=mode,
+                        encoding=encoding,
+                        delay=delay,
+                        errors=errors,
+                    )
                 )
             case "rotating_file":
-                handler = logging.handlers.RotatingFileHandler(  # pylint: disable=R0204
+                handler = logging.handlers.RotatingFileHandler(
                     filename=filename,
                     mode=mode,
                     maxBytes=max_bytes,
@@ -500,9 +501,9 @@ def _maybe_create_handler(  # noqa: PLR0913, C901
                     timed_handler.namer = namer
                 if rotator is not None:
                     timed_handler.rotator = rotator
-                handler = timed_handler  # pylint: disable=R0204
+                handler = timed_handler
             case _:  # "file"
-                handler = _logging.FileHandler(  # pylint: disable=R0204
+                handler = _logging.FileHandler(
                     filename=filename,
                     mode=mode,
                     encoding=encoding,
@@ -1122,7 +1123,7 @@ def get_logger_from_spec(spec: "_LoggerSpec") -> "logging.Logger":
     Returns:
         logging.Logger: The specified logger
     """
-    from snaplog._typing import _NoDefaultType
+    from snaplog._typing import _LoggerKwargs, _NoDefaultType
 
     # Handle case of name only
     if spec is None or isinstance(spec, str):

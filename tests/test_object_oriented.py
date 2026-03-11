@@ -541,7 +541,7 @@ class TestSnapLoggerDelegateMethods:
         assert snap.level == snap.logger.level
 
 
-class TestSnapLoggerColor:  # pylint: disable=too-few-public-methods
+class TestSnapLoggerColor:
     """Tests for the `color` parameter of `SnapLogger.__init__`."""
 
     @staticmethod
