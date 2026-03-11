@@ -15,13 +15,17 @@ class TestSnapLoggerInit:
 
     @staticmethod
     def test_auto_name_nodefault() -> None:
-        """NoDefault name produces 'log0' when counter is reset to 0."""
+        """
+        _NoDefault name produces 'log0' when counter is reset to 0.
+        """  # noqa: D200
         snap = SnapLogger()
         assert snap.name == "log0"
 
     @staticmethod
     def test_auto_name_counter_increments() -> None:
-        """Each NoDefault-named instance gets the next counter value."""
+        """
+        Each _NoDefault-named instance gets the next counter value.
+        """  # noqa: D200
         snap0 = SnapLogger()
         snap1 = SnapLogger()
         assert snap0.name == "log0"
@@ -54,7 +58,7 @@ class TestSnapLoggerInit:
     @staticmethod
     def test_formatter_nodefault_is_none() -> None:
         """
-        formatter=NoDefault (default) leaves self.formatter as None.
+        formatter=_NoDefault (default) leaves self.formatter as None.
         """  # noqa: D200
         snap = SnapLogger(name="test_oo_fmt_none")
         assert snap.formatter is None

@@ -26,7 +26,7 @@ class _NoDefaultType: ...  # pylint: disable=too-few-public-methods  # pragma: n
 
 
 # Define sentinel for having no default value
-NoDefault = _NoDefaultType()
+_NoDefault = _NoDefaultType()
 
 # Define types for info in logging calls
 type _SysExcInfoType = (

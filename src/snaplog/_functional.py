@@ -3,10 +3,10 @@
 import logging as _logging
 from typing import TYPE_CHECKING as _TYPE_CHECKING
 
-from snaplog._typing import NoDefault as _NoDefault
+from snaplog._typing import _NoDefault
 
 
-if _TYPE_CHECKING:
+if _TYPE_CHECKING:  # pragma: no cover
     import datetime
     import logging
     from collections.abc import Callable, Mapping, Sequence
@@ -753,8 +753,8 @@ def get_handler(  # noqa: PLR0913
             is `True` and otherwise the original handler is used; and if
             a `dict`, it must contain entries for all desired
             non-default arguments to `snaplog.get_formatter`. If
-            `NoDefault`, then no formatter is attached to the handler.
-            Defaults to `NoDefault`.
+            `_NoDefault`, then no formatter is attached to the handler.
+            Defaults to `_NoDefault`.
         filters (_FilterSpec | Sequence[_FilterSpec], optional):
             Specification of `logging.Filter`s to attach to the created
             handler. If more than one filter is specified, then they are
@@ -1055,8 +1055,8 @@ def get_logger(  # noqa: PLR0913
         formatter (_FormatterSpec | _NoDefaultType, optional):
             Specification of a `logging.Formatter` to add to all
             handlers created for the logger that do not have an
-            alternative formatter specified. If `NoDefault`, no
-            formatters are added. Defaults to `NoDefault`.
+            alternative formatter specified. If `_NoDefault`, no
+            formatters are added. Defaults to `_NoDefault`.
         filters (_FilterSpec | Sequence[_FilterSpec], optional):
             Specification of any `logging.Filter`s to add to the logger.
             Multiple filters can be specified by providing a sequence of
@@ -1066,7 +1066,7 @@ def get_logger(  # noqa: PLR0913
         color (_ColorSpec, optional): Color mode to apply to the
             formatter. Either a bare `_ColorMode` string or a
             tuple of `(_ColorMode, colormap)` for per-level color
-            overrides. When `formatter` is `NoDefault` and the
+            overrides. When `formatter` is `_NoDefault` and the
             mode is not `"off"`, a `ColorFormatter` is created.
             When `formatter` is a spec, `color` is passed through
             to `get_formatter_from_spec`. Defaults to `"level"`.

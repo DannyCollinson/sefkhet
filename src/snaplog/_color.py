@@ -4,7 +4,7 @@ import logging as _logging
 from typing import TYPE_CHECKING as _TYPE_CHECKING
 
 
-if _TYPE_CHECKING:
+if _TYPE_CHECKING:  # pragma: no cover
     import logging
     from collections.abc import Callable, Mapping
     from typing import Any

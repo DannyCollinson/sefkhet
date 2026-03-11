@@ -90,7 +90,7 @@ class TestConfigureDefaultLogger:
     def test_spec_ignored_when_other_arg_provided() -> None:
         """
         When name= is also given, the spec= condition is False
-        (not all params are NoDefault) and spec is ignored.
+        (not all params are _NoDefault) and spec is ignored.
         """
         configure_default_logger(name="explicit_name", spec="ignored_spec")
         logger = _one_step_module._default_logger

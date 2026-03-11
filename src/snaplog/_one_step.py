@@ -4,10 +4,10 @@ import logging as _logging
 import threading as _threading
 from typing import TYPE_CHECKING as _TYPE_CHECKING
 
-from snaplog._typing import NoDefault as _NoDefault
+from snaplog._typing import _NoDefault
 
 
-if _TYPE_CHECKING:
+if _TYPE_CHECKING:  # pragma: no cover
     import logging
     from collections.abc import Mapping, Sequence
     from typing import Any
@@ -51,11 +51,11 @@ def configure_default_logger(  # noqa: PLR0913
 
     Args:
         name (str | _NoDefaultType|  None, optional): Name to assign to
-            default logger. If `NoDefault`, uses `"snaplogger"`.
-            Defaults to `NoDefault`.
+            default logger. If `_NoDefault`, uses `"snaplogger"`.
+            Defaults to `_NoDefault`.
         level (int | _NoDefaultType, optional): Logging level to assign
-            to default logger and/or handler. If `NoDefault`, uses `20`.
-            Defaults to `NoDefault`.
+            to default logger and/or handler. If `_NoDefault`, uses `20`.
+            Defaults to `_NoDefault`.
         handlers (_HandlerSpec | Sequence[_HandlerSpec] | _NoDefaultType, optional):
             Specification of any `logging.Handler`s to add to the
             default logger. Multiple handlers can be specified by
@@ -64,26 +64,26 @@ def configure_default_logger(  # noqa: PLR0913
             `snaplog.get_handler` interface, except if using keyword
             arguments, they must be wrapped into a `dict` and provided
             as the second item of a `tuple`, where the first item is the
-            argument for `core`. If `NoDefault`, then
+            argument for `core`. If `_NoDefault`, then
             `snaplog.get_handler` is called and its result used as
-            `handlers`. Defaults to `NoDefault`.
+            `handlers`. Defaults to `_NoDefault`.
         formatter (_FormatterSpec | _NoDefaultType, optional):
             Specification of a `logging.Formatter` to add to all
             handlers created for the logger that do not have an
-            alternative formatter specified. If `NoDefault`, then
+            alternative formatter specified. If `_NoDefault`, then
             `snaplog.get_formatter` is called and its result used as
-            `formatter`. Defaults to `NoDefault`.
+            `formatter`. Defaults to `_NoDefault`.
         filters (_FilterSpec | Sequence[_FilterSpec] | _NoDefaultType, optional):
             Specification of any `logging.Filter`s to add to the logger.
             Multiple filters can be specified by providing a sequence of
             filter specifications. Specification of each filter is the
             same as when using the `snaplog.get_handler` inteface. If
-            `NoDefault`, then `snaplog.get_filter` is called and its
-            result used as `filters`. Defaults to `NoDefault`.
+            `_NoDefault`, then `snaplog.get_filter` is called and its
+            result used as `filters`. Defaults to `_NoDefault`.
         spec (_LoggerSpec | _NoDefaultType, optional): If not
-            `NoDefault` and all other arguments are `NoDefault`, then
+            `_NoDefault` and all other arguments are `_NoDefault`, then
             the logger is created according to `spec`; otherwise, this
-            parameter is ignored. Defaults to `NoDefault`.
+            parameter is ignored. Defaults to `_NoDefault`.
         force (bool, optional): If `True`, the default logger will be
             reconfigured if it has already been configured; otherwise,
             the default logger will not be reconfigured. Ignored if the
@@ -191,13 +191,13 @@ def log(  # noqa: PLR0913
             time of calling, the default logger will be instantiated
             using `logger` as the `spec` argument to
             `configure_default_logger`, which uses the default
-            configuration if `logger` is `NoDefault`; if `NoDefault`,
+            configuration if `logger` is `_NoDefault`; if `_NoDefault`,
             the default logger will be used, and it will be instantiated
             with the defaults if it has not been already; and if the
             default logger has already been instantiated but `logger`
             is a `_LoggerSpec`, a separate logger will be created
             according to the specification and used to log the message.
-            Defaults to `NoDefault`.
+            Defaults to `_NoDefault`.
     """  # noqa: W505
     from snaplog._functional import _parse_log_level, get_logger_from_spec
     from snaplog._typing import _NoDefaultType
@@ -276,13 +276,13 @@ def record(  # noqa: PLR0913
             time of calling, the default logger will be instantiated
             using `logger` as the `spec` argument to
             `configure_default_logger`, which uses the default
-            configuration if `logger` is `NoDefault`; if `NoDefault`,
+            configuration if `logger` is `_NoDefault`; if `_NoDefault`,
             the default logger will be used, and it will be instantiated
             with the defaults if it has not been already; and if the
             default logger has already been instantiated but `logger`
             is a `_LoggerSpec`, a separate logger will be created
             according to the specification and used to log the message.
-            Defaults to `NoDefault`.
+            Defaults to `_NoDefault`.
         exc_info (_ExcInfoType, optional): See `logging.Logger`'s
             method `log` for details. Defaults to `None`.
         stack_info (bool, optional): See `logging.Logger`'s
@@ -362,13 +362,13 @@ def rec(  # noqa: PLR0913
             time of calling, the default logger will be instantiated
             using `logger` as the `spec` argument to
             `configure_default_logger`, which uses the default
-            configuration if `logger` is `NoDefault`; if `NoDefault`,
+            configuration if `logger` is `_NoDefault`; if `_NoDefault`,
             the default logger will be used, and it will be instantiated
             with the defaults if it has not been already; and if the
             default logger has already been instantiated but `logger`
             is a `_LoggerSpec`, a separate logger will be created
             according to the specification and used to log the message.
-            Defaults to `NoDefault`.
+            Defaults to `_NoDefault`.
     """  # noqa: W505
     record(
         msg,

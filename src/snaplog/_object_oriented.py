@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING as _TYPE_CHECKING
 from typing import ParamSpec as _ParamSpec
 from typing import TypeVar as _TypeVar
 
-from snaplog._typing import NoDefault as _NoDefault
+from snaplog._typing import _NoDefault
 
 
-if _TYPE_CHECKING:
+if _TYPE_CHECKING:  # pragma: no cover
     import logging
     from collections.abc import Callable, Mapping, Sequence
     from typing import Any, Concatenate
@@ -74,9 +74,9 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         Args:
             name (str | _NoDefaultType | None, optional): Name to apply
                 to the logger. If `None`, uses the root logger. If
-                `NoDefault`, uses `"logX"`, where `X` is the cumulative
+                `_NoDefault`, uses `"logX"`, where `X` is the cumulative
                 number of `SnapLogger` instances created with a default
-                name. Defaults to `NoDefault`.
+                name. Defaults to `_NoDefault`.
             level (str | int, optional): Logging level to apply to the
                 logger. Valid log levels include a log level string from
                 the options provided by `snaplog.get_log_levels()`, the
@@ -96,8 +96,8 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             formatter (_FormatterSpec | _NoDefaultType, optional):
                 Specification of a `logging.Formatter` to add to all
                 handlers created for the logger that do not have an
-                alternative formatter specified. If `NoDefault`, no
-                formatters are added. Defaults to `NoDefault`.
+                alternative formatter specified. If `_NoDefault`, no
+                formatters are added. Defaults to `_NoDefault`.
             filters (_FilterSpec | Sequence[_FilterSpec], optional):
                 Specification of any `logging.Filter`s to add to the
                 logger. Multiple filters can be specified by providing a

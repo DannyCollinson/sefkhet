@@ -31,9 +31,9 @@ from snaplog._functional import (
     set_formatter_for_logger,
 )
 from snaplog._typing import (
-    NoDefault,
     _HandlerKwargs,
     _LoggerKwargs,
+    _NoDefault,
     _RotatingFileHandlerKwargs,
     _SupportsFilter,
     _TimedRotatingFileHandlerKwargs,
@@ -833,10 +833,10 @@ class TestGetHandler:
     @staticmethod
     def test_formatter_not_set_when_nodefault() -> None:
         """
-        Keyword argument formatter=NoDefault
+        Keyword argument formatter=_NoDefault
         leaves handler formatter as None.
         """
-        handler = get_handler(core="null", formatter=NoDefault)
+        handler = get_handler(core="null", formatter=_NoDefault)
         assert handler.formatter is None
 
     @staticmethod
@@ -1258,7 +1258,7 @@ class TestGetLoggerFromSpec:
 
     @staticmethod
     def test_tuple_int_dict() -> None:
-        """(int, dict) covers the name=NoDefault branch."""
+        """(int, dict) covers the name=_NoDefault branch."""
         result = get_logger_from_spec(
             (logging.DEBUG, _LoggerKwargs({"handlers": ()}))
         )
@@ -1352,7 +1352,7 @@ class TestGetLoggerColor:
     @staticmethod
     def test_color_full_with_nodefault_formatter_creates_formatter() -> None:
         """
-        color='full' + formatter=NoDefault auto-creates ColorFormatter.
+        color='full' + formatter=_NoDefault auto-creates ColorFormatter.
         """  # noqa: D200
         logger = get_logger(
             name="test_gl_color_full", handlers="null", color="full"
@@ -1375,7 +1375,7 @@ class TestGetLoggerColor:
     @staticmethod
     def test_color_off_with_nodefault_formatter_no_formatter() -> None:
         """
-        color='off' + formatter=NoDefault: handlers have no formatter.
+        color='off' + formatter=_NoDefault: handlers have no formatter.
         """  # noqa: D200
         logger = get_logger(
             name="test_gl_color_off", handlers="null", color="off"
