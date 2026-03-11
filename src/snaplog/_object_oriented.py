@@ -226,9 +226,9 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
     @_update_logger_attributes_hook
     def set_formatter(  # noqa: PLR0913
         self,
-        fmt: str
-        | _logging.Formatter
-        | None = "%(asctime)s | %(levelname)s | %(message)s",
+        fmt: (
+            "str | logging.Formatter | None"
+        ) = "%(asctime)s | %(levelname)s | %(message)s",
         *,
         datefmt: str | None = None,
         style: "_FormatStyle" = "%",

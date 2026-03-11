@@ -136,9 +136,9 @@ def _parse_log_level(level: str | int, *, quiet: bool = False) -> int:
 
 
 def get_formatter(  # noqa: PLR0913
-    fmt: str
-    | _logging.Formatter
-    | None = "%(asctime)s | %(levelname)s | %(message)s",
+    fmt: (
+        "str | logging.Formatter | None"
+    ) = "%(asctime)s | %(levelname)s | %(message)s",
     *,
     datefmt: str | None = None,
     style: "_FormatStyle" = "%",
@@ -520,9 +520,9 @@ def _maybe_create_handler(  # noqa: PLR0913, C901
 
 def set_formatter_for_handler(  # noqa: PLR0913
     handler: "logging.Handler",
-    fmt: str
-    | _logging.Formatter
-    | None = "%(asctime)s | %(levelname)s | %(message)s",
+    fmt: (
+        "str | logging.Formatter | None"
+    ) = "%(asctime)s | %(levelname)s | %(message)s",
     *,
     datefmt: str | None = None,
     style: "_FormatStyle" = "%",
@@ -947,9 +947,9 @@ def add_handlers_to_logger(
 
 def set_formatter_for_logger(  # noqa: PLR0913
     logger: "logging.Logger",
-    fmt: str
-    | _logging.Formatter
-    | None = "%(asctime)s | %(levelname)s | %(message)s",
+    fmt: (
+        "str | logging.Formatter | None"
+    ) = "%(asctime)s | %(levelname)s | %(message)s",
     *,
     datefmt: str | None = None,
     style: "_FormatStyle" = "%",
