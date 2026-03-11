@@ -1,17 +1,18 @@
 """Color formatting utilities for `snaplog`."""
 
-import logging
-from collections.abc import Callable, Mapping
-from typing import Any
-
-from snaplog._typing import _ColorMode, _ColorSpec, _FormatStyle
+import logging as _logging
+from typing import TYPE_CHECKING as _TYPE_CHECKING
 
 
-########################################################################
-# ANSI constants
-########################################################################
+if _TYPE_CHECKING:
+    import logging
+    from collections.abc import Callable, Mapping
+    from typing import Any
+
+    from snaplog._typing import _ColorMode, _ColorSpec, _FormatStyle
 
 
+# Define ANSI color strings
 _ANSI_RESET = "\033[0m"
 _PINK = "\033[38;5;212m"
 _BLUE = "\033[94m"
@@ -23,11 +24,7 @@ _RED = "\033[91m"
 _MAGENTA = "\033[35m"
 
 
-########################################################################
-# Levelname formatting
-########################################################################
-
-
+# Define width to pad level names to
 _LEVELNAME_WIDTH = 8
 
 
@@ -35,11 +32,6 @@ def _get_display_levelname(levelname: str) -> str:
     if levelname.startswith("Level ") and levelname[6:].isdigit():
         levelname = "LEVEL_" + levelname[6:]
     return levelname.ljust(_LEVELNAME_WIDTH)
-
-
-########################################################################
-# Public utilities
-########################################################################
 
 
 def get_level_color(level: int) -> str:  # noqa: PLR0911
@@ -81,8 +73,8 @@ def get_level_color(level: int) -> str:  # noqa: PLR0911
 
 
 def _parse_color_spec(
-    color: _ColorSpec,
-) -> tuple[_ColorMode, Callable[[int], str]]:
+    color: "_ColorSpec",
+) -> "tuple[_ColorMode, Callable[[int], str]]":
     """
     Parses a `_ColorSpec` into a color mode and a color function.
 
@@ -96,6 +88,8 @@ def _parse_color_spec(
             callable that maps an integer log level to an ANSI color
             escape code string
     """
+    from collections.abc import Mapping
+
     if not isinstance(color, tuple):
         return color, get_level_color
     mode, colormap = color
@@ -111,7 +105,7 @@ def _parse_color_spec(
     return mode, colormap
 
 
-class ColorFormatter(logging.Formatter):
+class ColorFormatter(_logging.Formatter):
     """
     A `logging.Formatter` subclass that applies ANSI color codes
     to log output based on the log record's level.
@@ -130,11 +124,11 @@ class ColorFormatter(logging.Formatter):
         self,
         fmt: str | None = None,
         datefmt: str | None = None,
-        style: _FormatStyle = "%",
+        style: "_FormatStyle" = "%",
         validate: bool = True,  # noqa: FBT001,FBT002
         *,
-        defaults: Mapping[str, Any] | None = None,
-        color: _ColorSpec,
+        defaults: "Mapping[str, Any] | None" = None,
+        color: "_ColorSpec",
     ) -> None:
         """
         Creates a `ColorFormatter` with the given format and color mode.
@@ -166,7 +160,7 @@ class ColorFormatter(logging.Formatter):
         )
         self._color_mode, self._color_fn = _parse_color_spec(color)
 
-    def format(self, record: logging.LogRecord) -> str:
+    def format(self, record: "logging.LogRecord") -> str:
         """
         Formats the log record with ANSI color codes applied
         according to `self._color_mode`.

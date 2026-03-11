@@ -12,9 +12,7 @@ from snaplog._object_oriented import SnapLogger
 from snaplog._typing import _SupportsFilter
 
 
-########################################################################
 # Global-state isolation (autouse)
-########################################################################
 
 
 @pytest.fixture(autouse=True)
@@ -70,9 +68,7 @@ def reset_snap_counter() -> Generator[None]:
     SnapLogger._counter = original
 
 
-########################################################################
 # Helper fixtures
-########################################################################
 
 
 @pytest.fixture

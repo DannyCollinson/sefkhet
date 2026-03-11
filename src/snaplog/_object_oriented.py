@@ -1,41 +1,38 @@
 """Object-oriented interface for `snaplog`."""
 
-import logging
-import threading
-from collections.abc import Callable, Mapping, Sequence
-from functools import wraps
-from typing import Any, Concatenate, ParamSpec, TypeVar
+import logging as _logging
+from typing import TYPE_CHECKING as _TYPE_CHECKING
+from typing import ParamSpec as _ParamSpec
+from typing import TypeVar as _TypeVar
 
-from snaplog._functional import (
-    _parse_log_level,
-    add_filters_to_target,
-    add_handlers_to_logger,
-    get_formatter,
-    get_formatter_from_spec,
-    get_logger,
-    set_formatter_for_logger,
-)
-from snaplog._typing import (
-    NoDefault,
-    _ArgsType,
-    _ColorSpec,
-    _ExcInfoType,
-    _FilterSpec,
-    _FilterType,
-    _FormatStyle,
-    _FormatterSpec,
-    _HandlerSpec,
-    _NoDefaultType,
-    _SysExcInfoType,
-)
+from snaplog._typing import NoDefault as _NoDefault
+
+
+if _TYPE_CHECKING:
+    import logging
+    from collections.abc import Callable, Mapping, Sequence
+    from typing import Any, Concatenate
+
+    from snaplog._typing import (
+        _ArgsType,
+        _ColorSpec,
+        _ExcInfoType,
+        _FilterSpec,
+        _FilterType,
+        _FormatStyle,
+        _FormatterSpec,
+        _HandlerSpec,
+        _NoDefaultType,
+        _SysExcInfoType,
+    )
 
 
 # Define generic type variables for hook
-P = ParamSpec("P")
-R = TypeVar("R")
+P = _ParamSpec("P")
+R = _TypeVar("R")
 
 
-class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
+class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
     """
     The base logger class for `snaplog`.
 
@@ -45,19 +42,21 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
     interface for compatibility.
     """
 
+    import threading
+
     # Create class attributes to make assigning default log names easier
     _lock = threading.Lock()
     _counter = 0
 
     def __init__(  # noqa: PLR0913
         self,
-        name: str | _NoDefaultType | None = NoDefault,
+        name: "str | _NoDefaultType | None" = _NoDefault,
         level: str | int = 20,
         *,
-        handlers: _HandlerSpec | Sequence[_HandlerSpec] = None,
-        formatter: _FormatterSpec | _NoDefaultType = NoDefault,
-        filters: _FilterSpec | Sequence[_FilterSpec] = (),
-        color: _ColorSpec = "level",
+        handlers: "_HandlerSpec | Sequence[_HandlerSpec]" = None,
+        formatter: "_FormatterSpec | _NoDefaultType" = _NoDefault,
+        filters: "_FilterSpec | Sequence[_FilterSpec]" = (),
+        color: "_ColorSpec" = "level",
     ) -> None:
         """
         The base logger class for `snaplog`.
@@ -112,6 +111,9 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
                 Passed through to `get_logger`. If mode is not `"off"`,
                 a `ColorFormatter` is used. Defaults to `"level"`.
         """
+        from snaplog._functional import get_formatter_from_spec, get_logger
+        from snaplog._typing import _NoDefaultType
+
         # Call super init and create root logger
         super().__init__("root", level=0)
 
@@ -151,8 +153,8 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
 
     @staticmethod
     def _update_logger_attributes_hook(
-        function: Callable[Concatenate["SnapLogger", P], R],
-    ) -> Callable[Concatenate["SnapLogger", P], R]:
+        function: "Callable[Concatenate[SnapLogger, P], R]",
+    ) -> "Callable[Concatenate[SnapLogger, P], R]":
         """
         Update the instance attributes to reflect the logger's
         current attributes after the function `function` is run.
@@ -164,9 +166,10 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         Returns:
             Callable[Concatenate["SnapLogger", P], R]: Wrapped function
         """
+        from functools import wraps
 
         @wraps(function)
-        def wrapper(self: SnapLogger, *args: P.args, **kwargs: P.kwargs) -> R:
+        def wrapper(self: "SnapLogger", *args: P.args, **kwargs: P.kwargs) -> R:
             """
             Returns the output of running the wrapped function with the
             given arguments and updates the logger's attributes after
@@ -204,7 +207,7 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
 
     @_update_logger_attributes_hook
     def add_handlers(
-        self, handlers: _HandlerSpec | Sequence[_HandlerSpec]
+        self, handlers: "_HandlerSpec | Sequence[_HandlerSpec]"
     ) -> None:
         """
         Adds the `logging.Handlers` specified
@@ -216,19 +219,21 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             handlers (_HandlerSpec | Sequence[_HandlerSpec]):
                 Specification of `logging.Handlers` to add to logger
         """
+        from snaplog._functional import add_handlers_to_logger
+
         add_handlers_to_logger(handlers=handlers, logger=self.logger)
 
     @_update_logger_attributes_hook
     def set_formatter(  # noqa: PLR0913
         self,
         fmt: str
-        | logging.Formatter
+        | _logging.Formatter
         | None = "%(asctime)s | %(levelname)s | %(message)s",
         *,
         datefmt: str | None = None,
-        style: _FormatStyle = "%",
+        style: "_FormatStyle" = "%",
         validate: bool = True,
-        defaults: Mapping[str, Any] | None = None,
+        defaults: "Mapping[str, Any] | None" = None,
         copy: bool = False,
         force: bool = False,
     ) -> None:
@@ -275,6 +280,8 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
                 otherwise, only handlers without a formatter already set
                 will have their formatter set. Defaults to `False`.
         """
+        from snaplog._functional import get_formatter, set_formatter_for_logger
+
         # Set new formatter for logger
         self.formatter = get_formatter(
             fmt=fmt,
@@ -291,7 +298,9 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         )
 
     @_update_logger_attributes_hook
-    def add_filters(self, filters: _FilterSpec | Sequence[_FilterSpec]) -> None:
+    def add_filters(
+        self, filters: "_FilterSpec | Sequence[_FilterSpec]"
+    ) -> None:
         """
         Adds the `logging.Filters` specified
         by `filters` to the logger.
@@ -302,21 +311,21 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             filters (_FilterSpec | Sequence[_FilterSpec]):
                 Specification of `logging.Filters` to add to logger
         """
+        from snaplog._functional import add_filters_to_target
+
         add_filters_to_target(filters=filters, target=self.logger)
 
-    ####################################################################
     # Main logging methods
-    ####################################################################
 
     def log(  # noqa: PLR0913  # pylint: disable=arguments-differ
         self,
         level: str | int,
         msg: object,
-        *args: Any,
-        exc_info: _ExcInfoType = None,
+        *args: "Any",
+        exc_info: "_ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: Mapping[str, object] | None = None,
+        extra: "Mapping[str, object] | None" = None,
     ) -> None:
         """
         Log a message using the standard `logging` API
@@ -342,6 +351,8 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
                 `logging.Logger`'s method `log` for details.
                 Defaults to `None`.
         """
+        from snaplog._functional import _parse_log_level
+
         # Determine level
         level = _parse_log_level(level=level, quiet=False)
         # Log message
@@ -358,13 +369,13 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
     def record(  # noqa: PLR0913
         self,
         msg: object,
-        *args: Any,
+        *args: "Any",
         level: str | int = "debug",
         quiet: bool = False,
-        exc_info: _ExcInfoType = None,
+        exc_info: "_ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: Mapping[str, object] | None = None,
+        extra: "Mapping[str, object] | None" = None,
     ) -> None:
         """
         Log/record a message using the `snaplog` API.
@@ -400,6 +411,8 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
                 `logging.Logger`'s method `log` for details.
                 Defaults to `None`.
         """
+        from snaplog._functional import _parse_log_level
+
         # Determine level
         level = _parse_log_level(level=level, quiet=quiet)
         # Delegate to log method
@@ -416,13 +429,13 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
     def rec(  # noqa: PLR0913
         self,
         msg: object,
-        *args: Any,
+        *args: "Any",
         level: str | int = "debug",
         quiet: bool = False,
-        exc_info: _ExcInfoType = None,
+        exc_info: "_ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: Mapping[str, object] | None = None,
+        extra: "Mapping[str, object] | None" = None,
     ) -> None:
         """
         Log/record a message using the `snaplog` API. Alias of `record`.
@@ -469,22 +482,20 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             extra=extra,
         )
 
-    ####################################################################
     # Replicate logging.Logger interface
-    ####################################################################
 
     def critical(
         self,
         msg: object,
         *args: object,
-        exc_info: _ExcInfoType = None,
+        exc_info: "_ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: Mapping[str, object] | None = None,
-        **kwargs: Any,
+        extra: "Mapping[str, object] | None" = None,
+        **kwargs: "Any",
     ) -> None:
         self.logger.log(
-            logging.CRITICAL,
+            _logging.CRITICAL,
             msg,
             *args,
             exc_info=exc_info,
@@ -498,14 +509,14 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: _ExcInfoType = None,
+        exc_info: "_ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: Mapping[str, object] | None = None,
-        **kwargs: Any,
+        extra: "Mapping[str, object] | None" = None,
+        **kwargs: "Any",
     ) -> None:
         self.logger.log(
-            logging.DEBUG,
+            _logging.DEBUG,
             msg,
             *args,
             exc_info=exc_info,
@@ -519,14 +530,14 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: _ExcInfoType = None,
+        exc_info: "_ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: Mapping[str, object] | None = None,
-        **kwargs: Any,
+        extra: "Mapping[str, object] | None" = None,
+        **kwargs: "Any",
     ) -> None:
         self.logger.log(
-            logging.ERROR,
+            _logging.ERROR,
             msg,
             *args,
             exc_info=exc_info,
@@ -540,14 +551,14 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: _ExcInfoType = None,
+        exc_info: "_ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: Mapping[str, object] | None = None,
-        **kwargs: Any,
+        extra: "Mapping[str, object] | None" = None,
+        **kwargs: "Any",
     ) -> None:
         self.logger.log(
-            logging.ERROR,
+            _logging.ERROR,
             msg,
             *args,
             exc_info=exc_info,
@@ -561,14 +572,14 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: _ExcInfoType = None,
+        exc_info: "_ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: Mapping[str, object] | None = None,
-        **kwargs: Any,
+        extra: "Mapping[str, object] | None" = None,
+        **kwargs: "Any",
     ) -> None:
         self.logger.log(
-            logging.FATAL,
+            _logging.FATAL,
             msg,
             *args,
             exc_info=exc_info,
@@ -582,14 +593,14 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: _ExcInfoType = None,
+        exc_info: "_ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: Mapping[str, object] | None = None,
-        **kwargs: Any,
+        extra: "Mapping[str, object] | None" = None,
+        **kwargs: "Any",
     ) -> None:
         self.logger.log(
-            logging.INFO,
+            _logging.INFO,
             msg,
             *args,
             exc_info=exc_info,
@@ -603,14 +614,14 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: _ExcInfoType = None,
+        exc_info: "_ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: Mapping[str, object] | None = None,
-        **kwargs: Any,
+        extra: "Mapping[str, object] | None" = None,
+        **kwargs: "Any",
     ) -> None:
         self.logger.log(
-            logging.WARNING,
+            _logging.WARNING,
             msg,
             *args,
             exc_info=exc_info,
@@ -624,14 +635,14 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: _ExcInfoType = None,
+        exc_info: "_ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: Mapping[str, object] | None = None,
-        **kwargs: Any,
+        extra: "Mapping[str, object] | None" = None,
+        **kwargs: "Any",
     ) -> None:
         self.logger.log(
-            logging.WARNING,
+            _logging.WARNING,
             msg,
             *args,
             exc_info=exc_info,
@@ -641,33 +652,33 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             **kwargs,
         )
 
-    def filter(self, record: logging.LogRecord) -> bool | logging.LogRecord:
+    def filter(self, record: "logging.LogRecord") -> "bool | logging.LogRecord":
         return self.logger.filter(record=record)
 
-    def handle(self, record: logging.LogRecord) -> None:
+    def handle(self, record: "logging.LogRecord") -> None:
         self.logger.handle(record=record)
 
     @_update_logger_attributes_hook
-    def addFilter(self, filter: _FilterType) -> None:  # noqa: A002
+    def addFilter(self, filter: "_FilterType") -> None:  # noqa: A002
         self.add_filters(filters=filter)
 
     @_update_logger_attributes_hook
-    def addHandler(self, hdlr: logging.Handler) -> None:
+    def addHandler(self, hdlr: "logging.Handler") -> None:
         self.add_handlers(handlers=hdlr)
 
     @_update_logger_attributes_hook
-    def removeFilter(self, filter: _FilterType) -> None:  # noqa: A002
+    def removeFilter(self, filter: "_FilterType") -> None:  # noqa: A002
         self.logger.removeFilter(filter=filter)
 
     @_update_logger_attributes_hook
-    def removeHandler(self, hdlr: logging.Handler) -> None:
+    def removeHandler(self, hdlr: "logging.Handler") -> None:
         self.logger.removeHandler(hdlr=hdlr)
 
     @_update_logger_attributes_hook
     def setLevel(self, level: str | int) -> None:
         self.logger.setLevel(level=level)
 
-    def callHandlers(self, record: logging.LogRecord) -> None:
+    def callHandlers(self, record: "logging.LogRecord") -> None:
         self.logger.callHandlers(record=record)
 
     def findCaller(
@@ -679,10 +690,12 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             stack_info=stack_info, stacklevel=stacklevel
         )
 
-    def getChild(self, suffix: str) -> logging.Logger:  # type: ignore[override]
+    def getChild(  # type: ignore[override]
+        self, suffix: str
+    ) -> "logging.Logger":
         return self.logger.getChild(suffix=suffix)
 
-    def getChildren(self) -> set[logging.Logger]:
+    def getChildren(self) -> "set[logging.Logger]":
         return self.logger.getChildren()
 
     def getEffectiveLevel(self) -> int:
@@ -701,12 +714,12 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         fn: str,
         lno: int,
         msg: object,
-        args: _ArgsType,
-        exc_info: _SysExcInfoType | None,
+        args: "_ArgsType",
+        exc_info: "_SysExcInfoType | None",
         func: str | None = None,
-        extra: Mapping[str, object] | None = None,
+        extra: "Mapping[str, object] | None" = None,
         sinfo: str | None = None,
-    ) -> logging.LogRecord:
+    ) -> "logging.LogRecord":
         return self.logger.makeRecord(
             name=name,
             level=level,

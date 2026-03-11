@@ -1,77 +1,70 @@
 """Functional interface for `snaplog`."""
 
-import datetime
-import logging
-import logging.handlers
-import os
-import sys
-from collections.abc import Callable, Mapping, Sequence
-from copy import deepcopy
-from io import TextIOBase
-from pathlib import Path
-from typing import Any, TextIO
+import logging as _logging
+from typing import TYPE_CHECKING as _TYPE_CHECKING
 
-from snaplog._color import ColorFormatter
-from snaplog._typing import (
-    NoDefault,
-    _ColorSpec,
-    _FilterSpec,
-    _FormatStyle,
-    _FormatterSpec,
-    _HandlerSpec,
-    _HandlerType,
-    _LoggerKwargs,
-    _LoggerSpec,
-    _NoDefaultType,
-    _StrOrPathLike,
-    _SupportsFilter,
-    _TextIOLike,
-)
+from snaplog._typing import NoDefault as _NoDefault
 
 
-########################################################################
-# Constants and helpers
-########################################################################
+if _TYPE_CHECKING:
+    import datetime
+    import logging
+    from collections.abc import Callable, Mapping, Sequence
+    from typing import Any
+
+    from snaplog._typing import (
+        _ColorSpec,
+        _FilterSpec,
+        _FormatStyle,
+        _FormatterSpec,
+        _HandlerSpec,
+        _HandlerType,
+        _LoggerKwargs,
+        _LoggerSpec,
+        _NoDefaultType,
+        _StrOrPathLike,
+        _TextIOLike,
+    )
 
 
 # Define log level mapping for log functions
 LOG_LEVEL_STR_TO_INT: dict[str, int] = {
-    "debug": logging.DEBUG,
-    "d": logging.DEBUG,
-    "info": logging.INFO,
-    "i": logging.INFO,
-    "warning": logging.WARNING,
-    "warn": logging.WARNING,
-    "w": logging.WARNING,
-    "error": logging.ERROR,
-    "e": logging.ERROR,
-    "exception": logging.ERROR,
-    "x": logging.ERROR,
-    "critical": logging.CRITICAL,
-    "c": logging.CRITICAL,
-    "fatal": logging.FATAL,
-    "f": logging.FATAL,
-    "notset": logging.NOTSET,
-    "not_set": logging.NOTSET,
-    "n": logging.NOTSET,
-    "DEBUG": logging.DEBUG,
-    "D": logging.DEBUG,
-    "INFO": logging.INFO,
-    "I": logging.INFO,
-    "WARNING": logging.WARNING,
-    "WARN": logging.WARNING,
-    "W": logging.WARNING,
-    "ERROR": logging.ERROR,
-    "E": logging.ERROR,
-    "EXCEPTION": logging.ERROR,
-    "X": logging.ERROR,
-    "CRITICAL": logging.CRITICAL,
-    "C": logging.CRITICAL,
-    "FATAL": logging.FATAL,
-    "F": logging.FATAL,
-    "NOTSET": logging.NOTSET,
-    "NOT_SET": logging.NOTSET,
-    "N": logging.NOTSET,
+    "debug": _logging.DEBUG,
+    "d": _logging.DEBUG,
+    "info": _logging.INFO,
+    "i": _logging.INFO,
+    "warning": _logging.WARNING,
+    "warn": _logging.WARNING,
+    "w": _logging.WARNING,
+    "error": _logging.ERROR,
+    "e": _logging.ERROR,
+    "exception": _logging.ERROR,
+    "x": _logging.ERROR,
+    "critical": _logging.CRITICAL,
+    "c": _logging.CRITICAL,
+    "fatal": _logging.FATAL,
+    "f": _logging.FATAL,
+    "notset": _logging.NOTSET,
+    "not_set": _logging.NOTSET,
+    "n": _logging.NOTSET,
+    "DEBUG": _logging.DEBUG,
+    "D": _logging.DEBUG,
+    "INFO": _logging.INFO,
+    "I": _logging.INFO,
+    "WARNING": _logging.WARNING,
+    "WARN": _logging.WARNING,
+    "W": _logging.WARNING,
+    "ERROR": _logging.ERROR,
+    "E": _logging.ERROR,
+    "EXCEPTION": _logging.ERROR,
+    "X": _logging.ERROR,
+    "CRITICAL": _logging.CRITICAL,
+    "C": _logging.CRITICAL,
+    "FATAL": _logging.FATAL,
+    "F": _logging.FATAL,
+    "NOTSET": _logging.NOTSET,
+    "NOT_SET": _logging.NOTSET,
+    "N": _logging.NOTSET,
 }
 
 
@@ -88,7 +81,7 @@ def get_log_level_map() -> dict[str, int]:
     # Start with snaplog defaults
     valid_levels_map = LOG_LEVEL_STR_TO_INT
     # Add user customizations
-    valid_levels_map.update(logging.getLevelNamesMapping())
+    valid_levels_map.update(_logging.getLevelNamesMapping())
     return valid_levels_map
 
 
@@ -129,7 +122,7 @@ def _parse_log_level(level: str | int, *, quiet: bool = False) -> int:
     valid_levels_map = get_log_level_map()
 
     # Force level to debug if quiet override is true
-    level = logging.DEBUG if quiet else level
+    level = _logging.DEBUG if quiet else level
 
     # Set log level as integer if not already
     if not isinstance(level, int):
@@ -142,23 +135,18 @@ def _parse_log_level(level: str | int, *, quiet: bool = False) -> int:
     return level
 
 
-########################################################################
-# Functional-style interface
-########################################################################
-
-
 def get_formatter(  # noqa: PLR0913
     fmt: str
-    | logging.Formatter
+    | _logging.Formatter
     | None = "%(asctime)s | %(levelname)s | %(message)s",
     *,
     datefmt: str | None = None,
-    style: _FormatStyle = "%",
+    style: "_FormatStyle" = "%",
     validate: bool = True,
-    defaults: Mapping[str, Any] | None = None,
+    defaults: "Mapping[str, Any] | None" = None,
     copy: bool = False,
-    color: _ColorSpec = "level",
-) -> logging.Formatter:
+    color: "_ColorSpec" = "level",
+) -> "logging.Formatter":
     """
     Returns a `logging.Formatter` configured
     according to the provided specifications.
@@ -207,8 +195,12 @@ def get_formatter(  # noqa: PLR0913
     Returns:
         logging.Formatter: The specified `logging.Formatter`
     """
+    from copy import deepcopy
+
+    from snaplog._color import ColorFormatter
+
     # Return original or copy of existing formatter if one is passed
-    if isinstance(fmt, logging.Formatter):
+    if isinstance(fmt, _logging.Formatter):
         return deepcopy(fmt) if copy else fmt
     # Return a ColorFormatter if color mode is active
     if color != "off":
@@ -221,7 +213,7 @@ def get_formatter(  # noqa: PLR0913
             color=color,
         )
     # Otherwise create a new formatter with specified configuration
-    return logging.Formatter(
+    return _logging.Formatter(
         fmt=fmt,
         datefmt=datefmt,
         style=style,
@@ -231,8 +223,8 @@ def get_formatter(  # noqa: PLR0913
 
 
 def get_formatter_from_spec(
-    spec: _FormatterSpec, *, color: _ColorSpec = "level"
-) -> logging.Formatter:
+    spec: "_FormatterSpec", *, color: "_ColorSpec" = "level"
+) -> "logging.Formatter":
     """
     Returns a `logging.Formatter` configured using a `_FormatterSpec`.
 
@@ -256,8 +248,8 @@ def get_formatter_from_spec(
 
 
 def get_filter(
-    filt: str | logging.Filter = "", *, copy: bool = False
-) -> logging.Filter:
+    filt: "str | logging.Filter" = "", *, copy: bool = False
+) -> "logging.Filter":
     """
     Returns a `logging.Filter` configured
     according to the provided specifications.
@@ -277,14 +269,16 @@ def get_filter(
     Returns:
         logging.Filter: The specified `logging.Filter`
     """
+    from copy import deepcopy
+
     # Return copy or original if the filter one is passed
-    if isinstance(filt, logging.Filter):
+    if isinstance(filt, _logging.Filter):
         return deepcopy(filt) if copy else filt
     # Otherwise, return a fresh filter
-    return logging.Filter(filt)
+    return _logging.Filter(filt)
 
 
-def get_filter_from_spec(spec: _FilterSpec) -> logging.Filter:
+def get_filter_from_spec(spec: "_FilterSpec") -> "logging.Filter":
     """
     Returns a `logging.Filter` configured according to `spec`.
 
@@ -303,7 +297,7 @@ def get_filter_from_spec(spec: _FilterSpec) -> logging.Filter:
         return get_filter(filt=spec)
 
     # Handle case of lone filter, adding copy=False as default
-    if isinstance(spec, logging.Filter):
+    if isinstance(spec, _logging.Filter):
         return get_filter(filt=spec, copy=False)
 
     # Handle case of (filter + copy) tuple
@@ -313,7 +307,7 @@ def get_filter_from_spec(spec: _FilterSpec) -> logging.Filter:
             spec  # pyright: ignore[reportUnknownArgumentType]
         )
         == 2  # noqa: PLR2004
-        and isinstance(spec[0], logging.Filter)
+        and isinstance(spec[0], _logging.Filter)
         and isinstance(spec[1], bool)
     ):
         return get_filter(filt=spec[0], copy=spec[1])
@@ -329,7 +323,7 @@ def get_filter_from_spec(spec: _FilterSpec) -> logging.Filter:
 
 def _maybe_create_special_string_handler(
     core: str, *, copy: bool
-) -> logging.Handler | None:
+) -> "logging.Handler | None":
     """
     Returns the `logging.Handler` associated with the
     special string matched by `core`; if `core` does
@@ -358,30 +352,33 @@ def _maybe_create_special_string_handler(
         logging.Handler | None: If `core` matches a special string, then
             the associated `logging.Handler`; otherwise, `None`
     """
+    import sys
+    from copy import deepcopy
+
     # Create placeholder to track if a handler is created
     handler = None
 
     # Check for existing handler with given name
-    existing_handler = logging.getHandlerByName(core)
+    existing_handler = _logging.getHandlerByName(core)
     if existing_handler is not None:
         handler = deepcopy(existing_handler) if copy else existing_handler
 
     # Check for StdOut, StdErr, or Null
     elif core.lower() == "stdout":
-        handler = logging.StreamHandler(sys.stdout)
+        handler = _logging.StreamHandler(sys.stdout)
     elif core.lower() == "stderr":
-        handler = logging.StreamHandler(sys.stderr)
+        handler = _logging.StreamHandler(sys.stderr)
     elif core.lower() == "null":
-        handler = logging.NullHandler()
+        handler = _logging.NullHandler()
 
     # Still None if nothing created; otherwise, the created handler
     return handler
 
 
 def _maybe_create_handler(  # noqa: PLR0913, C901
-    core: _StrOrPathLike | _TextIOLike | logging.Handler | None,
+    core: "_StrOrPathLike | _TextIOLike | logging.Handler | None",
     *,
-    handler_type: _HandlerType,
+    handler_type: "_HandlerType",
     mode: str,
     encoding: str | None,
     delay: bool,
@@ -391,11 +388,11 @@ def _maybe_create_handler(  # noqa: PLR0913, C901
     when: str,
     interval: int,
     utc: bool,
-    at_time: datetime.time | None,
-    namer: Callable[[str], str] | None,
-    rotator: Callable[[str, str], None] | None,
+    at_time: "datetime.time | None",
+    namer: "Callable[[str], str] | None",
+    rotator: "Callable[[str, str], None] | None",
     copy: bool,
-) -> logging.Handler | None:
+) -> "logging.Handler | None":
     """
     Returns a `logging.Handler` if a valid handler is specified;
     otherwise, returns `None`. See `get_handler` for details
@@ -442,16 +439,24 @@ def _maybe_create_handler(  # noqa: PLR0913, C901
         logging.Handler | None: If a valid handler was specified,
             then a `logging.Handler`; otherwise, `None`
     """
+    import logging.handlers
+    import os
+    import sys
+    from copy import deepcopy
+    from io import TextIOBase
+    from pathlib import Path
+    from typing import TextIO
+
     # Create placeholder to track if handler is created
-    handler: logging.Handler | None = None
+    handler: _logging.Handler | None = None
 
     # Handle case when a handler is provided
-    if isinstance(core, logging.Handler):
+    if isinstance(core, _logging.Handler):
         handler = deepcopy(core) if copy else core
 
     # Handle default case of None using default stderr stream handler
     if core is None:
-        handler = logging.StreamHandler(stream=sys.stderr)
+        handler = _logging.StreamHandler(stream=sys.stderr)
 
     # Handle cases of special strings
     if isinstance(core, str):
@@ -497,7 +502,7 @@ def _maybe_create_handler(  # noqa: PLR0913, C901
                     timed_handler.rotator = rotator
                 handler = timed_handler  # pylint: disable=R0204
             case _:  # "file"
-                handler = logging.FileHandler(  # pylint: disable=R0204
+                handler = _logging.FileHandler(  # pylint: disable=R0204
                     filename=filename,
                     mode=mode,
                     encoding=encoding,
@@ -507,22 +512,22 @@ def _maybe_create_handler(  # noqa: PLR0913, C901
 
     # Handle case of TextIO-like
     if isinstance(core, (TextIO, TextIOBase)):
-        handler = logging.StreamHandler(stream=core)
+        handler = _logging.StreamHandler(stream=core)
 
     # Still None if nothing created; otherwise, the created handler
     return handler
 
 
 def set_formatter_for_handler(  # noqa: PLR0913
-    handler: logging.Handler,
+    handler: "logging.Handler",
     fmt: str
-    | logging.Formatter
+    | _logging.Formatter
     | None = "%(asctime)s | %(levelname)s | %(message)s",
     *,
     datefmt: str | None = None,
-    style: _FormatStyle = "%",
+    style: "_FormatStyle" = "%",
     validate: bool = True,
-    defaults: Mapping[str, Any] | None = None,
+    defaults: "Mapping[str, Any] | None" = None,
     copy: bool = False,
 ) -> None:
     """
@@ -578,8 +583,8 @@ def set_formatter_for_handler(  # noqa: PLR0913
 
 
 def _parse_filters_arg(
-    filters: _FilterSpec | Sequence[_FilterSpec],
-) -> tuple[_FilterSpec, ...]:
+    filters: "_FilterSpec | Sequence[_FilterSpec]",
+) -> "tuple[_FilterSpec, ...]":
     """
     Returns the raw `filters` argument as a
     `tuple` of filter specs to apply.
@@ -591,12 +596,14 @@ def _parse_filters_arg(
     Returns:
         tuple[_FilterSpec, ...]: Tuple of filter specs
     """
+    from snaplog._typing import _SupportsFilter
+
     # Handle case of single string
     if isinstance(filters, str):
         return (filters,)
 
     # Handle case of lone filter, adding copy=False as default
-    if isinstance(filters, logging.Filter):
+    if isinstance(filters, _logging.Filter):
         return ((filters, False),)
 
     # Handle case of single filter-like
@@ -606,7 +613,7 @@ def _parse_filters_arg(
     if (
         isinstance(filters, tuple)
         and len(filters) == 2  # noqa: PLR2004
-        and isinstance(filters[0], logging.Filter)
+        and isinstance(filters[0], _logging.Filter)
         and isinstance(filters[1], bool)
     ):
         return (filters,)  # type: ignore[return-value] # pyright: ignore[reportReturnType]
@@ -616,8 +623,8 @@ def _parse_filters_arg(
 
 
 def add_filters_to_target(
-    target: logging.Handler | logging.Logger,
-    filters: _FilterSpec | Sequence[_FilterSpec],
+    target: "logging.Handler | logging.Logger",
+    filters: "_FilterSpec | Sequence[_FilterSpec]",
 ) -> None:
     """
     Adds the filters in `filters` to the `logging.Handler`
@@ -637,7 +644,7 @@ def add_filters_to_target(
         if isinstance(filt, str):
             target.addFilter(filter=get_filter(filt=filt, copy=False))
         # Add existing filter without copying
-        elif isinstance(filt, logging.Filter):
+        elif isinstance(filt, _logging.Filter):
             target.addFilter(filter=get_filter(filt, copy=False))
         # Add existing filter with optional copying
         elif isinstance(filt, tuple):
@@ -653,13 +660,13 @@ def add_filters_to_target(
 
 
 def get_handler(  # noqa: PLR0913
-    core: _StrOrPathLike | _TextIOLike | logging.Handler | None = None,
+    core: "_StrOrPathLike | _TextIOLike | logging.Handler | None" = None,
     *,
     name: str | None = None,
     level: int | None = 20,
-    formatter: _FormatterSpec | _NoDefaultType = NoDefault,
-    filters: _FilterSpec | Sequence[_FilterSpec] = (),
-    handler_type: _HandlerType = "file",
+    formatter: "_FormatterSpec | _NoDefaultType" = _NoDefault,
+    filters: "_FilterSpec | Sequence[_FilterSpec]" = (),
+    handler_type: "_HandlerType" = "file",
     mode: str = "a",
     encoding: str | None = "utf-8",
     delay: bool = False,
@@ -669,11 +676,11 @@ def get_handler(  # noqa: PLR0913
     when: str = "h",
     interval: int = 1,
     utc: bool = False,
-    at_time: datetime.time | None = None,
-    namer: Callable[[str], str] | None = None,
-    rotator: Callable[[str, str], None] | None = None,
+    at_time: "datetime.time | None" = None,
+    namer: "Callable[[str], str] | None" = None,
+    rotator: "Callable[[str, str], None] | None" = None,
     copy: bool = False,
-) -> logging.Handler:
+) -> "logging.Handler":
     """
     Returns a `logging.Handler` configured
     according to the provided specifications.
@@ -818,6 +825,8 @@ def get_handler(  # noqa: PLR0913
     Returns:
         logging.Handler: The specified `logging.Handler`
     """  # noqa: W505
+    from snaplog._typing import _NoDefaultType
+
     # Create the handler based on core
     handler = _maybe_create_handler(
         core=core,
@@ -861,7 +870,7 @@ def get_handler(  # noqa: PLR0913
     return handler
 
 
-def get_handler_from_spec(spec: _HandlerSpec) -> logging.Handler:
+def get_handler_from_spec(spec: "_HandlerSpec") -> "logging.Handler":
     """
     Returns a `logging.Handler` configured according to `spec`.
 
@@ -881,8 +890,8 @@ def get_handler_from_spec(spec: _HandlerSpec) -> logging.Handler:
 
 
 def _parse_handlers_arg(
-    handlers: _HandlerSpec | Sequence[_HandlerSpec],
-) -> tuple[_HandlerSpec, ...]:
+    handlers: "_HandlerSpec | Sequence[_HandlerSpec]",
+) -> "tuple[_HandlerSpec, ...]":
     """
     Returns the raw `handlers` argument as a
     `tuple` of handler specs to apply.
@@ -894,10 +903,14 @@ def _parse_handlers_arg(
     Returns:
         tuple[_HandlerSpec, ...]: Tuple of handler specs
     """
+    import os
+    from io import TextIOBase
+    from typing import TextIO
+
     # Handle case of single handler with only core specifier
     # by adding empty kwargs
     if handlers is None or isinstance(
-        handlers, (str, os.PathLike, TextIO, TextIOBase, logging.Handler)
+        handlers, (str, os.PathLike, TextIO, TextIOBase, _logging.Handler)
     ):
         return (handlers,)
 
@@ -915,7 +928,7 @@ def _parse_handlers_arg(
 
 
 def add_handlers_to_logger(
-    logger: logging.Logger, handlers: _HandlerSpec | Sequence[_HandlerSpec]
+    logger: "logging.Logger", handlers: "_HandlerSpec | Sequence[_HandlerSpec]"
 ) -> None:
     """
     Adds the handlers in `handlers` to the specified `logging.Logger`.
@@ -933,15 +946,15 @@ def add_handlers_to_logger(
 
 
 def set_formatter_for_logger(  # noqa: PLR0913
-    logger: logging.Logger,
+    logger: "logging.Logger",
     fmt: str
-    | logging.Formatter
+    | _logging.Formatter
     | None = "%(asctime)s | %(levelname)s | %(message)s",
     *,
     datefmt: str | None = None,
-    style: _FormatStyle = "%",
+    style: "_FormatStyle" = "%",
     validate: bool = True,
-    defaults: Mapping[str, Any] | None = None,
+    defaults: "Mapping[str, Any] | None" = None,
     copy: bool = False,
     force: bool = False,
 ) -> None:
@@ -1009,11 +1022,11 @@ def get_logger(  # noqa: PLR0913
     name: str | None = "log",
     level: str | int = 20,
     *,
-    handlers: _HandlerSpec | Sequence[_HandlerSpec] = (),
-    formatter: _FormatterSpec | _NoDefaultType = NoDefault,
-    filters: _FilterSpec | Sequence[_FilterSpec] = (),
-    color: _ColorSpec = "level",
-) -> logging.Logger:
+    handlers: "_HandlerSpec | Sequence[_HandlerSpec]" = (),
+    formatter: "_FormatterSpec | _NoDefaultType" = _NoDefault,
+    filters: "_FilterSpec | Sequence[_FilterSpec]" = (),
+    color: "_ColorSpec" = "level",
+) -> "logging.Logger":
     """
     Returns a `logging.Logger` configured according
     to the provided specifications.
@@ -1061,8 +1074,10 @@ def get_logger(  # noqa: PLR0913
     Returns:
         logging.Logger: The speficied `logging.Logger`
     """
+    from snaplog._typing import _NoDefaultType
+
     # Get logger with specified name, replacing default with "log"
-    logger = logging.getLogger(
+    logger = _logging.getLogger(
         "log" if isinstance(name, _NoDefaultType) else name
     )
 
@@ -1075,7 +1090,7 @@ def get_logger(  # noqa: PLR0913
     add_filters_to_target(target=logger, filters=filters)
 
     # Get formatter if applicable
-    resolved_formatter: logging.Formatter | None
+    resolved_formatter: _logging.Formatter | None
     if isinstance(formatter, _NoDefaultType):
         # Only auto-create a formatter when color mode is active
         if color != "off":
@@ -1097,7 +1112,7 @@ def get_logger(  # noqa: PLR0913
     return logger
 
 
-def get_logger_from_spec(spec: _LoggerSpec) -> logging.Logger:
+def get_logger_from_spec(spec: "_LoggerSpec") -> "logging.Logger":
     """
     Returns a `logging.Logger` configured according to `spec`.
 
@@ -1107,6 +1122,8 @@ def get_logger_from_spec(spec: _LoggerSpec) -> logging.Logger:
     Returns:
         logging.Logger: The specified logger
     """
+    from snaplog._typing import _NoDefaultType
+
     # Handle case of name only
     if spec is None or isinstance(spec, str):
         return get_logger(name=spec)
@@ -1125,7 +1142,7 @@ def get_logger_from_spec(spec: _LoggerSpec) -> logging.Logger:
         name = spec[0]
         level = None
     else:
-        name = NoDefault
+        name = _NoDefault
         level = spec[0]
     # Check if second item is level or keyword args
     if isinstance(spec[1], int):

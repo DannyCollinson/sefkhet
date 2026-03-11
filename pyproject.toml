@@ -368,24 +368,25 @@ extend-exclude = [
         "YTT",   # flake8-2020
     ]
     ignore = [
-        "ANN401", # any-type
-        "COM812", # missing-trailing-comma
-        "CPY",    # flake8-copyright: missing-copyright-notice
-        "D203",   # incorrect-blank-line-before-class
-        "D205",   # missing-blank-line-after-summary
-        "D212",   # multi-line-summary-first-line
-        "D215",   # overindented-section-underline
-        "D400",   # missing-trailing-period
-        "D401",   # non-imperative-mood
-        "D407",   # missing-dashed-underline-after-section
-        "D408",   # missing-section-underline-after-name
-        "D409",   # mismatched-section-underline-length
-        "D413",   # missing-blank-line-after-last-section
-        "N999",   # invalid-module-name
-        "S311",   # suspicious-non-cryptographic-random-usage
-        "T201",   # print
-        "TD002",  # missing-todo-author
-        "TD003",  # missing-todo-link
+        "ANN401",  # any-type
+        "COM812",  # missing-trailing-comma
+        "CPY",     # flake8-copyright: missing-copyright-notice
+        "D203",    # incorrect-blank-line-before-class
+        "D205",    # missing-blank-line-after-summary
+        "D212",    # multi-line-summary-first-line
+        "D215",    # overindented-section-underline
+        "D400",    # missing-trailing-period
+        "D401",    # non-imperative-mood
+        "D407",    # missing-dashed-underline-after-section
+        "D408",    # missing-section-underline-after-name
+        "D409",    # mismatched-section-underline-length
+        "D413",    # missing-blank-line-after-last-section
+        "N999",    # invalid-module-name
+        "PLC0415", # import-outside-top-level
+        "S311",    # suspicious-non-cryptographic-random-usage
+        "T201",    # print
+        "TD002",   # missing-todo-author
+        "TD003",   # missing-todo-link
     ]
     preview = true
 

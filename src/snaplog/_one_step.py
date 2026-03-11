@@ -1,49 +1,50 @@
 """One-step logging interface for `snaplog`."""
 
-import logging
-import threading
-from collections.abc import Mapping, Sequence
-from typing import Any
+import logging as _logging
+import threading as _threading
+from typing import TYPE_CHECKING as _TYPE_CHECKING
 
-from snaplog._functional import (
-    _parse_log_level,
-    get_formatter,
-    get_handler,
-    get_logger,
-    get_logger_from_spec,
-)
-from snaplog._typing import (
-    NoDefault,
-    _ColorSpec,
-    _ExcInfoType,
-    _FilterSpec,
-    _FormatterSpec,
-    _HandlerSpec,
-    _LoggerSpec,
-    _NoDefaultType,
-)
+from snaplog._typing import NoDefault as _NoDefault
+
+
+if _TYPE_CHECKING:
+    import logging
+    from collections.abc import Mapping, Sequence
+    from typing import Any
+
+    from snaplog._typing import (
+        _ColorSpec,
+        _ExcInfoType,
+        _FilterSpec,
+        _FormatterSpec,
+        _HandlerSpec,
+        _LoggerSpec,
+        _NoDefaultType,
+    )
 
 
 # Define a default logger instance that we can use
 # for log function calls if a logger is not provided
-_default_logger: logging.Logger | None = None
+_default_logger: _logging.Logger | None = None
 
 # Create thread lock to use when instantiating default logger
-_lock = threading.Lock()
+_lock = _threading.Lock()
 
 
 def configure_default_logger(  # noqa: PLR0913
-    name: str | _NoDefaultType | None = NoDefault,
-    level: int | _NoDefaultType = NoDefault,
+    name: "str | _NoDefaultType | None" = _NoDefault,
+    level: "int | _NoDefaultType" = _NoDefault,
     *,
-    handlers: _HandlerSpec
-    | Sequence[_HandlerSpec]
-    | _NoDefaultType = NoDefault,
-    formatter: _FormatterSpec | _NoDefaultType = NoDefault,
-    filters: _FilterSpec | Sequence[_FilterSpec] | _NoDefaultType = NoDefault,
-    spec: _LoggerSpec | _NoDefaultType = NoDefault,
+    handlers: (
+        "_HandlerSpec | Sequence[_HandlerSpec] | _NoDefaultType"
+    ) = _NoDefault,
+    formatter: "_FormatterSpec | _NoDefaultType" = _NoDefault,
+    filters: (
+        "_FilterSpec | Sequence[_FilterSpec] | _NoDefaultType"
+    ) = _NoDefault,
+    spec: "_LoggerSpec | _NoDefaultType" = _NoDefault,
     force: bool = False,
-    color: _ColorSpec = "level",
+    color: "_ColorSpec" = "level",
 ) -> None:
     """
     Configures the default logger used by `snaplog`.
@@ -94,6 +95,14 @@ def configure_default_logger(  # noqa: PLR0913
             Passed through to `get_logger` in the non-spec path.
             Defaults to `"level"`.
     """  # noqa: E501,W505
+    from snaplog._functional import (
+        get_formatter,
+        get_handler,
+        get_logger,
+        get_logger_from_spec,
+    )
+    from snaplog._typing import _NoDefaultType
+
     # Make sure function operates on the module-level default logger
     global _default_logger  # noqa: PLW0603
 
@@ -142,12 +151,12 @@ def configure_default_logger(  # noqa: PLR0913
 def log(  # noqa: PLR0913
     level: int | str,
     msg: object,
-    *args: Any,
-    exc_info: _ExcInfoType = None,
+    *args: "Any",
+    exc_info: "_ExcInfoType" = None,
     stack_info: bool = False,
     stacklevel: int = 1,
-    extra: Mapping[str, object] | None = None,
-    logger: logging.Logger | _LoggerSpec | _NoDefaultType = NoDefault,
+    extra: "Mapping[str, object] | None" = None,
+    logger: "logging.Logger | _LoggerSpec | _NoDefaultType" = _NoDefault,
 ) -> None:
     """
     Log a message according to the `logging.log` API
@@ -190,8 +199,11 @@ def log(  # noqa: PLR0913
             according to the specification and used to log the message.
             Defaults to `NoDefault`.
     """  # noqa: W505
+    from snaplog._functional import _parse_log_level, get_logger_from_spec
+    from snaplog._typing import _NoDefaultType
+
     # Decide which logger to use if none given
-    if not isinstance(logger, logging.Logger):
+    if not isinstance(logger, _logging.Logger):
         # Use default logger if no spec provided
         if isinstance(logger, _NoDefaultType):
             # Make sure default logger is instantiated
@@ -223,14 +235,14 @@ def log(  # noqa: PLR0913
 
 def record(  # noqa: PLR0913
     msg: object,
-    *args: Any,
+    *args: "Any",
     level: str | int = "debug",
     quiet: bool = False,
-    logger: logging.Logger | _LoggerSpec | _NoDefaultType = NoDefault,
-    exc_info: _ExcInfoType = None,
+    logger: "logging.Logger | _LoggerSpec | _NoDefaultType" = _NoDefault,
+    exc_info: "_ExcInfoType" = None,
     stack_info: bool = False,
     stacklevel: int = 1,
-    extra: Mapping[str, object] | None = None,
+    extra: "Mapping[str, object] | None" = None,
 ) -> None:
     """
     Log a message according to the `snaplog` API
@@ -281,6 +293,8 @@ def record(  # noqa: PLR0913
             `logging.Logger`'s method `log` for details.
             Defaults to `None`.
     """  # noqa: W505
+    from snaplog._functional import _parse_log_level
+
     # Parse provided level
     level = _parse_log_level(level=level, quiet=quiet)
     # Delegate to log function
@@ -298,14 +312,14 @@ def record(  # noqa: PLR0913
 
 def rec(  # noqa: PLR0913
     msg: object,
-    *args: Any,
+    *args: "Any",
     level: str | int = "debug",
     quiet: bool = False,
-    exc_info: _ExcInfoType = None,
+    exc_info: "_ExcInfoType" = None,
     stack_info: bool = False,
     stacklevel: int = 1,
-    extra: Mapping[str, object] | None = None,
-    logger: logging.Logger | _LoggerSpec | _NoDefaultType = NoDefault,
+    extra: "Mapping[str, object] | None" = None,
+    logger: "logging.Logger | _LoggerSpec | _NoDefaultType" = _NoDefault,
 ) -> None:
     """
     Log a message according to the `snaplog` API
