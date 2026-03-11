@@ -207,9 +207,7 @@ class TestRecord:
         configure_default_logger(spec=...) is called.
         """
         assert _one_step_module._default_logger is None
-        _one_step_module.record(
-            "spec msg", logger="test_os_spec_r"
-        )
+        _one_step_module.record("spec msg", logger="test_os_spec_r")
         logger = cast("logging.Logger", _one_step_module._default_logger)
         assert logger.name == "test_os_spec_r"
 

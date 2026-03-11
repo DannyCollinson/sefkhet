@@ -34,7 +34,9 @@ from snaplog._typing import (
     NoDefault,
     _HandlerKwargs,
     _LoggerKwargs,
+    _RotatingFileHandlerKwargs,
     _SupportsFilter,
+    _TimedRotatingFileHandlerKwargs,
 )
 
 
@@ -199,10 +201,7 @@ class TestGetFormatter:
         Arguments datefmt and style are forwarded to logging.Formatter.
         """  # noqa: D200
         result = get_formatter(
-            fmt="%(message)s",
-            datefmt="%Y",
-            style="%",
-            validate=False,
+            fmt="%(message)s", datefmt="%Y", style="%", validate=False
         )
         assert result.datefmt == "%Y"
 
@@ -386,7 +385,7 @@ class TestMaybeCreateHandler:
     @staticmethod
     def _call(core: object, *, copy: bool = False) -> logging.Handler | None:
         """
-        Helper to call with default file_handler_kwargs.
+        Helper to call with default file handler params.
 
         Args:
             core (object): Used as `core` argument
@@ -396,13 +395,25 @@ class TestMaybeCreateHandler:
 
         Returns:
             logging.Handler | None: Returns the result of calling
-                `snaplog._functional._maybe_create_handler` with the
-                default value of `file_handler_kwargs`
+                `snaplog._functional._maybe_create_handler` with
+                default values for all file handler params
 
         """
         return _maybe_create_handler(
             core=core,  # type: ignore[arg-type] # pyright: ignore[reportArgumentType]
-            file_handler_kwargs={},
+            handler_type="file",
+            mode="a",
+            encoding="utf-8",
+            delay=False,
+            errors=None,
+            max_bytes=0,
+            backup_count=0,
+            when="h",
+            interval=1,
+            utc=False,
+            at_time=None,
+            namer=None,
+            rotator=None,
             copy=copy,
         )
 
@@ -455,8 +466,7 @@ class TestMaybeCreateHandler:
         assert isinstance(result, logging.NullHandler)
 
     def test_named_handler_string(
-        self,
-        named_handler: tuple[logging.NullHandler, str],
+        self, named_handler: tuple[logging.NullHandler, str]
     ) -> None:
         """A registered handler name returns the named handler."""
         hdlr, name = named_handler
@@ -464,30 +474,163 @@ class TestMaybeCreateHandler:
         assert result is hdlr
 
     @staticmethod
-    def test_path_string_creates_file_handler(log_file: str) -> None:
-        """A path string creates a FileHandler."""
-        result = _maybe_create_handler(
-            core=log_file,
-            file_handler_kwargs={"delay": True},
+    def _call_with_path(
+        core: object, *, handler_type: str = "file", delay: bool = True
+    ) -> logging.Handler | None:
+        """
+        Helper to call `_maybe_create_handler` with a path core.
+
+        Args:
+            core (object): Used as `core` argument
+            handler_type (str, optional): Handler type discriminator.
+                Defaults to `"file"`.
+            delay (bool, optional): If `True`, file open is deferred.
+                Defaults to `True`.
+
+        Returns:
+            logging.Handler | None: Result of `_maybe_create_handler`
+
+        """
+        return _maybe_create_handler(
+            core=core,  # type: ignore[arg-type] # pyright: ignore[reportArgumentType]
+            handler_type=handler_type,  # type: ignore[arg-type] # pyright: ignore[reportArgumentType]
+            mode="a",
+            encoding="utf-8",
+            delay=delay,
+            errors=None,
+            max_bytes=0,
+            backup_count=0,
+            when="h",
+            interval=1,
+            utc=False,
+            at_time=None,
+            namer=None,
+            rotator=None,
             copy=False,
         )
+
+    def test_path_string_creates_file_handler(self, log_file: str) -> None:
+        """A path string creates a FileHandler."""
+        result = self._call_with_path(log_file)
         try:
             assert isinstance(result, logging.FileHandler)
         finally:
             if result is not None:  # type: ignore[comparison-overlap] # pragma: no branch
                 result.close()
 
-    @staticmethod
-    def test_pathlike_object_creates_file_handler(log_file: str) -> None:
+    def test_pathlike_object_creates_file_handler(self, log_file: str) -> None:
         """A Path object creates a FileHandler."""
         path = pathlib.Path(log_file)
+        result = self._call_with_path(path)
+        try:
+            assert isinstance(result, logging.FileHandler)
+        finally:
+            if result is not None:  # type: ignore[comparison-overlap] # pragma: no branch
+                result.close()
+
+    def test_watched_file_handler(self, log_file: str) -> None:
+        """handler_type='watched_file' creates WatchedFileHandler."""
+        import logging.handlers
+
+        result = self._call_with_path(log_file, handler_type="watched_file")
+        try:
+            assert isinstance(result, logging.handlers.WatchedFileHandler)
+        finally:
+            if result is not None:  # type: ignore[comparison-overlap] # pragma: no branch
+                result.close()
+
+    @staticmethod
+    def test_rotating_file_handler(log_file: str) -> None:
+        """handler_type='rotating_file' creates RotatingFileHandler."""
+        import logging.handlers
+
         result = _maybe_create_handler(
-            core=path,
-            file_handler_kwargs={"delay": True},
+            core=log_file,
+            handler_type="rotating_file",
+            mode="a",
+            encoding="utf-8",
+            delay=True,
+            errors=None,
+            max_bytes=1024,
+            backup_count=3,
+            when="h",
+            interval=1,
+            utc=False,
+            at_time=None,
+            namer=None,
+            rotator=None,
             copy=False,
         )
         try:
-            assert isinstance(result, logging.FileHandler)
+            assert isinstance(result, logging.handlers.RotatingFileHandler)
+            assert result.maxBytes == 1024
+            assert result.backupCount == 3
+        finally:
+            if result is not None:  # type: ignore[comparison-overlap] # pragma: no branch
+                result.close()
+
+    @staticmethod
+    def test_timed_rotating_file_handler(log_file: str) -> None:
+        """handler_type='timed_rotating_file' creates handler."""
+        import logging.handlers
+
+        result = _maybe_create_handler(
+            core=log_file,
+            handler_type="timed_rotating_file",
+            mode="a",
+            encoding="utf-8",
+            delay=True,
+            errors=None,
+            max_bytes=0,
+            backup_count=5,
+            when="midnight",
+            interval=1,
+            utc=True,
+            at_time=None,
+            namer=None,
+            rotator=None,
+            copy=False,
+        )
+        try:
+            assert isinstance(result, logging.handlers.TimedRotatingFileHandler)
+            assert result.backupCount == 5
+            assert result.utc is True
+        finally:
+            if result is not None:  # type: ignore[comparison-overlap] # pragma: no branch
+                result.close()
+
+    @staticmethod
+    def test_timed_rotating_file_handler_namer_rotator(log_file: str) -> None:
+        """TimedRotatingFileHandler accepts namer and rotator."""
+        import logging.handlers
+
+        def _namer(name: str) -> str:
+            return name + ".gz"  # pragma: no cover
+
+        def _rotator(source: str, dest: str) -> None:
+            pass  # pragma: no cover
+
+        result = _maybe_create_handler(
+            core=log_file,
+            handler_type="timed_rotating_file",
+            mode="a",
+            encoding="utf-8",
+            delay=True,
+            errors=None,
+            max_bytes=0,
+            backup_count=0,
+            when="h",
+            interval=1,
+            utc=False,
+            at_time=None,
+            namer=_namer,
+            rotator=_rotator,
+            copy=False,
+        )
+        try:
+            assert isinstance(result, logging.handlers.TimedRotatingFileHandler)
+            assert result.namer is _namer
+            assert result.rotator is _rotator
         finally:
             if result is not None:  # type: ignore[comparison-overlap] # pragma: no branch
                 result.close()
@@ -712,13 +855,65 @@ class TestGetHandler:
     def test_file_handler_with_mode_encoding_delay(log_file: str) -> None:
         """File handler kwargs (mode, encoding, delay) are forwarded."""
         handler = get_handler(
-            core=log_file,
-            mode="w",
-            encoding="utf-8",
-            delay=True,
+            core=log_file, mode="w", encoding="utf-8", delay=True
         )
         try:
             assert isinstance(handler, logging.FileHandler)
+        finally:
+            handler.close()
+
+    @staticmethod
+    def test_watched_file_handler_type(log_file: str) -> None:
+        """handler_type='watched_file' creates WatchedFileHandler."""
+        import logging.handlers
+
+        handler = get_handler(
+            core=log_file, handler_type="watched_file", delay=True
+        )
+        try:
+            assert isinstance(handler, logging.handlers.WatchedFileHandler)
+        finally:
+            handler.close()
+
+    @staticmethod
+    def test_rotating_file_handler_type(log_file: str) -> None:
+        """handler_type='rotating_file' with max_bytes/backup_count."""
+        import logging.handlers
+
+        handler = get_handler(
+            core=log_file,
+            handler_type="rotating_file",
+            max_bytes=2048,
+            backup_count=2,
+            delay=True,
+        )
+        try:
+            assert isinstance(handler, logging.handlers.RotatingFileHandler)
+            assert handler.maxBytes == 2048
+            assert handler.backupCount == 2
+        finally:
+            handler.close()
+
+    @staticmethod
+    def test_timed_rotating_file_handler_type(log_file: str) -> None:
+        """handler_type='timed_rotating_file' with time kwargs."""
+        import logging.handlers
+
+        handler = get_handler(
+            core=log_file,
+            handler_type="timed_rotating_file",
+            when="midnight",
+            interval=1,
+            backup_count=7,
+            utc=True,
+            delay=True,
+        )
+        try:
+            assert isinstance(
+                handler, logging.handlers.TimedRotatingFileHandler
+            )
+            assert handler.backupCount == 7
+            assert handler.utc is True
         finally:
             handler.close()
 
@@ -735,9 +930,48 @@ class TestGetHandlerFromSpec:
     @staticmethod
     def test_tuple_spec() -> None:
         """A tuple spec unpacks core and kwargs."""
-        result = get_handler_from_spec(("null", {"name": "h1"}))
+        result = get_handler_from_spec(
+            ("null", {"name": "h1"})  # type: ignore[arg-type]
+        )
         assert isinstance(result, logging.NullHandler)
         assert result.name == "h1"
+
+    @staticmethod
+    def test_rotating_file_handler_kwargs_spec(log_file: str) -> None:
+        """Tuple with _RotatingFileHandlerKwargs creates handler."""
+        import logging.handlers
+
+        kwargs = _RotatingFileHandlerKwargs(
+            handler_type="rotating_file",
+            max_bytes=512,
+            backup_count=1,
+            delay=True,
+        )
+        result = get_handler_from_spec((log_file, kwargs))
+        try:
+            assert isinstance(result, logging.handlers.RotatingFileHandler)
+            assert result.maxBytes == 512
+        finally:
+            result.close()
+
+    @staticmethod
+    def test_timed_rotating_file_handler_kwargs_spec(log_file: str) -> None:
+        """Tuple with _TimedRotatingFileHandlerKwargs creates it."""
+        import logging.handlers
+
+        kwargs = _TimedRotatingFileHandlerKwargs(
+            handler_type="timed_rotating_file",
+            when="d",
+            interval=1,
+            backup_count=3,
+            delay=True,
+        )
+        result = get_handler_from_spec((log_file, kwargs))
+        try:
+            assert isinstance(result, logging.handlers.TimedRotatingFileHandler)
+            assert result.backupCount == 3
+        finally:
+            result.close()
 
 
 class TestParseHandlersArg:
@@ -917,9 +1151,7 @@ class TestGetLogger:
     def test_formatter_with_no_handlers() -> None:
         """A formatter spec with no handlers runs without error."""
         logger = get_logger(
-            name="test_gl_fmt_no_handlers",
-            handlers=(),
-            formatter="%(message)s",
+            name="test_gl_fmt_no_handlers", handlers=(), formatter="%(message)s"
         )
         assert len(logger.handlers) == 0
 

@@ -1,9 +1,11 @@
 """Functional interface for `snaplog`."""
 
+import datetime
 import logging
+import logging.handlers
 import os
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from copy import deepcopy
 from io import TextIOBase
 from pathlib import Path
@@ -13,11 +15,11 @@ from snaplog._color import ColorFormatter
 from snaplog._typing import (
     NoDefault,
     _ColorSpec,
-    _FileHandlerKwargs,
     _FilterSpec,
     _FormatStyle,
     _FormatterSpec,
     _HandlerSpec,
+    _HandlerType,
     _LoggerKwargs,
     _LoggerSpec,
     _NoDefaultType,
@@ -247,11 +249,7 @@ def get_formatter_from_spec(
     # If a dict, specify as keyword arguments
     if isinstance(spec, dict):
         # Dict's own color key takes precedence; only inject if absent
-        if "color" not in spec and color:
-            return get_formatter(  # pyright: ignore[reportUnknownVariableType]
-                **spec,
-                color=color,  # pyright: ignore[reportCallIssue]
-            )
+        spec["color"] = spec.get("color", color)
         return get_formatter(**spec)
     # If here, just pass spec as main argument
     return get_formatter(fmt=spec, color=color)
@@ -380,10 +378,22 @@ def _maybe_create_special_string_handler(
     return handler
 
 
-def _maybe_create_handler(
+def _maybe_create_handler(  # noqa: PLR0913, C901
     core: _StrOrPathLike | _TextIOLike | logging.Handler | None,
     *,
-    file_handler_kwargs: _FileHandlerKwargs,
+    handler_type: _HandlerType,
+    mode: str,
+    encoding: str | None,
+    delay: bool,
+    errors: str | None,
+    max_bytes: int,
+    backup_count: int,
+    when: str,
+    interval: int,
+    utc: bool,
+    at_time: datetime.time | None,
+    namer: Callable[[str], str] | None,
+    rotator: Callable[[str, str], None] | None,
     copy: bool,
 ) -> logging.Handler | None:
     """
@@ -394,17 +404,43 @@ def _maybe_create_handler(
     Args:
         core (_StrOrPathLike | _TextIOLike | logging.Handler | None):
             Specification of the handler
-        file_handler_kwargs (_FileHandlerKwargs): Keyword arguments to
-            pass to the `logging.FileHandler` constructor. Ignored if
-            not creating a new `logging.FileHandler`.
+        handler_type (_HandlerType): Type of file handler to create.
+            Ignored if not creating a file handler.
+        mode (str): File open mode. Ignored for
+            `TimedRotatingFileHandler` and non-file handlers.
+        encoding (str | None): File encoding. Ignored if not
+            creating a file handler.
+        delay (bool): If `True`, file is not opened until a
+            message is emitted. Ignored if not creating a file
+            handler.
+        errors (str | None): Encoding error handling. Ignored if
+            not creating a file handler.
+        max_bytes (int): Maximum file size in bytes before
+            rotation. Only used for `RotatingFileHandler`.
+        backup_count (int): Number of backup files to keep. Only
+            used for rotating file handlers.
+        when (str): Interval type for timed rotation. Only used
+            for `TimedRotatingFileHandler`.
+        interval (int): Interval count for timed rotation. Only
+            used for `TimedRotatingFileHandler`.
+        utc (bool): If `True`, UTC time is used for rotation.
+            Only used for `TimedRotatingFileHandler`.
+        at_time (datetime.time | None): Specific time of day for
+            rotation. Only used for `TimedRotatingFileHandler`.
+        namer (Callable[[str], str] | None): Callable to generate
+            rotated file names. Only used for
+            `TimedRotatingFileHandler`.
+        rotator (Callable[[str, str], None] | None): Callable to
+            perform file rotation. Only used for
+            `TimedRotatingFileHandler`.
         copy (bool): If `True`, returns a deep copy of the
             original instance of `core`; otherwise, the original
             instance is returned. Ignored if `core` is not a
             `logging.Handler`. Defaults to `False`.
 
     Returns:
-        logging.Handler | None: If a valid handler was specified, then a
-            `logging.Handler`; otherwise, `None`
+        logging.Handler | None: If a valid handler was specified,
+            then a `logging.Handler`; otherwise, `None`
     """
     # Create placeholder to track if handler is created
     handler: logging.Handler | None = None
@@ -423,9 +459,51 @@ def _maybe_create_handler(
 
     # Handle case of pathlike
     if handler is None and isinstance(core, (str, os.PathLike)):
-        handler = logging.FileHandler(  # pylint: disable=R0204
-            filename=Path(os.fsdecode(core)).resolve(), **file_handler_kwargs
-        )
+        filename = Path(os.fsdecode(core)).resolve()
+        match handler_type:
+            case "watched_file":
+                handler = logging.handlers.WatchedFileHandler(  # pylint: disable=R0204
+                    filename=filename,
+                    mode=mode,
+                    encoding=encoding,
+                    delay=delay,
+                    errors=errors,
+                )
+            case "rotating_file":
+                handler = logging.handlers.RotatingFileHandler(  # pylint: disable=R0204
+                    filename=filename,
+                    mode=mode,
+                    maxBytes=max_bytes,
+                    backupCount=backup_count,
+                    encoding=encoding,
+                    delay=delay,
+                    errors=errors,
+                )
+            case "timed_rotating_file":
+                timed_handler = logging.handlers.TimedRotatingFileHandler(
+                    filename=filename,
+                    when=when,
+                    interval=interval,
+                    backupCount=backup_count,
+                    encoding=encoding,
+                    delay=delay,
+                    utc=utc,
+                    atTime=at_time,
+                    errors=errors,
+                )
+                if namer is not None:
+                    timed_handler.namer = namer
+                if rotator is not None:
+                    timed_handler.rotator = rotator
+                handler = timed_handler  # pylint: disable=R0204
+            case _:  # "file"
+                handler = logging.FileHandler(  # pylint: disable=R0204
+                    filename=filename,
+                    mode=mode,
+                    encoding=encoding,
+                    delay=delay,
+                    errors=errors,
+                )
 
     # Handle case of TextIO-like
     if isinstance(core, (TextIO, TextIOBase)):
@@ -531,7 +609,7 @@ def _parse_filters_arg(
         and isinstance(filters[0], logging.Filter)
         and isinstance(filters[1], bool)
     ):
-        return (filters,)  # pyright: ignore[reportReturnType]
+        return (filters,)  # type: ignore[return-value] # pyright: ignore[reportReturnType]
 
     # If here, have a sequence of filters, so make sure it's a tuple
     return tuple(filters)  # pyright: ignore[reportReturnType]
@@ -581,10 +659,19 @@ def get_handler(  # noqa: PLR0913
     level: int | None = 20,
     formatter: _FormatterSpec | _NoDefaultType = NoDefault,
     filters: _FilterSpec | Sequence[_FilterSpec] = (),
+    handler_type: _HandlerType = "file",
     mode: str = "a",
     encoding: str | None = "utf-8",
     delay: bool = False,
     errors: str | None = None,
+    max_bytes: int = 0,
+    backup_count: int = 0,
+    when: str = "h",
+    interval: int = 1,
+    utc: bool = False,
+    at_time: datetime.time | None = None,
+    namer: Callable[[str], str] | None = None,
+    rotator: Callable[[str, str], None] | None = None,
     copy: bool = False,
 ) -> logging.Handler:
     """
@@ -613,12 +700,21 @@ def get_handler(  # noqa: PLR0913
         `logging.StreamHandler` is created, which logs to `sys.stderr`
     6.  If `core` is the string `"null"`, a default
         `logging.NullHandler` is created, which silences logging
-    7.  If `core` is a `_StrOrPathLike`, then the handler
-        `logging.FileHandler(filename=core)` is created, which logs to
-        the file `core`
+    7.  If `core` is a `_StrOrPathLike`, then a file handler is
+        created based on `handler_type`:
+
+        a.  `"file"` (default): `logging.FileHandler(filename=core)`
+        b.  `"watched_file"`:
+            `logging.handlers.WatchedFileHandler(filename=core)`
+        c.  `"rotating_file"`:
+            `logging.handlers.RotatingFileHandler(filename=core)`
+        d.  `"timed_rotating_file"`:
+            `logging.handlers.TimedRotatingFileHandler(
+            filename=core)`
+
     8.  If `core` is a `_TextIOLike`, then
-        `logging.StreamHandler(stream=core)` is created, which logs to
-        the stream `core`
+        `logging.StreamHandler(stream=core)` is created, which logs
+        to the stream `core`
     9.  At this point, `core` should have matched one of the options
         above, so if it hasn't, a `ValueError` is raised
 
@@ -669,19 +765,48 @@ def get_handler(  # noqa: PLR0913
             original filter is used; if a compatible `Callable` or class
             with `filter` method, it will be added as a filter directly.
             Defaults to `()` (no filters).
-        mode (str, optional): Mode used to open the log file. Ignored if
-            not creating a `logging.FileHandler`. Defaults to `"a"`.
+        handler_type (_HandlerType, optional): Type of file handler
+            to create when `core` is a path. One of `"file"`,
+            `"watched_file"`, `"rotating_file"`, or
+            `"timed_rotating_file"`. Ignored if not creating a file
+            handler. Defaults to `"file"`.
+        mode (str, optional): Mode used to open the log file. Ignored
+            if not creating a file handler or if using
+            `"timed_rotating_file"`. Defaults to `"a"`.
         encoding (str | None, optional): Encoding for the log file.
-            Ignored if not creating a `logging.FileHandler`. Note that
-            the default here does not match the `logging` default of
+            Ignored if not creating a file handler. Note that the
+            default here does not match the `logging` default of
             `None`. Defaults to `"utf-8"`.
         delay (bool, optional): If `True`, the log file is not opened
             until a message is emitted; otherwise, the file is opened
-            immediately upon handler creation. Ignored if not creating a
-            `logging.FileHandler`. Defaults to `False`.
+            immediately upon handler creation. Ignored if not creating
+            a file handler. Defaults to `False`.
         errors (str | None, optional): Determines how encoding errors
-            are handled. Ignored if not creating a
-            `logging.FileHandler`. Defaults to `None`.
+            are handled. Ignored if not creating a file handler.
+            Defaults to `None`.
+        max_bytes (int, optional): Maximum file size in bytes before
+            rotation. Only used for `"rotating_file"`.
+            Defaults to `0` (no limit).
+        backup_count (int, optional): Number of backup files to keep
+            after rotation. Only used for rotating file handlers.
+            Defaults to `0`.
+        when (str, optional): Interval type for timed rotation (e.g.
+            `"h"`, `"d"`, `"midnight"`). Only used for
+            `"timed_rotating_file"`. Defaults to `"h"`.
+        interval (int, optional): Interval count for timed rotation.
+            Only used for `"timed_rotating_file"`. Defaults to `1`.
+        utc (bool, optional): If `True`, UTC time is used for
+            rotation timing. Only used for
+            `"timed_rotating_file"`. Defaults to `False`.
+        at_time (datetime.time | None, optional): Specific time of
+            day for rotation. Only used for
+            `"timed_rotating_file"`. Defaults to `None`.
+        namer (Callable[[str], str] | None, optional): Callable to
+            generate rotated file names. Only used for
+            `"timed_rotating_file"`. Defaults to `None`.
+        rotator (Callable[[str, str], None] | None, optional):
+            Callable to perform file rotation. Only used for
+            `"timed_rotating_file"`. Defaults to `None`.
         copy (bool, optional): If `True`, returns a deep copy of the
             original instance of `core`; otherwise, the original
             instance is returned. Ignored if `core` is not a
@@ -696,12 +821,19 @@ def get_handler(  # noqa: PLR0913
     # Create the handler based on core
     handler = _maybe_create_handler(
         core=core,
-        file_handler_kwargs={
-            "mode": mode,
-            "encoding": encoding,
-            "delay": delay,
-            "errors": errors,
-        },
+        handler_type=handler_type,
+        mode=mode,
+        encoding=encoding,
+        delay=delay,
+        errors=errors,
+        max_bytes=max_bytes,
+        backup_count=backup_count,
+        when=when,
+        interval=interval,
+        utc=utc,
+        at_time=at_time,
+        namer=namer,
+        rotator=rotator,
         copy=copy,
     )
 
@@ -741,7 +873,10 @@ def get_handler_from_spec(spec: _HandlerSpec) -> logging.Handler:
     """
     # Create using keyword arguments if present, otherwise just core
     if isinstance(spec, tuple):
-        return get_handler(core=spec[0], **spec[1])
+        return get_handler(
+            core=spec[0],
+            **spec[1],  # pyright: ignore[reportArgumentType]
+        )
     return get_handler(core=spec)
 
 
@@ -1007,15 +1142,15 @@ def get_logger_from_spec(spec: _LoggerSpec) -> logging.Logger:
     # Return based on tuple items
     if isinstance(name, _NoDefaultType):
         return get_logger(  # pyright: ignore[reportUnknownVariableType]
-            level=level,
+            level=level,  # type: ignore[arg-type,misc]
             **kwargs,  # pyright: ignore[reportCallIssue]
         )
     if level is None:
-        return get_logger(  # pyright: ignore[reportUnknownVariableType]
+        return get_logger(  # type: ignore[misc] # pyright: ignore[reportUnknownVariableType]
             name=name,
             **kwargs,  # pyright: ignore[reportCallIssue]
         )
-    return get_logger(  # pyright: ignore[reportUnknownVariableType]
+    return get_logger(  # type: ignore[misc] # pyright: ignore[reportUnknownVariableType]
         name=name,
         level=level,
         **kwargs,  # pyright: ignore[reportCallIssue]

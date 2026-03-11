@@ -1,11 +1,20 @@
 """Typing definitions for `snaplog`."""
 
+import datetime
 import logging
 import os
 from collections.abc import Callable, Mapping, Sequence
 from io import TextIOBase
 from types import TracebackType
-from typing import Any, Literal, Protocol, TextIO, TypedDict, runtime_checkable
+from typing import (
+    Any,
+    Literal,
+    Protocol,
+    Required,
+    TextIO,
+    TypedDict,
+    runtime_checkable,
+)
 
 
 # Define general helpers
@@ -40,6 +49,11 @@ type _ColorMode = Literal["full", "partial", "level", "msg", "off"]
 # Define type aliases for custom color maps and color spec
 type _ColorMap = Callable[[int], str] | Mapping[int, str]
 type _ColorSpec = _ColorMode | tuple[_ColorMode, _ColorMap]
+
+# Define type alias for handler type discriminator
+type _HandlerType = Literal[
+    "file", "watched_file", "rotating_file", "timed_rotating_file"
+]
 
 
 # Define typed dict for specifying formatter keyword arguments
@@ -122,10 +136,32 @@ class _HandlerKwargs(TypedDict, total=False):
     level: int | None
     copy: bool
     # Ignored unless creating file handler
+    handler_type: _HandlerType
     mode: str
     encoding: str | None
     delay: bool
     errors: str | None
+
+
+class _RotatingFileHandlerKwargs(_HandlerKwargs, total=False):
+    """Kwargs for creating a `logging.handlers.RotatingFileHandler`."""
+
+    handler_type: Required[Literal["rotating_file"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+    max_bytes: int
+    backup_count: int
+
+
+class _TimedRotatingFileHandlerKwargs(_HandlerKwargs, total=False):
+    """Kwargs for creating a `TimedRotatingFileHandler`."""
+
+    handler_type: Required[Literal["timed_rotating_file"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+    when: str
+    interval: int
+    backup_count: int
+    utc: bool
+    at_time: datetime.time | None
+    namer: Callable[[str], str] | None
+    rotator: Callable[[str, str], None] | None
 
 
 # Define type alias for valid handler specs
@@ -135,6 +171,8 @@ type _HandlerSpec = (
     | logging.Handler  # Pre-configured handler
     # Handler specifier plus additional configurations
     | tuple[_StrOrPathLike | _TextIOLike | logging.Handler, _HandlerKwargs]
+    | tuple[_StrOrPathLike, _RotatingFileHandlerKwargs]
+    | tuple[_StrOrPathLike, _TimedRotatingFileHandlerKwargs]
     | None  # Default stderr handler
 )
 

@@ -157,7 +157,7 @@ def log(  # noqa: PLR0913
     `logging.Logger` instance or a logger specification.*
 
     Args:
-        level (str | int): Logging level to log message at. Valid log
+        level (int | str): Logging level to log message at. Valid log
             levels include a log level string from the options provided
             by `snaplog.get_log_levels()`, the `int` equivalents of
             those log levels as defined by the `logging`library, or any

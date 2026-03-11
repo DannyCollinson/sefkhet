@@ -74,8 +74,8 @@ include-package-data = true
     version = { attr = "snaplog._version.__version__" }
 
 
-# Dev tool config
-########################################################################
+    # Dev tool config
+    ########################################################################
 
 [tool.bandit]
 targets = ["*.ipynb", "*.py"]
@@ -250,6 +250,8 @@ enable = [
 
 [tool.pyright]
 typeCheckingMode = "strict"
+reportUnnecessaryTypeIgnoreComment = "warning"
+enableTypeIgnoreComments = false
 # Match Ruff/mypy setup
 reportMissingImports = true
 reportMissingTypeStubs = "warning"
@@ -296,6 +298,7 @@ extend-exclude = [
     [tool.ruff.format]
     docstring-code-format = true
     docstring-code-line-length = 72
+    skip-magic-trailing-comma = true
     line-ending = "lf"
 
     [tool.ruff.lint]
@@ -390,6 +393,7 @@ extend-exclude = [
         case-sensitive = true
         known-first-party = ["snaplog"]
         lines-after-imports = 2
+        split-on-trailing-comma = false
 
         [tool.ruff.lint.per-file-ignores]
         "*.ipynb" = ["ERA001", "PLR2004", "T20"]

@@ -73,11 +73,11 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         `logging.getLogger` (`None` and `30`, respectively).
 
         Args:
-            name (str | None, optional): Name to apply to the logger. If
-                `None`, uses the root logger. If `NoDefault`, uses
-                `"logX"`, where `X` is the cumulative number of
-                `SnapLogger` instances created with a default name.
-                Defaults to `NoDefault`.
+            name (str | _NoDefaultType | None, optional): Name to apply
+                to the logger. If `None`, uses the root logger. If
+                `NoDefault`, uses `"logX"`, where `X` is the cumulative
+                number of `SnapLogger` instances created with a default
+                name. Defaults to `NoDefault`.
             level (str | int, optional): Logging level to apply to the
                 logger. Valid log levels include a log level string from
                 the options provided by `snaplog.get_log_levels()`, the
@@ -308,7 +308,7 @@ class SnapLogger(logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
     # Main logging methods
     ####################################################################
 
-    def log(  # noqa: PLR0913
+    def log(  # noqa: PLR0913  # pylint: disable=arguments-differ
         self,
         level: str | int,
         msg: object,

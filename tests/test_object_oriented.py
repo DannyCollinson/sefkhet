@@ -551,8 +551,7 @@ class TestSnapLoggerColor:  # pylint: disable=too-few-public-methods
     def test_tuple_color_creates_color_formatter() -> None:
         """Tuple color with callable gives handler a ColorFormatter."""
         snap = SnapLogger(
-            name="test_oo_color_tuple",
-            color=("full", lambda _: "\033[99m"),
+            name="test_oo_color_tuple", color=("full", lambda _: "\033[99m")
         )
         assert len(snap.handlers) >= 1
         assert isinstance(snap.handlers[-1].formatter, ColorFormatter)

@@ -335,10 +335,7 @@ class TestColorFormatter:  # noqa: PLR0904
         """
         fmt = "%(levelname)s | %(message)s"
         for mode in ("off", "full", "level", "msg", "partial"):
-            colored = ColorFormatter(
-                fmt,
-                color=mode,
-            )
+            colored = ColorFormatter(fmt, color=mode)
             record = _make_record(msg="side_effect_test", level=logging.INFO)
             result1 = colored.format(record)
             result2 = colored.format(record)
@@ -349,8 +346,7 @@ class TestColorFormatter:  # noqa: PLR0904
         """Custom callable colormap is used in 'full' mode."""
         sentinel = "\033[99m"
         colored = ColorFormatter(
-            "%(levelname)s | %(message)s",
-            color=("full", lambda _: sentinel),
+            "%(levelname)s | %(message)s", color=("full", lambda _: sentinel)
         )
         record = _make_record(level=logging.INFO)
         result = colored.format(record)
@@ -361,8 +357,7 @@ class TestColorFormatter:  # noqa: PLR0904
         """Custom callable colormap wraps levelname in 'level' mode."""
         sentinel = "\033[99m"
         colored = ColorFormatter(
-            "%(levelname)s | %(message)s",
-            color=("level", lambda _: sentinel),
+            "%(levelname)s | %(message)s", color=("level", lambda _: sentinel)
         )
         record = _make_record(level=logging.INFO)
         result = colored.format(record)
