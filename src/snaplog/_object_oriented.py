@@ -438,7 +438,9 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         extra: "Mapping[str, object] | None" = None,
     ) -> None:
         """
-        Log/record a message using the `snaplog` API. Alias of `record`.
+        Log/record a message using the `snaplog` API.
+
+        Alias of `record`.
 
         *Note that this function's API differs from that of the
         `logging.Logger`'s `log` method: this function requires that
