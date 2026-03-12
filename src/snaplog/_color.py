@@ -29,6 +29,19 @@ _LEVELNAME_WIDTH = 8
 
 
 def _get_display_levelname(levelname: str) -> str:
+    """
+    Returns the name to display in the log for `levelname`.
+
+    Args:
+        levelname (str): Original log level name
+
+    Returns:
+        str: Formatted log level name to display, which is `levelname`
+            left-padded to `_LEVELNAME_WIDTH` characters, with the
+            prefix `"Level "` replaced by `"LEVEL_"` if `levelname`
+            starts with `"Level "` followed by a digit (e.g.,
+            `"Level 1"` becomes `"LEVEL_1"`)
+    """
     if levelname.startswith("Level ") and levelname[6:].isdigit():
         levelname = "LEVEL_" + levelname[6:]
     return levelname.ljust(_LEVELNAME_WIDTH)
@@ -96,6 +109,18 @@ def _parse_color_spec(
     if isinstance(colormap, Mapping):
 
         def _map_fn(level: int) -> str:
+            """
+            Returns the custom ANSI color code escape string for
+            `level` if `level` is in `colormap`; otherwise,
+            returns the default ANSI color code escape string
+            for `level` from `get_level_color`.
+
+            Args:
+                level (int): Integer log level
+
+            Returns:
+                str: ANSI escape code string for the given level
+            """
             try:
                 return colormap[level]  # pyright: ignore[reportUnknownVariableType]
             except KeyError:

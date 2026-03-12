@@ -496,6 +496,11 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         extra: "Mapping[str, object] | None" = None,
         **kwargs: "Any",
     ) -> None:
+        """
+        Log a message with level `CRITICAL` on this logger.
+
+        Mirrors the interface of `logging.Logger.critical`.
+        """
         self.logger.log(
             _logging.CRITICAL,
             msg,
@@ -517,6 +522,11 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         extra: "Mapping[str, object] | None" = None,
         **kwargs: "Any",
     ) -> None:
+        """
+        Log a message with level `DEBUG` on this logger.
+
+        Mirrors the interface of `logging.Logger.debug`.
+        """
         self.logger.log(
             _logging.DEBUG,
             msg,
@@ -538,6 +548,11 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         extra: "Mapping[str, object] | None" = None,
         **kwargs: "Any",
     ) -> None:
+        """
+        Log a message with level `ERROR` on this logger.
+
+        Mirrors the interface of `logging.Logger.error`.
+        """
         self.logger.log(
             _logging.ERROR,
             msg,
@@ -559,6 +574,11 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         extra: "Mapping[str, object] | None" = None,
         **kwargs: "Any",
     ) -> None:
+        """
+        Log a message with level `ERROR` on this logger.
+
+        Mirrors the interface of `logging.Logger.exception`.
+        """
         self.logger.log(
             _logging.ERROR,
             msg,
@@ -580,6 +600,11 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         extra: "Mapping[str, object] | None" = None,
         **kwargs: "Any",
     ) -> None:
+        """
+        Log a message with level `FATAL` on this logger.
+
+        Mirrors the interface of `logging.Logger.fatal`.
+        """
         self.logger.log(
             _logging.FATAL,
             msg,
@@ -601,6 +626,11 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         extra: "Mapping[str, object] | None" = None,
         **kwargs: "Any",
     ) -> None:
+        """
+        Log a message with level `INFO` on this logger.
+
+        Mirrors the interface of `logging.Logger.info`.
+        """
         self.logger.log(
             _logging.INFO,
             msg,
@@ -622,6 +652,16 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         extra: "Mapping[str, object] | None" = None,
         **kwargs: "Any",
     ) -> None:
+        """
+        Log a message with level `WARNING` on this logger.
+
+        Mirrors the interface of `logging.Logger.warning`.
+
+        *Note that `logging.Logger.warn` is deprecated and should not be
+        used, but it is included here for compatibility with the
+        `logging.Logger` interface. See `logging.Logger.warning`
+        for details.*
+        """
         self.logger.log(
             _logging.WARNING,
             msg,
@@ -643,6 +683,11 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         extra: "Mapping[str, object] | None" = None,
         **kwargs: "Any",
     ) -> None:
+        """
+        Log a message with level `WARNING` on this logger.
+
+        Mirrors the interface of `logging.Logger.warning`.
+        """
         self.logger.log(
             _logging.WARNING,
             msg,
@@ -655,32 +700,100 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         )
 
     def filter(self, record: "logging.LogRecord") -> "bool | logging.LogRecord":
+        """
+        Returns the result of filtering the specified
+        record using the logger's filters.
+
+        See `logging.Logger`'s `filter` method for details.
+
+        Args:
+            record (logging.LogRecord): Record to filter
+
+        Returns:
+            bool | logging.LogRecord: Result of filtering the record
+        """
         return self.logger.filter(record=record)
 
     def handle(self, record: "logging.LogRecord") -> None:
+        """
+        Handles the specified record using the logger's handlers.
+
+        See `logging.Logger`'s `handle` method for details.
+
+        Args:
+            record (logging.LogRecord): Record to handle
+        """
         self.logger.handle(record=record)
 
     @_update_logger_attributes_hook
     def addFilter(self, filter: "_FilterType") -> None:  # noqa: A002
+        """
+        Adds the specified `logging.Filter` to the logger.
+
+        See `logging.Logger`'s `addFilter` method for details.
+
+        Args:
+            filter (_FilterType): Filter to add
+        """
         self.add_filters(filters=filter)
 
     @_update_logger_attributes_hook
     def addHandler(self, hdlr: "logging.Handler") -> None:
+        """
+        Adds the specified `logging.Handler` to the logger.
+
+        See `logging.Logger`'s `addHandler` method for details.
+
+        Args:
+            hdlr (logging.Handler): Handler to add
+        """
         self.add_handlers(handlers=hdlr)
 
     @_update_logger_attributes_hook
     def removeFilter(self, filter: "_FilterType") -> None:  # noqa: A002
+        """
+        Removes the specified `logging.Filter` from the logger.
+
+        See `logging.Logger`'s `removeFilter` method for details.
+
+        Args:
+            filter (_FilterType): Filter to remove
+        """
         self.logger.removeFilter(filter=filter)
 
     @_update_logger_attributes_hook
     def removeHandler(self, hdlr: "logging.Handler") -> None:
+        """
+        Removes the specified `logging.Handler` from the logger.
+
+        See `logging.Logger`'s `removeHandler` method for details.
+
+        Args:
+            hdlr (logging.Handler): Handler to remove
+        """
         self.logger.removeHandler(hdlr=hdlr)
 
     @_update_logger_attributes_hook
     def setLevel(self, level: str | int) -> None:
+        """
+        Sets the logging level of the logger to the specified level.
+
+        See `logging.Logger`'s `setLevel` method for details.
+
+        Args:
+            level (str | int): Level to use
+        """
         self.logger.setLevel(level=level)
 
     def callHandlers(self, record: "logging.LogRecord") -> None:
+        """
+        Calls the handlers for the specified record.
+
+        See `logging.Logger`'s `callHandlers` method for details.
+
+        Args:
+            record (logging.LogRecord): Record to handle
+        """
         self.logger.callHandlers(record=record)
 
     def findCaller(
@@ -688,6 +801,27 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         stack_info: bool = False,  # noqa: FBT001,FBT002
         stacklevel: int = 1,
     ) -> tuple[str, int, str, str | None]:
+        """
+        Returns a tupl of information about the caller of the logging
+        function, including the filename, line number, function name,
+        and stack info (if `stack_info` is `True`).
+
+        See `logging.Logger`'s `findCaller` method for details.
+
+        Args:
+            stack_info (bool, optional): If `True`, includes stack info
+                in the returned tuple; otherwise, stack info is not
+                included. Defaults to `False`.
+            stacklevel (int, optional): Number of stack frames to skip
+                when determining the caller information.
+                Defaults to `1`.
+
+        Returns:
+            tuple[str, int, str, str | None]: Tuple containing the
+                filename, line number, function name, and stack info (if
+                `stack_info` is `True`) of the caller of the
+                logging function
+        """
         return self.logger.findCaller(
             stack_info=stack_info, stacklevel=stacklevel
         )
@@ -695,18 +829,72 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
     def getChild(  # type: ignore[override]
         self, suffix: str
     ) -> "logging.Logger":
+        """
+        Returns a logger which is a child of this logger,
+        with the name of this logger as a prefix.
+
+        See `logging.Logger`'s `getChild` method for details.
+
+        Args:
+            suffix (str): Suffix to append to this logger's name for the
+                child logger
+
+        Returns:
+            logging.Logger: Logger which is a child of this logger, with
+                the name of this logger as a prefix and `suffix` as
+                a suffix
+        """
         return self.logger.getChild(suffix=suffix)
 
     def getChildren(self) -> "set[logging.Logger]":
+        """
+        Returns a set of all child loggers of this logger.
+
+        See `logging.Logger`'s `getChildren` method for details.
+
+        Returns:
+            set[logging.Logger]: Set of all child loggers of this logger
+        """
         return self.logger.getChildren()
 
     def getEffectiveLevel(self) -> int:
+        """
+        Returns the effective logging level for this logger.
+
+        See `logging.Logger`'s `getEffectiveLevel` method for details.
+
+        Returns:
+            int: Effective logging level for this logger
+        """
         return self.logger.getEffectiveLevel()
 
     def hasHandlers(self) -> bool:
+        """
+        Returns `True` if this logger has any handlers
+        configured; otherwise, returns `False`.
+
+        See `logging.Logger`'s `hasHandlers` method for details.
+
+        Returns:
+            bool: `True` if this logger has any handlers configured;
+                otherwise, `False`
+        """
         return self.logger.hasHandlers()
 
     def isEnabledFor(self, level: int) -> bool:
+        """
+        Returns `True` if this logger is enabled for the
+        specified level; otherwise returns `False`.
+
+        See `logging.Logger`'s `isEnabledFor` method for details.
+
+        Args:
+            level (int): Integer log level to check
+
+        Returns:
+            bool: `True` if this logger is enabled for the specified
+                level; otherwise, `False`
+        """
         return self.logger.isEnabledFor(level=level)
 
     def makeRecord(  # noqa: PLR0913,PLR0917
@@ -722,6 +910,39 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         extra: "Mapping[str, object] | None" = None,
         sinfo: str | None = None,
     ) -> "logging.LogRecord":
+        """
+        Returns a `logging.LogRecord` instance created
+        using the specified arguments.
+
+        Args:
+            name (str): Name of logger to which record will be passed
+            level (int): Integer log level for the record
+            fn (str): Filename of the source file where the logging call
+                was made
+            lno (int): Line number in the source file where the logging
+                call was made
+            msg (object): Message to log
+            args (_ArgsType): Arguments to pass to the
+                `logging.LogRecord` constructor for interpolation
+                into `msg`
+            exc_info (_SysExcInfoType | None): Exception info to pass
+                to the `logging.LogRecord` constructor. If `None`, no
+                exception info is included in the record. If a tuple of
+                the form returned by `sys.exc_info()`, the tuple is
+                passed directly to the `logging.LogRecord` constructor.
+            func (str | None, optional): Function name to pass to the
+                `logging.LogRecord` constructor. If `None`, no function
+                name is included in the record. Defaults to `None`.
+            extra (Mapping[str, object] | None, optional): Extra
+                attributes to add to the `logging.LogRecord` instance
+                created by this function. Defaults to `None`.
+            sinfo (str | None, optional): Stack info to pass to the
+                `logging.LogRecord` constructor. If `None`, no stack
+                info is included in the record. Defaults to `None`.
+
+        Returns:
+            logging.LogRecord: _description_
+        """
         return self.logger.makeRecord(
             name=name,
             level=level,

@@ -665,7 +665,8 @@ def _wrap_handler_in_queue(
     handler: "logging.Handler",
 ) -> "logging.handlers.QueueHandler":
     """
-    Wraps `handler` in a `QueueHandler` / `QueueListener` pair.
+    Returns a `logging.handlers.QueueHandler` that has a `QueueListener`
+    in a separate thread with the original handler attached.
 
     The real handler is attached to a `QueueListener` running in a
     background daemon thread. A `QueueHandler` (non-blocking in the
@@ -681,11 +682,11 @@ def _wrap_handler_in_queue(
     handler formats on the listener thread.
 
     Args:
-        handler (logging.Handler): The real handler to wrap.
+        handler (logging.Handler): The real handler to wrap
 
     Returns:
         logging.handlers.QueueHandler: Non-blocking queue handler
-            with `.listener` wired to the started `QueueListener`.
+            with `.listener` wired to the started `QueueListener`
     """
     import atexit
     import logging.handlers
@@ -695,6 +696,7 @@ def _wrap_handler_in_queue(
     if isinstance(handler, logging.handlers.QueueHandler):
         return handler
 
+    # Create queue that is passed to both constructors
     q: queue.SimpleQueue[logging.LogRecord] = queue.SimpleQueue()
     listener = logging.handlers.QueueListener(
         q, handler, respect_handler_level=True
