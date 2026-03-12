@@ -1,8 +1,11 @@
 """Tests for `snaplog._functional`."""
 
+import atexit
 import io
 import logging
+import logging.handlers
 import pathlib
+import queue
 from typing import Any
 
 import pytest
@@ -15,6 +18,7 @@ from snaplog._functional import (
     _parse_filters_arg,
     _parse_handlers_arg,
     _parse_log_level,
+    _wrap_handler_in_queue,
     add_filters_to_target,
     add_handlers_to_logger,
     get_filter,
@@ -1393,3 +1397,167 @@ class TestGetLoggerColor:
         )
         handler = logger.handlers[-1]
         assert isinstance(handler.formatter, ColorFormatter)
+
+
+class TestQueueHandler:
+    """Tests for queued handler support in `get_handler`."""
+
+    @staticmethod
+    def test_queued_false_returns_plain_handler() -> None:
+        """queued=False (default) returns a non-QueueHandler."""
+        handler = get_handler(core="null", queued=False)
+        assert not isinstance(handler, logging.handlers.QueueHandler)
+        handler.close()
+
+    @staticmethod
+    def test_queued_true_returns_queue_handler() -> None:
+        """queued=True returns a QueueHandler."""
+        handler = get_handler(core="null", queued=True)
+        assert isinstance(handler, logging.handlers.QueueHandler)
+        assert handler.listener is not None
+        handler.listener.stop()
+        handler.close()
+
+    @staticmethod
+    def test_listener_attribute_is_set() -> None:
+        """handler.listener is a QueueListener."""
+        handler = get_handler(core="null", queued=True)
+        assert isinstance(handler, logging.handlers.QueueHandler)
+        assert isinstance(handler.listener, logging.handlers.QueueListener)
+        handler.listener.stop()
+        handler.close()
+
+    @staticmethod
+    def test_listener_is_running() -> None:
+        """handler.listener._thread.is_alive() after creation."""
+        handler = get_handler(core="null", queued=True)
+        assert isinstance(handler, logging.handlers.QueueHandler)
+        assert handler.listener is not None
+        listener = handler.listener
+        assert listener._thread is not None
+        assert listener._thread.is_alive()
+        listener.stop()
+        handler.close()
+
+    @staticmethod
+    def test_atexit_registered(monkeypatch: pytest.MonkeyPatch) -> None:
+        """atexit.register is called with listener.stop."""
+        registered: list[Any] = []
+
+        def _capture(fn: Any) -> None:
+            registered.append(fn)
+
+        monkeypatch.setattr(atexit, "register", _capture)
+        handler = get_handler(core="null", queued=True)
+        assert isinstance(handler, logging.handlers.QueueHandler)
+        assert handler.listener is not None
+        listener = handler.listener
+        assert listener.stop in registered
+        listener.stop()
+        handler.close()
+
+    @staticmethod
+    def test_queue_is_simple_queue() -> None:
+        """handler.queue is queue.SimpleQueue."""
+        handler = get_handler(core="null", queued=True)
+        assert isinstance(handler, logging.handlers.QueueHandler)
+        assert isinstance(handler.queue, queue.SimpleQueue)
+        assert handler.listener is not None
+        handler.listener.stop()
+        handler.close()
+
+    @staticmethod
+    def test_formatter_on_real_handler_not_queue_handler() -> None:
+        """
+        Formatter is None on the returned QueueHandler; real
+        handler has the formatter.
+        """
+        fmt = logging.Formatter("%(message)s")
+        stream = io.StringIO()
+        real = logging.StreamHandler(stream)
+        real.setFormatter(fmt)
+        handler = get_handler(core=real, formatter=fmt, queued=True)
+        assert isinstance(handler, logging.handlers.QueueHandler)
+        assert handler.formatter is None
+        assert handler.listener is not None
+        listener = handler.listener
+        assert listener.handlers[0].formatter is fmt
+        listener.stop()
+        handler.close()
+
+    @staticmethod
+    def test_level_on_real_handler() -> None:
+        """Level set on real handler; QueueHandler level is NOTSET."""
+        stream = io.StringIO()
+        real = logging.StreamHandler(stream)
+        handler = get_handler(core=real, level=logging.WARNING, queued=True)
+        assert isinstance(handler, logging.handlers.QueueHandler)
+        assert handler.level == logging.NOTSET
+        assert handler.listener is not None
+        listener = handler.listener
+        assert listener.handlers[0].level == logging.WARNING
+        listener.stop()
+        handler.close()
+
+    @staticmethod
+    def test_record_delivered_end_to_end() -> None:
+        """
+        Log record reaches stream after listener.stop()
+        joins thread.
+        """
+        stream = io.StringIO()
+        real: logging.StreamHandler[io.StringIO] = logging.StreamHandler(
+            stream
+        )
+        real.setFormatter(logging.Formatter("%(message)s"))
+        real.setLevel(logging.DEBUG)
+        logger = logging.getLogger("test_queue_e2e")
+        logger.setLevel(logging.DEBUG)
+        qh = get_handler(core=real, level=None, queued=True)
+        assert isinstance(qh, logging.handlers.QueueHandler)
+        logger.addHandler(qh)
+        logger.info("hello")
+        assert qh.listener is not None
+        qh.listener.stop()
+        assert "hello" in stream.getvalue()
+
+    @staticmethod
+    def test_queued_with_file_path(tmp_path: pytest.TempPathFactory) -> None:
+        """
+        get_handler with a file path and queued=True
+        returns QueueHandler.
+        """
+        log_file = str(
+            tmp_path / "queue_test.log"  # type: ignore[operator] # pyright: ignore[reportOperatorIssue,reportUnknownArgumentType]
+        )
+        handler = get_handler(core=log_file, queued=True)
+        assert isinstance(handler, logging.handlers.QueueHandler)
+        assert handler.listener is not None
+        handler.listener.stop()
+        handler.close()
+
+    @staticmethod
+    def test_queued_in_kwargs_dict() -> None:
+        """
+        get_handler_from_spec with queued=True in kwargs
+        returns QueueHandler.
+        """
+        stream = io.StringIO()
+        spec: tuple[Any, Any] = (stream, {"queued": True, "level": None})
+        handler = get_handler_from_spec(spec)
+        assert isinstance(handler, logging.handlers.QueueHandler)
+        assert handler.listener is not None
+        handler.listener.stop()
+        handler.close()
+
+    @staticmethod
+    def test_already_queue_handler_returned_as_is() -> None:
+        """
+        Passing an existing QueueHandler as core with
+        queued=True does not double-wrap.
+        """
+        q: queue.SimpleQueue[logging.LogRecord] = queue.SimpleQueue()
+        existing = logging.handlers.QueueHandler(q)
+        result = _wrap_handler_in_queue(existing)
+        assert result is existing
+        existing.close()

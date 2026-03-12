@@ -135,6 +135,7 @@ class _HandlerKwargs(TypedDict, total=False):
     name: str | None
     level: int | None
     copy: bool
+    queued: bool
     # Ignored unless creating file handler
     handler_type: _HandlerType
     mode: str

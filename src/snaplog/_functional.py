@@ -9,6 +9,7 @@ from snaplog._typing import _NoDefault
 if _TYPE_CHECKING:  # pragma: no cover
     import datetime
     import logging
+    import logging.handlers  # noqa: TC004
     from collections.abc import Callable, Mapping, Sequence
     from typing import Any
 
@@ -447,7 +448,7 @@ def _maybe_create_handler(  # noqa: PLR0913, C901
     from typing import TextIO
 
     # Create placeholder to track if handler is created
-    handler: _logging.Handler | None = None
+    handler: _logging.Handler | None = None  # noqa: F823
 
     # Handle case when a handler is provided
     if isinstance(core, _logging.Handler):
@@ -660,6 +661,51 @@ def add_filters_to_target(
             target.addFilter(filter=filt)
 
 
+def _wrap_handler_in_queue(
+    handler: "logging.Handler",
+) -> "logging.handlers.QueueHandler":
+    """
+    Wraps `handler` in a `QueueHandler` / `QueueListener` pair.
+
+    The real handler is attached to a `QueueListener` running in a
+    background daemon thread. A `QueueHandler` (non-blocking in the
+    caller's thread) is returned. The listener is started immediately
+    and registered with `atexit` so it drains the queue on clean exit.
+
+    Records lost on abrupt termination (SIGKILL, `os._exit`) cannot
+    be recovered — this matches stdlib `QueueListener` behaviour.
+
+    The `queued` parameter's formatter/level are applied to `handler`
+    before wrapping, not to the returned `QueueHandler`, because
+    `QueueHandler.emit` enqueues the raw `LogRecord` and the real
+    handler formats on the listener thread.
+
+    Args:
+        handler (logging.Handler): The real handler to wrap.
+
+    Returns:
+        logging.handlers.QueueHandler: Non-blocking queue handler
+            with `.listener` wired to the started `QueueListener`.
+    """
+    import atexit
+    import logging.handlers
+    import queue
+
+    # Guard: do not double-wrap an existing QueueHandler
+    if isinstance(handler, logging.handlers.QueueHandler):
+        return handler
+
+    q: queue.SimpleQueue[logging.LogRecord] = queue.SimpleQueue()
+    listener = logging.handlers.QueueListener(
+        q, handler, respect_handler_level=True
+    )
+    queue_handler = logging.handlers.QueueHandler(q)
+    queue_handler.listener = listener
+    listener.start()
+    atexit.register(listener.stop)
+    return queue_handler
+
+
 def get_handler(  # noqa: PLR0913
     core: "_StrOrPathLike | _TextIOLike | logging.Handler | None" = None,
     *,
@@ -681,6 +727,7 @@ def get_handler(  # noqa: PLR0913
     namer: "Callable[[str], str] | None" = None,
     rotator: "Callable[[str, str], None] | None" = None,
     copy: bool = False,
+    queued: bool = False,
 ) -> "logging.Handler":
     """
     Returns a `logging.Handler` configured
@@ -819,6 +866,14 @@ def get_handler(  # noqa: PLR0913
             original instance of `core`; otherwise, the original
             instance is returned. Ignored if `core` is not a
             `logging.Handler`. Defaults to `False`.
+        queued (bool, optional): If `True`, wraps the created handler
+            in a `logging.handlers.QueueHandler` /
+            `logging.handlers.QueueListener` pair so that log I/O
+            happens on a background thread. The `QueueHandler` is
+            returned; the listener is started immediately and
+            registered with `atexit` for clean shutdown. If `core` is
+            already a `QueueHandler`, it is returned as-is.
+            Defaults to `False`.
 
     Raises:
         ValueError: Raised if `core` fails to specify a valid handler
@@ -868,6 +923,8 @@ def get_handler(  # noqa: PLR0913
     # Add filters if specified
     add_filters_to_target(target=handler, filters=filters)
 
+    if queued:
+        handler = _wrap_handler_in_queue(handler)
     return handler
 
 

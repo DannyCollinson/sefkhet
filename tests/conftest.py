@@ -2,6 +2,7 @@
 
 import io
 import logging
+import logging.handlers
 from collections.abc import Generator
 from typing import Any
 
@@ -37,6 +38,11 @@ def isolated_logging() -> Generator[None]:
         entry = logging.Logger.manager.loggerDict.get(name)
         if isinstance(entry, logging.Logger):  # pragma: no branch
             for hdlr in entry.handlers[:]:
+                if (
+                    isinstance(hdlr, logging.handlers.QueueHandler)
+                    and hdlr.listener is not None
+                ):
+                    hdlr.listener.stop()
                 hdlr.close()
                 entry.removeHandler(hdlr)
             entry.filters.clear()
@@ -45,6 +51,11 @@ def isolated_logging() -> Generator[None]:
     # Restore root-logger handlers
     for hdlr in logging.root.handlers[:]:
         if hdlr not in pre_root_handlers:
+            if (
+                isinstance(hdlr, logging.handlers.QueueHandler)
+                and hdlr.listener is not None
+            ):
+                hdlr.listener.stop()
             hdlr.close()
             logging.root.removeHandler(hdlr)
     logging.root.filters.clear()
