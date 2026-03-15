@@ -269,7 +269,7 @@ class TestColorFormatter:  # noqa: PLR0904
         # The plain message text appears after the reset code
         reset_idx = result.index(_ANSI_RESET)
         tail = result[reset_idx + len(_ANSI_RESET) :]
-        assert msg in tail or msg in result
+        assert msg in tail
 
     @staticmethod
     def test_partial_mode_restores_msg_and_args() -> None:

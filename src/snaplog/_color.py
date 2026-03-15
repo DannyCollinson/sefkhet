@@ -60,7 +60,7 @@ def get_level_color(level: int) -> str:  # noqa: PLR0911
     - `30-39`: yellow
     - `40-49`: orange
     - `50-59`: red
-    - `>= 59`: magenta
+    - `>= 60`: magenta
 
     Args:
         level (int): Integer log level

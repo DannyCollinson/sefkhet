@@ -55,7 +55,7 @@ def isolated_logging() -> Generator[None]:
                 isinstance(hdlr, logging.handlers.QueueHandler)
                 and hdlr.listener is not None
             ):
-                hdlr.listener.stop()
+                hdlr.listener.stop()  # pragma: no cover
             hdlr.close()
             logging.root.removeHandler(hdlr)
     logging.root.filters.clear()

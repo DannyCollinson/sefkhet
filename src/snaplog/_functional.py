@@ -79,7 +79,7 @@ def get_log_level_map() -> dict[str, int]:
             strings to their associated integer log levels
     """
     # Start with snaplog defaults
-    valid_levels_map = LOG_LEVEL_STR_TO_INT
+    valid_levels_map = LOG_LEVEL_STR_TO_INT.copy()
     # Add user customizations
     valid_levels_map.update(_logging.getLevelNamesMapping())
     return valid_levels_map

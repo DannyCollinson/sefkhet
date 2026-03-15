@@ -121,8 +121,9 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         if isinstance(name, _NoDefaultType):
             # Use thread lock to ensure that only
             # one of each number can be created
-            name = f"log{SnapLogger._counter}"
-            SnapLogger._counter += 1
+            with SnapLogger._lock:
+                name = f"log{SnapLogger._counter}"
+                SnapLogger._counter += 1
 
         # Create logger
         self.logger = get_logger(
@@ -779,10 +780,15 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         Sets the logging level of the logger to the specified level.
 
         See `logging.Logger`'s `setLevel` method for details.
+        Supports snaplog shorthand strings (e.g. ``"d"``,
+        ``"i"``, ``"w"``, ``"e"``, ``"c"``).
 
         Args:
             level (str | int): Level to use
         """
+        from snaplog._functional import _parse_log_level
+
+        level = _parse_log_level(level=level, quiet=False)
         self.logger.setLevel(level=level)
 
     def callHandlers(self, record: "logging.LogRecord") -> None:
