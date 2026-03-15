@@ -6,6 +6,32 @@ from typing import TYPE_CHECKING as _TYPE_CHECKING
 from snaplog._typing import _NoDefault
 
 
+_DEFAULT_FMT = "%(asctime)s | %(levelname)s | %(message)s"
+_DEFAULT_FMT_WITH_NAME = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+_DEFAULT_LOGGER_NAMES: frozenset[str | None] = frozenset(
+    {None, "root", "log", "snaplogger"}
+)
+
+
+def _get_default_fmt(name: str | None) -> str:
+    """
+    Returns the default format string for a logger.
+
+    If the logger name is one of the built-in defaults
+    (`None`, `"root"`, `"log"`, `"snaplogger"`), the format
+    string omits `%(name)s`; otherwise, it includes it.
+
+    Args:
+        name (str | None): Logger name to check
+
+    Returns:
+        str: The appropriate default format string
+    """
+    if name in _DEFAULT_LOGGER_NAMES:
+        return _DEFAULT_FMT
+    return _DEFAULT_FMT_WITH_NAME
+
+
 if _TYPE_CHECKING:  # pragma: no cover
     import datetime
     import logging
@@ -136,9 +162,7 @@ def _parse_log_level(level: str | int, *, quiet: bool = False) -> int:
 
 
 def get_formatter(  # noqa: PLR0913
-    fmt: (
-        "str | logging.Formatter | None"
-    ) = "%(asctime)s | %(levelname)s | %(message)s",
+    fmt: ("str | logging.Formatter | None") = _DEFAULT_FMT,
     *,
     datefmt: str | None = None,
     style: "_FormatStyle" = "%",
@@ -158,16 +182,16 @@ def get_formatter(  # noqa: PLR0913
 
     This function follows the defaults of the `logging.Formatter`
     constructor except for the `fmt` string, which defaults to `None`
-    in the `logging.Formatter` constructor but is set to a custom
-    string here (`"%(asctime)s | %(levelname)s | %(message)s"`).
-    See the `logging.Formatter` class for details about the arguments.
+    in the `logging.Formatter` constructor but is set to
+    `_DEFAULT_FMT` here. See the `logging.Formatter` class for
+    details about the arguments.
 
     Args:
         fmt (str | logging.Formatter | None, optional): If a
-            `logging.Formatter`, then the formatter to return a copy of;
-            otherwise, the format string to pass to the
+            `logging.Formatter`, then the formatter to return a copy
+            of; otherwise, the format string to pass to the
             `logging.Formatter` constructor.
-            Defaults to `"%(asctime)s | %(levelname)s | %(message)s"`.
+            Defaults to `_DEFAULT_FMT`.
         datefmt (str | None, optional): Date format string to pass to
             `logging.Formatter` constructor. Ignored if `fmt` is a
             `logging.Formatter`. Defaults to `None`.
@@ -522,9 +546,7 @@ def _maybe_create_handler(  # noqa: PLR0913, C901
 
 def set_formatter_for_handler(  # noqa: PLR0913
     handler: "logging.Handler",
-    fmt: (
-        "str | logging.Formatter | None"
-    ) = "%(asctime)s | %(levelname)s | %(message)s",
+    fmt: ("str | logging.Formatter | None") = _DEFAULT_FMT,
     *,
     datefmt: str | None = None,
     style: "_FormatStyle" = "%",
@@ -542,18 +564,17 @@ def set_formatter_for_handler(  # noqa: PLR0913
 
     This function follows the defaults of the `logging.Formatter`
     constructor except for the `fmt` string, which defaults to
-    `None` in the `logging.Formatter` constructor but is set to a
-    custom string here (
-    `"%(asctime)s | %(levelname)s | %(message)s"`). See the
-    `logging.Formatter` class for details about the arguments.
+    `None` in the `logging.Formatter` constructor but is set to
+    `_DEFAULT_FMT` here. See the `logging.Formatter` class for
+    details about the arguments.
 
     Args:
         handler (logging.Handler): Handler to set formatter for
         fmt (str | logging.Formatter | None, optional): If a
             `logging.Formatter`, then the formatter to use a copy
             of; otherwise, the format string to pass to the
-            `logging.Formatter` constructor. Defaults to
-            `"%(asctime)s | %(levelname)s | %(message)s"`.
+            `logging.Formatter` constructor.
+            Defaults to `_DEFAULT_FMT`.
         datefmt (str | None, optional): Date format string to pass
             to `logging.Formatter` constructor. Ignored if `fmt` is
             a `logging.Formatter`. Defaults to `None`.
@@ -1007,9 +1028,7 @@ def add_handlers_to_logger(
 
 def set_formatter_for_logger(  # noqa: PLR0913
     logger: "logging.Logger",
-    fmt: (
-        "str | logging.Formatter | None"
-    ) = "%(asctime)s | %(levelname)s | %(message)s",
+    fmt: ("str | logging.Formatter | _NoDefaultType | None") = _NoDefault,
     *,
     datefmt: str | None = None,
     style: "_FormatStyle" = "%",
@@ -1028,18 +1047,19 @@ def set_formatter_for_logger(  # noqa: PLR0913
 
     This function follows the defaults of the `logging.Formatter`
     constructor except for the `fmt` string, which defaults to
-    `None` in the `logging.Formatter` constructor but is set to a
-    custom string here (
-    `"%(asctime)s | %(levelname)s | %(message)s"`). See the
+    `None` in the `logging.Formatter` constructor but is resolved
+    here based on the logger name: loggers with non-default names
+    get a format string that includes `%(name)s`. See the
     `logging.Formatter` class for details about the arguments.
 
     Args:
         logger (logging.Logger): Logger to set formatter for
-        fmt (str | logging.Formatter | None, optional): If a
-            `logging.Formatter`, then the formatter to use a copy
-            of; otherwise, the format string to pass to the
-            `logging.Formatter` constructor. Defaults to
-            `"%(asctime)s | %(levelname)s | %(message)s"`.
+        fmt (str | logging.Formatter | _NoDefaultType | None, optional):
+            If a `logging.Formatter`, then the formatter to use a
+            copy of; otherwise, the format string to pass to the
+            `logging.Formatter` constructor. If `_NoDefault`,
+            resolves to a name-aware default format string.
+            Defaults to `_NoDefault`.
         datefmt (str | None, optional): Date format string to pass
             to `logging.Formatter` constructor. Ignored if `fmt` is
             a `logging.Formatter`. Defaults to `None`.
@@ -1062,6 +1082,12 @@ def set_formatter_for_logger(  # noqa: PLR0913
             otherwise, only handlers without a formatter already set
             will have their formatter set. Defaults to `False`.
     """
+    from snaplog._typing import _NoDefaultType
+
+    # Resolve default fmt based on logger name
+    if isinstance(fmt, _NoDefaultType):
+        fmt = _get_default_fmt(logger.name)
+
     # Get new formatter for logger
     formatter = get_formatter(
         fmt=fmt,
@@ -1136,10 +1162,13 @@ def get_logger(  # noqa: PLR0913
     """
     from snaplog._typing import _NoDefaultType
 
-    # Get logger with specified name, replacing default with "log"
-    logger = _logging.getLogger(
+    # Resolve name, replacing default with "log"
+    resolved_name: str | None = (
         "log" if isinstance(name, _NoDefaultType) else name
     )
+
+    # Get logger with specified name
+    logger = _logging.getLogger(resolved_name)
 
     # Set logger level
     level = _parse_log_level(level=level, quiet=False)
@@ -1154,7 +1183,9 @@ def get_logger(  # noqa: PLR0913
     if isinstance(formatter, _NoDefaultType):
         # Only auto-create a formatter when color mode is active
         if color != "off":
-            resolved_formatter = get_formatter(color=color)
+            resolved_formatter = get_formatter(
+                fmt=_get_default_fmt(resolved_name), color=color
+            )
         else:
             resolved_formatter = None
     else:

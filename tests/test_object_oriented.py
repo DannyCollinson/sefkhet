@@ -559,3 +559,37 @@ class TestSnapLoggerColor:
         )
         assert len(snap.handlers) >= 1
         assert isinstance(snap.handlers[-1].formatter, ColorFormatter)
+
+
+class TestSnapLoggerNameAwareFmt:
+    """Tests for name-aware default format strings in SnapLogger."""
+
+    @staticmethod
+    def test_custom_name_includes_name_in_fmt() -> None:
+        """SnapLogger with custom name has %(name)s in fmt."""
+        snap = SnapLogger(name="test_oo_nafmt_custom")
+        assert len(snap.handlers) >= 1
+        fmt = snap.handlers[-1].formatter
+        assert fmt is not None
+        assert "%(name)s" in fmt._fmt  # type: ignore[operator] # pyright: ignore[reportOperatorIssue]
+
+    @staticmethod
+    def test_auto_numbered_name_includes_name_in_fmt() -> None:
+        """SnapLogger with auto-numbered name has %(name)s."""
+        snap = SnapLogger()
+        assert snap.name == "log0"
+        assert len(snap.handlers) >= 1
+        fmt = snap.handlers[-1].formatter
+        assert fmt is not None
+        assert "%(name)s" in fmt._fmt  # type: ignore[operator] # pyright: ignore[reportOperatorIssue]
+
+    @staticmethod
+    def test_explicit_formatter_not_overridden() -> None:
+        """Explicit formatter is not overridden by name logic."""
+        snap = SnapLogger(
+            name="test_oo_nafmt_explicit", formatter="%(message)s"
+        )
+        assert len(snap.handlers) >= 1
+        fmt = snap.handlers[-1].formatter
+        assert fmt is not None
+        assert fmt._fmt == "%(message)s"

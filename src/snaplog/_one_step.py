@@ -96,6 +96,7 @@ def configure_default_logger(  # noqa: PLR0913
             Defaults to `"level"`.
     """  # noqa: E501,W505
     from snaplog._functional import (
+        _get_default_fmt,
         get_formatter,
         get_handler,
         get_logger,
@@ -129,7 +130,7 @@ def configure_default_logger(  # noqa: PLR0913
         else handlers
     )
     formatter = (
-        get_formatter(color=color)
+        get_formatter(fmt=_get_default_fmt(name), color=color)
         if isinstance(formatter, _NoDefaultType)
         else formatter
     )

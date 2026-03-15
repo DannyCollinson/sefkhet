@@ -13,6 +13,10 @@ import pytest
 import snaplog
 from snaplog._color import ColorFormatter
 from snaplog._functional import (
+    _DEFAULT_FMT,
+    _DEFAULT_FMT_WITH_NAME,
+    _DEFAULT_LOGGER_NAMES,
+    _get_default_fmt,
     _maybe_create_handler,
     _maybe_create_special_string_handler,
     _parse_filters_arg,
@@ -1283,6 +1287,113 @@ class TestPublicApi:  # pylint: disable=too-few-public-methods
             assert hasattr(snaplog, name), f"Missing export: {name}"
 
 
+class TestGetDefaultFmt:
+    """Tests for `_get_default_fmt` and name-aware format strings."""
+
+    @staticmethod
+    def test_default_names_return_fmt_without_name() -> None:
+        """Default logger names produce a format without %(name)s."""
+        for name in (None, "root", "log", "snaplogger"):
+            result = _get_default_fmt(name)
+            assert result == _DEFAULT_FMT
+            assert "%(name)s" not in result
+
+    @staticmethod
+    def test_custom_name_returns_fmt_with_name() -> None:
+        """A non-default name produces a format with %(name)s."""
+        result = _get_default_fmt("myapp")
+        assert result == _DEFAULT_FMT_WITH_NAME
+        assert "%(name)s" in result
+
+    @staticmethod
+    def test_auto_numbered_name_returns_fmt_with_name() -> None:
+        """Auto-numbered names like 'log0' include %(name)s."""
+        result = _get_default_fmt("log0")
+        assert result == _DEFAULT_FMT_WITH_NAME
+
+    @staticmethod
+    def test_default_logger_names_frozenset() -> None:
+        """_DEFAULT_LOGGER_NAMES contains the expected values."""
+        assert (
+            frozenset({None, "root", "log", "snaplogger"})
+            == _DEFAULT_LOGGER_NAMES
+        )
+
+    @staticmethod
+    def test_get_logger_custom_name_has_name_in_fmt() -> None:
+        """
+        get_logger with non-default name auto-creates
+        a formatter that includes %(name)s.
+        """
+        logger = get_logger(name="test_gdf_custom", handlers="null")
+        handler = logger.handlers[-1]
+        assert handler.formatter is not None
+        assert "%(name)s" in handler.formatter._fmt  # type: ignore[operator] # pyright: ignore[reportOperatorIssue]
+
+    @staticmethod
+    def test_get_logger_default_name_no_name_in_fmt() -> None:
+        """
+        get_logger with default name 'log' auto-creates
+        a formatter without %(name)s.
+        """
+        logger = get_logger(name="log", handlers="null")
+        handler = logger.handlers[-1]
+        assert handler.formatter is not None
+        assert "%(name)s" not in handler.formatter._fmt  # type: ignore[operator] # pyright: ignore[reportOperatorIssue]
+
+    @staticmethod
+    def test_get_logger_none_name_no_name_in_fmt() -> None:
+        """
+        get_logger with name=None auto-creates
+        a formatter without %(name)s.
+        """
+        logger = get_logger(name=None, handlers="null")
+        handler = logger.handlers[-1]
+        assert handler.formatter is not None
+        assert "%(name)s" not in handler.formatter._fmt  # type: ignore[operator] # pyright: ignore[reportOperatorIssue]
+
+    @staticmethod
+    def test_explicit_formatter_not_overridden() -> None:
+        """
+        When user provides an explicit formatter,
+        the name logic does not interfere.
+        """
+        logger = get_logger(
+            name="test_gdf_explicit_fmt",
+            handlers="null",
+            formatter="%(message)s",
+        )
+        handler = logger.handlers[-1]
+        assert handler.formatter is not None
+        assert handler.formatter._fmt == "%(message)s"
+
+    @staticmethod
+    def test_set_formatter_for_logger_default_custom() -> None:
+        """
+        set_formatter_for_logger with default fmt uses
+        name-aware format for custom-named loggers.
+        """
+        logger = logging.getLogger("test_gdf_sfl_custom")
+        handler = logging.NullHandler()
+        logger.addHandler(handler)
+        set_formatter_for_logger(logger)
+        assert handler.formatter is not None
+        assert "%(name)s" in handler.formatter._fmt  # type: ignore[operator] # pyright: ignore[reportOperatorIssue]
+
+    @staticmethod
+    def test_set_formatter_for_logger_default_builtin() -> None:
+        """
+        set_formatter_for_logger with default fmt uses format
+        without %(name)s for default-named loggers.
+        """
+        logger = logging.getLogger("log")
+        handler = logging.NullHandler()
+        logger.addHandler(handler)
+        set_formatter_for_logger(logger)
+        assert handler.formatter is not None
+        assert "%(name)s" not in handler.formatter._fmt  # type: ignore[operator] # pyright: ignore[reportOperatorIssue]
+
+
 class TestGetFormatterColor:
     """Tests for the `color` parameter of `get_formatter`."""
 
@@ -1506,9 +1617,7 @@ class TestQueueHandler:
         joins thread.
         """
         stream = io.StringIO()
-        real: logging.StreamHandler[io.StringIO] = logging.StreamHandler(
-            stream
-        )
+        real: logging.StreamHandler[io.StringIO] = logging.StreamHandler(stream)
         real.setFormatter(logging.Formatter("%(message)s"))
         real.setLevel(logging.DEBUG)
         logger = logging.getLogger("test_queue_e2e")

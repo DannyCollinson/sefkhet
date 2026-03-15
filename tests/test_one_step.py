@@ -97,6 +97,34 @@ class TestConfigureDefaultLogger:
         assert logger is not None
         assert logger.name == "explicit_name"
 
+    @staticmethod
+    def test_custom_name_includes_name_in_fmt() -> None:
+        """
+        Custom name includes %(name)s in the auto-created
+        formatter.
+        """
+        configure_default_logger(name="myapp")
+        logger = _one_step_module._default_logger
+        assert logger is not None
+        assert len(logger.handlers) >= 1
+        fmt = logger.handlers[-1].formatter
+        assert fmt is not None
+        assert "%(name)s" in fmt._fmt  # type: ignore[operator] # pyright: ignore[reportOperatorIssue]
+
+    @staticmethod
+    def test_default_name_excludes_name_in_fmt() -> None:
+        """
+        Default name 'snaplogger' excludes %(name)s from the
+        auto-created formatter.
+        """
+        configure_default_logger()
+        logger = _one_step_module._default_logger
+        assert logger is not None
+        assert len(logger.handlers) >= 1
+        fmt = logger.handlers[-1].formatter
+        assert fmt is not None
+        assert "%(name)s" not in fmt._fmt  # type: ignore[operator] # pyright: ignore[reportOperatorIssue]
+
 
 class TestLog:
     """Tests for `log` (standard `logging.Logger.log` API)."""
