@@ -570,7 +570,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: "_ExcInfoType" = None,
+        exc_info: "_ExcInfoType" = True,
         stack_info: bool = False,
         stacklevel: int = 1,
         extra: "Mapping[str, object] | None" = None,
@@ -580,6 +580,8 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         Log a message with level `ERROR` on this logger.
 
         Mirrors the interface of `logging.Logger.exception`.
+        Exception info is captured by default (``exc_info=True``),
+        matching the standard-library behaviour.
         """
         self.logger.log(
             _logging.ERROR,

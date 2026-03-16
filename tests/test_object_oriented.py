@@ -713,6 +713,58 @@ class TestUpdateLoggerAttributesHookException:
             )
 
 
+class TestSnapLoggerExceptionExcInfo:
+    """Tests for SnapLogger.exception() exc_info default."""
+
+    @staticmethod
+    def test_exception_captures_exc_info_by_default(
+        string_io_stream: io.StringIO,
+    ) -> None:
+        """exception() captures traceback by default."""  # noqa: DOC501
+        snap = SnapLogger(
+            name="test_oo_exc_info_default",
+            level=logging.DEBUG,
+            handlers=(
+                logging.StreamHandler(string_io_stream),
+                _HandlerKwargs({"level": logging.DEBUG}),
+            ),
+            formatter="%(message)s",
+        )
+        msg = "boom"
+        try:
+            raise ValueError(msg)  # noqa: TRY301
+        except ValueError:
+            snap.exception("caught it")
+        output = string_io_stream.getvalue()
+        assert "caught it" in output
+        assert "ValueError" in output
+        assert "boom" in output
+        assert "Traceback" in output
+
+    @staticmethod
+    def test_exception_exc_info_false_suppresses_traceback(
+        string_io_stream: io.StringIO,
+    ) -> None:
+        """exception(exc_info=False) suppresses traceback."""  # noqa: DOC501
+        snap = SnapLogger(
+            name="test_oo_exc_info_false",
+            level=logging.DEBUG,
+            handlers=(
+                logging.StreamHandler(string_io_stream),
+                _HandlerKwargs({"level": logging.DEBUG}),
+            ),
+            formatter="%(message)s",
+        )
+        msg = "boom"
+        try:
+            raise ValueError(msg)  # noqa: TRY301
+        except ValueError:
+            snap.exception("caught it", exc_info=False)
+        output = string_io_stream.getvalue()
+        assert "caught it" in output
+        assert "Traceback" not in output
+
+
 class TestSnapLoggerLogEdgeCases:
     """Edge-case tests for SnapLogger.log."""
 

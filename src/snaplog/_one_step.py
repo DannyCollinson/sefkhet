@@ -107,7 +107,8 @@ def configure_default_logger(  # noqa: PLR0913
     # Make sure function operates on the module-level default logger
     global _default_logger  # noqa: PLW0603
 
-    # Skip if default logger is already configured and force is false
+    # Fast-path: skip if default logger is already configured and
+    # force is false.
     if _default_logger is not None and not force:
         return
 
@@ -118,6 +119,9 @@ def configure_default_logger(  # noqa: PLR0913
     ) and not isinstance(spec, _NoDefaultType):
         # Use thread lock to ensure only one default logger gets made
         with _lock:
+            # Double-check inside the lock to avoid redundant creation
+            if _default_logger is not None and not force:
+                return
             _default_logger = get_logger_from_spec(spec=spec)
         return
 
@@ -139,6 +143,9 @@ def configure_default_logger(  # noqa: PLR0913
     # Configure default logger,
     # and use thread lock to ensure only one default logger gets made
     with _lock:
+        # Double-check inside the lock to avoid redundant creation
+        if _default_logger is not None and not force:
+            return
         _default_logger = get_logger(
             name=name,
             level=level,
