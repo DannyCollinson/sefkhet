@@ -170,6 +170,17 @@ class TestParseLogLevel:
         with pytest.raises(ValueError, match="bogus_value"):
             _parse_log_level("bogus_value")
 
+    @staticmethod
+    def test_whitespace_string_level() -> None:
+        """Whitespace-padded string raises ValueError."""
+        with pytest.raises(ValueError, match="debug"):
+            _parse_log_level("  debug  ")
+
+    @staticmethod
+    def test_negative_int_level() -> None:
+        """Negative int passes through unchanged."""
+        assert _parse_log_level(-5) == -5
+
 
 class TestGetFormatter:
     """Tests for `get_formatter`."""
@@ -669,6 +680,16 @@ class TestMaybeCreateHandler:
         """An unrecognized type returns None."""
         result = self._call(42)
         assert result is None
+
+    def test_textio_subclass(self) -> None:
+        """A custom TextIOBase subclass creates a StreamHandler."""
+
+        class _FakeTextIO(io.TextIOBase):
+            pass
+
+        stream = _FakeTextIO()
+        result = self._call(stream)
+        assert isinstance(result, logging.StreamHandler)
 
 
 class TestSetFormatterForHandler:
@@ -1741,3 +1762,58 @@ class TestQueueHandler:
         assert output.startswith(color)
         assert _ANSI_RESET in output
         assert "colorful" in output
+
+
+class TestIntegrationCombinations:
+    """Integration tests for handler/formatter combos."""
+
+    @staticmethod
+    def test_color_formatter_with_rotating_file_handler(log_file: str) -> None:
+        """Rotating file handler with color formatter."""
+        handler = get_handler(
+            core=log_file,
+            handler_type="rotating_file",
+            formatter="%(levelname)s %(message)s",
+            delay=True,
+        )
+        try:
+            assert isinstance(handler, logging.handlers.RotatingFileHandler)
+            assert handler.formatter is not None
+        finally:
+            handler.close()
+
+    @staticmethod
+    def test_color_formatter_with_timed_rotating_handler(log_file: str) -> None:
+        """Timed rotating file handler with color formatter."""
+        handler = get_handler(
+            core=log_file,
+            handler_type="timed_rotating_file",
+            formatter="%(levelname)s %(message)s",
+            delay=True,
+        )
+        try:
+            assert isinstance(
+                handler, logging.handlers.TimedRotatingFileHandler
+            )
+            assert handler.formatter is not None
+        finally:
+            handler.close()
+
+    @staticmethod
+    def test_get_logger_from_spec_nested_dict() -> None:
+        """Complex dict spec wires handlers and filters."""
+        result = get_logger_from_spec(
+            {
+                "name": "test_integ_nested",
+                "level": logging.DEBUG,
+                "handlers": [
+                    "null",
+                    ("stderr", _HandlerKwargs({"level": logging.WARNING})),
+                ],
+                "filters": "test_integ_nested",
+            }
+        )
+        assert result.name == "test_integ_nested"
+        assert result.level == logging.DEBUG
+        assert len(result.handlers) == 2
+        assert len(result.filters) == 1

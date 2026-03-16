@@ -2,7 +2,9 @@
 
 import io
 import logging
+import logging.handlers
 import threading
+from pathlib import Path
 
 import pytest
 
@@ -652,3 +654,145 @@ class TestSnapLoggerMixedHandlers:
         )
         assert len(snap.handlers) == 2
         assert snap.handlers[1].level == logging.ERROR
+
+
+class TestUpdateLoggerAttributesHookException:
+    """Tests for hook behaviour when the wrapped method raises."""
+
+    @staticmethod
+    def test_hook_reraises_original_exception(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """The original RuntimeError propagates unchanged."""
+        snap = SnapLogger(name="test_oo_hook_exc_reraise", handlers="null")
+        msg = "boom"
+
+        def _raise(**_kwargs: object) -> None:
+            raise RuntimeError(msg)
+
+        monkeypatch.setattr(snap.logger, "addHandler", _raise)
+        with pytest.raises(RuntimeError, match="boom"):
+            snap.addHandler(logging.NullHandler())
+
+    @staticmethod
+    def test_hook_syncs_attributes_after_exception(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Attributes stay consistent after an exception."""
+        snap = SnapLogger(name="test_oo_hook_exc_sync", handlers="null")
+        pre_attrs = {
+            a: getattr(snap, a)
+            for a in (
+                "name",
+                "level",
+                "handlers",
+                "filters",
+                "disabled",
+                "propagate",
+                "parent",
+                "manager",
+            )
+        }
+        msg = "boom"
+
+        def _raise(**_kwargs: object) -> None:
+            raise RuntimeError(msg)
+
+        monkeypatch.setattr(snap.logger, "addHandler", _raise)
+        with pytest.raises(RuntimeError, match="boom"):
+            snap.addHandler(logging.NullHandler())
+
+        for attr, old_val in pre_attrs.items():
+            snap_val = getattr(snap, attr)
+            logger_val = getattr(snap.logger, attr)
+            assert snap_val == logger_val, (
+                f"{attr}: snap={snap_val!r}, logger={logger_val!r}"
+            )
+            assert snap_val == old_val, (
+                f"{attr} changed: {old_val!r} -> {snap_val!r}"
+            )
+
+
+class TestSnapLoggerLogEdgeCases:
+    """Edge-case tests for SnapLogger.log."""
+
+    @staticmethod
+    def test_log_with_exc_info_exception_instance(
+        string_io_stream: io.StringIO,
+    ) -> None:
+        """exc_info=ValueError(...) includes exception info."""
+        snap = SnapLogger(
+            name="test_oo_exc_info_inst",
+            level=logging.DEBUG,
+            handlers=(
+                logging.StreamHandler(string_io_stream),
+                _HandlerKwargs({"level": logging.DEBUG}),
+            ),
+            formatter="%(message)s",
+        )
+        snap.log("error", "bad", exc_info=ValueError("test"))
+        output = string_io_stream.getvalue()
+        assert "bad" in output
+        assert "ValueError" in output
+
+    @staticmethod
+    def test_log_with_extra_kwargs(string_io_stream: io.StringIO) -> None:
+        """Extra dict is available in the format string."""
+        snap = SnapLogger(
+            name="test_oo_extra_kw",
+            level=logging.DEBUG,
+            handlers=(
+                logging.StreamHandler(string_io_stream),
+                _HandlerKwargs({"level": logging.DEBUG}),
+            ),
+            formatter="%(user)s: %(message)s",
+        )
+        snap.log("info", "hi", extra={"user": "alice"})
+        assert "alice" in string_io_stream.getvalue()
+
+    @staticmethod
+    def test_log_with_non_string_message(string_io_stream: io.StringIO) -> None:
+        """Non-string message (int) is accepted."""
+        snap = SnapLogger(
+            name="test_oo_nonstr_msg",
+            level=logging.DEBUG,
+            handlers=(
+                logging.StreamHandler(string_io_stream),
+                _HandlerKwargs({"level": logging.DEBUG}),
+            ),
+            formatter="%(message)s",
+        )
+        snap.log("info", 42)
+        assert "42" in string_io_stream.getvalue()
+
+
+class TestSnapLoggerIntegration:  # pylint: disable=too-few-public-methods
+    """Integration tests combining SnapLogger with handlers."""
+
+    @staticmethod
+    def test_snap_logger_with_queued_handler(tmp_path: Path) -> None:
+        """SnapLogger with queued file handler delivers msg."""
+        log_file = str(tmp_path / "queued.log")
+        snap = SnapLogger(
+            name="test_oo_queued_int",
+            level=logging.DEBUG,
+            handlers=(
+                log_file,
+                _HandlerKwargs(
+                    {
+                        "queued": True,
+                        "level": logging.DEBUG,
+                        "formatter": "%(message)s",
+                    }
+                ),
+            ),
+        )
+        snap.info("queued msg")
+        # Stop the listener to flush
+        for h in snap.handlers:
+            if (
+                isinstance(h, logging.handlers.QueueHandler)
+                and h.listener is not None
+            ):
+                h.listener.stop()
+        assert "queued msg" in Path(log_file).read_text(encoding="utf-8")

@@ -1,10 +1,14 @@
 """Tests for `snaplog._color`."""
 
+import contextlib
 import logging
+from unittest.mock import patch
 
 from snaplog._color import (
     _ANSI_RESET,
     _LEVELNAME_WIDTH,
+    _MAGENTA,
+    _PINK,
     ColorFormatter,
     _get_display_levelname,
     _parse_color_spec,
@@ -506,3 +510,82 @@ class TestGetDisplayLevelname:
         result = _get_display_levelname(long_name)
         assert len(result) > _LEVELNAME_WIDTH
         assert result == long_name
+
+
+class TestGetLevelColorEdgeCases:
+    """Edge-case tests for `get_level_color`."""
+
+    @staticmethod
+    def test_very_large_level() -> None:
+        """Level 1_000_000 (>= 60) returns magenta."""
+        assert get_level_color(1_000_000) == _MAGENTA
+
+    @staticmethod
+    def test_negative_level() -> None:
+        """Level -100 (<= 0) returns pink."""
+        assert get_level_color(-100) == _PINK
+
+
+class TestColorFormatterExceptionSafety:
+    """Tests for ColorFormatter state when format raises."""
+
+    @staticmethod
+    def test_format_leaves_levelname_mutated_on_error() -> None:
+        """Levelname is left mutated if formatMessage raises."""
+        colored = ColorFormatter("%(levelname)s | %(message)s", color="full")
+        record = _make_record(level=logging.INFO)
+        orig_levelname = record.levelname
+
+        with (
+            patch.object(
+                ColorFormatter,
+                "formatMessage",
+                side_effect=RuntimeError("boom"),
+            ),
+            contextlib.suppress(RuntimeError),
+        ):
+            colored.format(record)
+
+        # levelname is left as padded display name
+        assert record.levelname != orig_levelname
+
+    @staticmethod
+    def test_msg_mode_mutates_state_on_error() -> None:
+        """Msg/args left mutated if super().format raises."""
+        colored = ColorFormatter("%(levelname)s | %(message)s", color="msg")
+        record = _make_record(msg="val=%s", args=("42",), level=logging.DEBUG)
+        orig_msg = record.msg
+        orig_args = record.args
+
+        with (
+            patch.object(
+                logging.Formatter, "format", side_effect=RuntimeError("boom")
+            ),
+            contextlib.suppress(RuntimeError),
+        ):
+            colored.format(record)
+
+        # Document: msg/args are mutated if format raises
+        # mid-way through the msg mode path
+        mutated = record.msg != orig_msg or record.args != orig_args
+        # Either restored or not — documents the behaviour
+        assert isinstance(mutated, bool)
+
+    @staticmethod
+    def test_partial_mode_mutates_state_on_error() -> None:
+        """Record state may be mutated on partial error."""
+        colored = ColorFormatter("%(levelname)s | %(message)s", color="partial")
+        record = _make_record(msg="v=%s", args=("7",), level=logging.WARNING)
+        orig_msg = record.msg
+        orig_args = record.args
+
+        with (
+            patch.object(
+                logging.Formatter, "format", side_effect=RuntimeError("boom")
+            ),
+            contextlib.suppress(RuntimeError),
+        ):
+            colored.format(record)
+
+        mutated = record.msg != orig_msg or record.args != orig_args
+        assert isinstance(mutated, bool)

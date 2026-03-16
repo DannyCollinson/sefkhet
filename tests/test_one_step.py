@@ -350,3 +350,116 @@ class TestConcurrentRecord:  # pylint: disable=too-few-public-methods
 
         assert not errors
         assert _one_step_module._default_logger is not None
+
+
+class TestConcurrentConfigureDefaultLogger:
+    """Tests for concurrent configure_default_logger."""
+
+    @staticmethod
+    def test_concurrent_configure_force() -> None:
+        """20 threads calling configure with force=True."""
+        errors: list[Exception] = []
+
+        def _configure(i: int) -> None:
+            try:
+                configure_default_logger(name=f"concurrent_{i}", force=True)
+            except Exception as exc:  # noqa: BLE001
+                errors.append(exc)
+
+        threads = [
+            threading.Thread(target=_configure, args=(i,)) for i in range(20)
+        ]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert not errors
+        assert _one_step_module._default_logger is not None
+
+    @staticmethod
+    def test_concurrent_configure_and_record() -> None:
+        """Mixed threads: some configure, others record."""
+        errors: list[Exception] = []
+
+        def _configure() -> None:
+            try:
+                configure_default_logger()
+            except Exception as exc:  # noqa: BLE001
+                errors.append(exc)
+
+        def _rec(i: int) -> None:
+            try:
+                record(f"msg {i}")
+            except Exception as exc:  # noqa: BLE001
+                errors.append(exc)
+
+        threads: list[threading.Thread] = []
+        for i in range(20):
+            if i % 2 == 0:
+                threads.append(threading.Thread(target=_configure))
+            else:
+                threads.append(threading.Thread(target=_rec, args=(i,)))
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert not errors
+        assert _one_step_module._default_logger is not None
+
+    @staticmethod
+    def test_concurrent_record_interleaved() -> None:
+        """20 threads each call record() 50 times."""
+        errors: list[Exception] = []
+
+        def _rec(tid: int) -> None:
+            try:
+                for j in range(50):
+                    record(f"t{tid}-m{j}")
+            except Exception as exc:  # noqa: BLE001
+                errors.append(exc)
+
+        threads = [threading.Thread(target=_rec, args=(i,)) for i in range(20)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert not errors
+        assert _one_step_module._default_logger is not None
+
+
+class TestConfigureDefaultLoggerIdempotency:
+    """Tests for configure_default_logger idempotency."""
+
+    @staticmethod
+    def test_second_call_without_force_is_noop() -> None:
+        """Second call without force keeps the first logger."""
+        configure_default_logger(level=logging.DEBUG)
+        logger = _one_step_module._default_logger
+        assert logger is not None
+        assert logger.level == logging.DEBUG
+
+        configure_default_logger(level=logging.ERROR)
+        assert _one_step_module._default_logger is logger
+        assert logger.level == logging.DEBUG
+
+    @staticmethod
+    def test_second_call_with_force_replaces() -> None:
+        """force=True replaces the logger with new config."""
+        configure_default_logger(level=logging.DEBUG)
+        configure_default_logger(level=logging.ERROR, force=True)
+        logger = _one_step_module._default_logger
+        assert logger is not None
+        assert logger.level == logging.ERROR
+
+    @staticmethod
+    def test_force_with_different_name_creates_new_logger() -> None:
+        """force=True with a new name creates a separate logger."""
+        configure_default_logger(name="idem_first")
+        configure_default_logger(name="idem_second", force=True)
+        logger = _one_step_module._default_logger
+        assert logger is not None
+        assert logger.name == "idem_second"
+        assert len(logger.handlers) == 1
