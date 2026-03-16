@@ -158,6 +158,18 @@ class TestParseLogLevel:
         with pytest.raises(ValueError, match="invalid value for 'level'"):
             _parse_log_level("bogus_level_xyz")
 
+    @staticmethod
+    def test_empty_string_raises_value_error() -> None:
+        """An empty string raises ValueError."""
+        with pytest.raises(ValueError, match="invalid value for 'level'"):
+            _parse_log_level("")
+
+    @staticmethod
+    def test_invalid_str_error_message_contains_value() -> None:
+        """The ValueError message includes the offending value."""
+        with pytest.raises(ValueError, match="bogus_value"):
+            _parse_log_level("bogus_value")
+
 
 class TestGetFormatter:
     """Tests for `get_formatter`."""
@@ -308,8 +320,8 @@ class TestGetFilterFromSpec:
 
     @staticmethod
     def test_invalid_spec_raises_type_error() -> None:
-        """An invalid spec raises TypeError."""
-        with pytest.raises(TypeError):
+        """An invalid spec raises TypeError with spec in message."""
+        with pytest.raises(TypeError, match="42"):
             get_filter_from_spec(
                 42  # type: ignore[arg-type] # pyright: ignore[reportArgumentType]
             )
@@ -802,8 +814,8 @@ class TestGetHandler:
 
     @staticmethod
     def test_invalid_core_raises_value_error() -> None:
-        """An unrecognized core type raises ValueError."""
-        with pytest.raises(ValueError, match="No handler was created"):
+        """An unrecognized core type raises ValueError with value."""
+        with pytest.raises(ValueError, match="42"):
             get_handler(
                 core=42  # type: ignore[arg-type] # pyright: ignore[reportArgumentType]
             )
@@ -858,6 +870,14 @@ class TestGetHandler:
         """No args creates a StreamHandler."""
         handler = get_handler()
         assert isinstance(handler, logging.StreamHandler)
+
+    @staticmethod
+    def test_default_stderr_queued() -> None:
+        """core=None + queued=True wraps the default handler."""
+        handler = get_handler(core=None, queued=True)
+        assert isinstance(handler, logging.handlers.QueueHandler)
+        assert handler.listener is not None
+        handler.listener.stop()
 
     @staticmethod
     def test_file_handler_with_mode_encoding_delay(log_file: str) -> None:
@@ -1194,6 +1214,31 @@ class TestGetLogger:
         assert handler.formatter is not None
         assert handler.formatter._fmt == inner_fmt
 
+    @staticmethod
+    def test_formatter_guard_mixed_handlers() -> None:
+        """
+        With two handlers — one with and one without a formatter —
+        get_logger only applies the formatter to the bare one.
+        """
+        inner_fmt = "%(message)s"
+        outer_fmt = "%(levelname)s %(message)s"
+        logger = get_logger(
+            name="test_gl_fmt_guard_mixed",
+            handlers=[
+                "null",
+                ("null", _HandlerKwargs({"formatter": inner_fmt})),
+            ],
+            formatter=outer_fmt,
+        )
+        bare_handler = logger.handlers[-2]
+        pre_set_handler = logger.handlers[-1]
+        # Bare handler gets the outer formatter
+        assert bare_handler.formatter is not None
+        assert bare_handler.formatter._fmt == outer_fmt
+        # Pre-set handler keeps its own formatter
+        assert pre_set_handler.formatter is not None
+        assert pre_set_handler.formatter._fmt == inner_fmt
+
 
 class TestGetLoggerFromSpec:
     """Tests for `get_logger_from_spec`."""
@@ -1437,14 +1482,16 @@ class TestGetFormatterFromSpecColor:
     @staticmethod
     def test_dict_spec_with_color_key_uses_dict_color() -> None:
         """Dict spec with 'color' key uses that color, not the param."""
-        result = get_formatter_from_spec({"color": "full"})
+        result = get_formatter_from_spec({"color": "full"}, color="msg")
         assert isinstance(result, ColorFormatter)
+        assert result._color_mode == "full"
 
     @staticmethod
     def test_dict_spec_without_color_uses_param() -> None:
         """Dict spec without 'color' key uses the color param."""
         result = get_formatter_from_spec({"fmt": "%(message)s"}, color="full")
         assert isinstance(result, ColorFormatter)
+        assert result._color_mode == "full"
 
     @staticmethod
     def test_str_spec_with_color_param() -> None:
@@ -1670,3 +1717,27 @@ class TestQueueHandler:
         result = _wrap_handler_in_queue(existing)
         assert result is existing
         existing.close()
+
+    @staticmethod
+    def test_color_formatter_survives_queue() -> None:
+        """ColorFormatter output survives the queue round-trip."""
+        from snaplog._color import _ANSI_RESET, get_level_color
+
+        stream = io.StringIO()
+        real: logging.StreamHandler[io.StringIO] = logging.StreamHandler(stream)
+        color_fmt = ColorFormatter("%(levelname)s | %(message)s", color="full")
+        real.setFormatter(color_fmt)
+        real.setLevel(logging.DEBUG)
+        logger = logging.getLogger("test_color_queue_e2e")
+        logger.setLevel(logging.DEBUG)
+        qh = get_handler(core=real, level=None, queued=True)
+        assert isinstance(qh, logging.handlers.QueueHandler)
+        logger.addHandler(qh)
+        logger.info("colorful")
+        assert qh.listener is not None
+        qh.listener.stop()
+        output = stream.getvalue()
+        color = get_level_color(logging.INFO)
+        assert output.startswith(color)
+        assert _ANSI_RESET in output
+        assert "colorful" in output

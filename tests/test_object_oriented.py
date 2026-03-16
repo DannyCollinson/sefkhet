@@ -2,6 +2,7 @@
 
 import io
 import logging
+import threading
 
 import pytest
 
@@ -267,19 +268,26 @@ class TestSnapLoggerRecord:
         assert "hello info" in string_io_stream.getvalue()
 
     @staticmethod
-    def test_quiet_overrides_level(string_io_stream: io.StringIO) -> None:
-        """quiet=True logs at DEBUG regardless of level arg."""
+    def test_quiet_overrides_level() -> None:
+        """quiet=True forces the record level to DEBUG."""
+        captured: list[logging.LogRecord] = []
+
+        class _CaptureHandler(logging.Handler):
+            def emit(  # noqa: PLR6301
+                self, record: logging.LogRecord
+            ) -> None:
+                captured.append(record)
+
+        handler = _CaptureHandler()
         snap = SnapLogger(
             name="test_oo_rec_quiet",
             level=logging.DEBUG,
-            handlers=(
-                logging.StreamHandler(string_io_stream),
-                _HandlerKwargs({"level": logging.DEBUG}),
-            ),
+            handlers=(handler, _HandlerKwargs({"level": logging.DEBUG})),
             formatter="%(message)s",
         )
         snap.record("quiet msg", level="critical", quiet=True)
-        assert "quiet msg" in string_io_stream.getvalue()
+        assert len(captured) == 1
+        assert captured[0].levelno == logging.DEBUG
 
 
 class TestSnapLoggerRec:  # pylint: disable=too-few-public-methods
@@ -540,6 +548,13 @@ class TestSnapLoggerDelegateMethods:
         assert snap.level == logging.ERROR
         assert snap.level == snap.logger.level
 
+    @staticmethod
+    def test_setLevel_with_string_shorthand(snap: SnapLogger) -> None:
+        """setLevel('d') sets level to DEBUG via _parse_log_level."""
+        snap.setLevel("d")
+        assert snap.level == logging.DEBUG
+        assert snap.level == snap.logger.level
+
 
 class TestSnapLoggerColor:
     """Tests for the `color` parameter of `SnapLogger.__init__`."""
@@ -593,3 +608,47 @@ class TestSnapLoggerNameAwareFmt:
         fmt = snap.handlers[-1].formatter
         assert fmt is not None
         assert fmt._fmt == "%(message)s"
+
+
+class TestSnapLoggerConcurrency:
+    """Tests for concurrent SnapLogger creation."""
+
+    @staticmethod
+    def test_concurrent_creation_unique_names() -> None:
+        """Concurrent creation produces unique sequential names."""
+        results: list[str] = []
+        errors: list[Exception] = []
+
+        def _create() -> None:
+            try:
+                snap = SnapLogger()
+                results.append(snap.name)
+            except Exception as exc:  # noqa: BLE001
+                errors.append(exc)
+
+        threads = [threading.Thread(target=_create) for _ in range(20)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert not errors
+        assert len(results) == 20
+        assert len(set(results)) == 20
+
+
+class TestSnapLoggerMixedHandlers:
+    """Tests for SnapLogger with mixed handler specs."""
+
+    @staticmethod
+    def test_mixed_handler_specs() -> None:
+        """Mixed handler list (str + tuple) creates all handlers."""
+        snap = SnapLogger(
+            name="test_oo_mixed_hdlr",
+            handlers=[
+                "null",
+                ("stderr", _HandlerKwargs({"level": logging.ERROR})),
+            ],
+        )
+        assert len(snap.handlers) == 2
+        assert snap.handlers[1].level == logging.ERROR

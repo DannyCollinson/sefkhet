@@ -248,6 +248,16 @@ class TestColorFormatter:  # noqa: PLR0904
         assert f"{color}x=99{_ANSI_RESET}" in result
 
     @staticmethod
+    def test_msg_mode_with_args_none() -> None:
+        """Mode 'msg' works when record.args is None."""
+        fmt = "%(message)s"
+        colored = ColorFormatter(fmt, color="msg")
+        record = _make_record(msg="plain message", args=None)
+        color = get_level_color(record.levelno)
+        result = colored.format(record)
+        assert f"{color}plain message{_ANSI_RESET}" in result
+
+    @staticmethod
     def test_partial_mode_levelname_region_colored() -> None:
         """Mode 'partial' colors the level name region."""
         fmt = "%(levelname)s | %(message)s"
@@ -270,6 +280,17 @@ class TestColorFormatter:  # noqa: PLR0904
         reset_idx = result.index(_ANSI_RESET)
         tail = result[reset_idx + len(_ANSI_RESET) :]
         assert msg in tail
+
+    @staticmethod
+    def test_partial_mode_starts_with_color_ends_with_reset() -> None:
+        """Mode 'partial' starts with ANSI color and ends with reset."""
+        fmt = "%(levelname)s | %(message)s"
+        colored = ColorFormatter(fmt, color="partial")
+        record = _make_record(level=logging.WARNING)
+        color = get_level_color(record.levelno)
+        result = colored.format(record)
+        assert result.startswith(color)
+        assert result.endswith(_ANSI_RESET)
 
     @staticmethod
     def test_partial_mode_restores_msg_and_args() -> None:
@@ -477,3 +498,11 @@ class TestGetDisplayLevelname:
         """'Level X' where X is not a digit is not transformed."""
         result = _get_display_levelname("Level AB")
         assert result.startswith("Level AB")
+
+    @staticmethod
+    def test_name_longer_than_width_not_truncated() -> None:
+        """Names longer than _LEVELNAME_WIDTH are not truncated."""
+        long_name = "VERYLONGNAME"
+        result = _get_display_levelname(long_name)
+        assert len(result) > _LEVELNAME_WIDTH
+        assert result == long_name

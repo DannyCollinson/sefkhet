@@ -2,6 +2,7 @@
 
 import io
 import logging
+import threading
 from typing import cast
 
 import snaplog._one_step as _one_step_module
@@ -254,14 +255,46 @@ class TestRecord:
         assert _one_step_module._default_logger is existing
 
     @staticmethod
-    def test_quiet_mode() -> None:
-        """quiet=True logs at DEBUG without error."""
-        record("quiet msg", level="critical", quiet=True)
+    def test_quiet_mode_asserts_debug_level() -> None:
+        """quiet=True forces the record level to DEBUG."""
+        captured: list[logging.LogRecord] = []
+
+        class _CaptureHandler(logging.Handler):
+            def emit(  # noqa: PLR6301
+                self, record: logging.LogRecord
+            ) -> None:
+                captured.append(record)
+
+        handler = _CaptureHandler()
+        handler.setLevel(logging.DEBUG)
+        logger = logging.getLogger("test_os_quiet_level")
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
+
+        record("quiet msg", level="critical", quiet=True, logger=logger)
+        assert len(captured) == 1
+        assert captured[0].levelno == logging.DEBUG
 
     @staticmethod
     def test_explicit_level() -> None:
         """An explicit level kwarg is accepted without error."""
         record("info msg", level="info")
+
+    @staticmethod
+    def test_args_interpolation() -> None:
+        """record() passes *args through for message formatting."""
+        stream = io.StringIO()
+        logger = logging.getLogger("test_os_args_interp")
+        logger.setLevel(logging.DEBUG)
+        handler: logging.StreamHandler[io.StringIO] = logging.StreamHandler(
+            stream
+        )
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        handler.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
+
+        record("count=%d", 5, logger=logger)
+        assert "count=5" in stream.getvalue()
 
 
 class TestRec:  # pylint: disable=too-few-public-methods
@@ -293,3 +326,27 @@ class TestConfigureDefaultLoggerColor:
         assert logger is not None
         assert len(logger.handlers) >= 1
         assert isinstance(logger.handlers[-1].formatter, ColorFormatter)
+
+
+class TestConcurrentRecord:  # pylint: disable=too-few-public-methods
+    """Tests for concurrent record() when _default_logger is None."""
+
+    @staticmethod
+    def test_concurrent_record_no_exceptions() -> None:
+        """Concurrent record() calls do not raise exceptions."""
+        errors: list[Exception] = []
+
+        def _log(i: int) -> None:
+            try:
+                record(f"concurrent msg {i}")
+            except Exception as exc:  # noqa: BLE001
+                errors.append(exc)
+
+        threads = [threading.Thread(target=_log, args=(i,)) for i in range(20)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert not errors
+        assert _one_step_module._default_logger is not None
