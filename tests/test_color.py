@@ -530,8 +530,8 @@ class TestColorFormatterExceptionSafety:
     """Tests for ColorFormatter state when format raises."""
 
     @staticmethod
-    def test_format_leaves_levelname_mutated_on_error() -> None:
-        """Levelname is left mutated if formatMessage raises."""
+    def test_format_restores_levelname_on_error() -> None:
+        """Levelname is restored if formatMessage raises."""
         colored = ColorFormatter("%(levelname)s | %(message)s", color="full")
         record = _make_record(level=logging.INFO)
         orig_levelname = record.levelname
@@ -546,16 +546,16 @@ class TestColorFormatterExceptionSafety:
         ):
             colored.format(record)
 
-        # levelname is left as padded display name
-        assert record.levelname != orig_levelname
+        assert record.levelname == orig_levelname
 
     @staticmethod
-    def test_msg_mode_mutates_state_on_error() -> None:
-        """Msg/args left mutated if super().format raises."""
+    def test_msg_mode_restores_state_on_error() -> None:
+        """Msg/args are restored if super().format raises."""
         colored = ColorFormatter("%(levelname)s | %(message)s", color="msg")
         record = _make_record(msg="val=%s", args=("42",), level=logging.DEBUG)
         orig_msg = record.msg
         orig_args = record.args
+        orig_levelname = record.levelname
 
         with (
             patch.object(
@@ -565,19 +565,18 @@ class TestColorFormatterExceptionSafety:
         ):
             colored.format(record)
 
-        # Document: msg/args are mutated if format raises
-        # mid-way through the msg mode path
-        mutated = record.msg != orig_msg or record.args != orig_args
-        # Either restored or not — documents the behaviour
-        assert isinstance(mutated, bool)
+        assert record.msg == orig_msg
+        assert record.args == orig_args
+        assert record.levelname == orig_levelname
 
     @staticmethod
-    def test_partial_mode_mutates_state_on_error() -> None:
-        """Record state may be mutated on partial error."""
+    def test_partial_mode_restores_state_on_error() -> None:
+        """Record state is restored on partial error."""
         colored = ColorFormatter("%(levelname)s | %(message)s", color="partial")
         record = _make_record(msg="v=%s", args=("7",), level=logging.WARNING)
         orig_msg = record.msg
         orig_args = record.args
+        orig_levelname = record.levelname
 
         with (
             patch.object(
@@ -587,5 +586,6 @@ class TestColorFormatterExceptionSafety:
         ):
             colored.format(record)
 
-        mutated = record.msg != orig_msg or record.args != orig_args
-        assert isinstance(mutated, bool)
+        assert record.msg == orig_msg
+        assert record.args == orig_args
+        assert record.levelname == orig_levelname

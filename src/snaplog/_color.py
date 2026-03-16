@@ -203,21 +203,24 @@ class ColorFormatter(_logging.Formatter):
 
         if self._color_mode == "off":
             record.levelname = display_levelname
-            result = super().format(record)
-            record.levelname = orig_levelname
-            return result
+            try:
+                return super().format(record)
+            finally:
+                record.levelname = orig_levelname
 
         if self._color_mode == "full":
             record.levelname = display_levelname
-            result = f"{color}{super().format(record)}{reset}"
-            record.levelname = orig_levelname
-            return result
+            try:
+                return f"{color}{super().format(record)}{reset}"
+            finally:
+                record.levelname = orig_levelname
 
         if self._color_mode == "level":
             record.levelname = f"{color}{display_levelname}{reset}"
-            result = super().format(record)
-            record.levelname = orig_levelname
-            return result
+            try:
+                return super().format(record)
+            finally:
+                record.levelname = orig_levelname
 
         if self._color_mode == "msg":
             orig_msg = record.msg
@@ -225,11 +228,12 @@ class ColorFormatter(_logging.Formatter):
             record.levelname = display_levelname
             record.msg = f"{color}{record.getMessage()}{reset}"
             record.args = None
-            result = super().format(record)
-            record.msg = orig_msg
-            record.args = orig_args
-            record.levelname = orig_levelname
-            return result
+            try:
+                return super().format(record)
+            finally:
+                record.msg = orig_msg
+                record.args = orig_args
+                record.levelname = orig_levelname
 
         # "partial": color everything except the message
         orig_msg = record.msg
@@ -237,8 +241,9 @@ class ColorFormatter(_logging.Formatter):
         record.levelname = display_levelname
         record.msg = f"{reset}{record.getMessage()}{color}"
         record.args = None
-        result = f"{color}{super().format(record)}{reset}"
-        record.msg = orig_msg
-        record.args = orig_args
-        record.levelname = orig_levelname
-        return result
+        try:
+            return f"{color}{super().format(record)}{reset}"
+        finally:
+            record.msg = orig_msg
+            record.args = orig_args
+            record.levelname = orig_levelname

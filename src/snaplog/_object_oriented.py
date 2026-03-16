@@ -186,21 +186,22 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             Returns:
                 R: Output of running the wrapped function
             """
-            # Run function
-            result = function(self, *args, **kwargs)
-
-            # Update attributes
-            for attribute in (
-                "name",
-                "level",
-                "handlers",
-                "filters",
-                "disabled",
-                "propagate",
-                "parent",
-                "manager",
-            ):
-                setattr(self, attribute, getattr(self.logger, attribute))
+            # Run function and sync attributes afterward,
+            # including when the function raises
+            try:
+                result = function(self, *args, **kwargs)
+            finally:
+                for attribute in (
+                    "name",
+                    "level",
+                    "handlers",
+                    "filters",
+                    "disabled",
+                    "propagate",
+                    "parent",
+                    "manager",
+                ):
+                    setattr(self, attribute, getattr(self.logger, attribute))
 
             return result
 
@@ -947,7 +948,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
                 info is included in the record. Defaults to `None`.
 
         Returns:
-            logging.LogRecord: _description_
+            logging.LogRecord: Log record created from the arguments
         """
         return self.logger.makeRecord(
             name=name,
