@@ -41,6 +41,7 @@ if _TYPE_CHECKING:  # pragma: no cover
 
     from snaplog._typing import (
         _ColorSpec,
+        _CsvSpec,
         _FilterSpec,
         _FormatStyle,
         _FormatterSpec,
@@ -172,6 +173,7 @@ def get_formatter(  # noqa: PLR0913
     copy: bool = False,
     color: "_ColorSpec" = "level",
     json: "bool | _JsonSpec" = False,
+    csv: "bool | _CsvSpec" = False,
 ) -> "logging.Formatter":
     """
     Returns a `logging.Formatter` configured
@@ -194,34 +196,39 @@ def get_formatter(  # noqa: PLR0913
             of; otherwise, the format string to pass to the
             `logging.Formatter` constructor.
             Defaults to `_DEFAULT_FMT`.
-        datefmt (str | None, optional): Date format string to pass to
-            `logging.Formatter` constructor. Ignored if `fmt` is a
-            `logging.Formatter`. Defaults to `None`.
-        style (_FormatStyle, optional): Style format used by the format
-            string. Ignored if `fmt` is a `logging.Formatter`.
-            Defaults to `"%"`.
+        datefmt (str | None, optional): Date format string to pass
+            to `logging.Formatter` constructor. Ignored if `fmt`
+            is a `logging.Formatter`. Defaults to `None`.
+        style (_FormatStyle, optional): Style format used by the
+            format string. Ignored if `fmt` is a
+            `logging.Formatter`. Defaults to `"%"`.
         validate (bool, optional): If `True`, the configuration is
-            validated upon creation; otherwise, no validation occurs.
-            Ignored if `fmt` is a `logging.Formatter`.
+            validated upon creation; otherwise, no validation
+            occurs. Ignored if `fmt` is a `logging.Formatter`.
             Defaults to `True`.
-        defaults (Mapping[str, Any] | None, optional): Default values
-            for string variable interpolation. Ignored if `fmt` is a
-            `logging.Formatter`. Defaults to `None`.
-        copy (bool, optional): If `True`, returns a deep copy of the
-            original instance of `fmt`; otherwise, returns the original
-            instance. Ignored if `fmt` is not a `logging.Formatter`.
-            Defaults to `False`.
+        defaults (Mapping[str, Any] | None, optional): Default
+            values for string variable interpolation. Ignored if
+            `fmt` is a `logging.Formatter`. Defaults to `None`.
+        copy (bool, optional): If `True`, returns a deep copy of
+            the original instance of `fmt`; otherwise, returns the
+            original instance. Ignored if `fmt` is not a
+            `logging.Formatter`. Defaults to `False`.
         color (_ColorSpec, optional): Color mode for the
             formatter. Either a bare `_ColorMode` string or a
             tuple of `(_ColorMode, colormap)` for per-level color
             overrides. If the mode is not `"off"`, a
             `ColorFormatter` is returned. Ignored if `fmt` is a
-            `logging.Formatter` or if `json` is not `False`.
-            Defaults to `"level"`.
+            `logging.Formatter` or if `csv` or `json` is not
+            `False`. Defaults to `"level"`.
         json (bool | _JsonSpec, optional): JSON output mode. If
-            not `False`, a `JsonFormatter` is returned and `color` is
-            ignored. Ignored if `fmt` is a `logging.Formatter`.
+            not `False`, a `JsonFormatter` is returned and `color`
+            is ignored. Ignored if `fmt` is a
+            `logging.Formatter` or if `csv` is not `False`.
             Defaults to `False`.
+        csv (bool | _CsvSpec, optional): CSV output mode. If
+            not `False`, a `CsvFormatter` is returned and `json`
+            and `color` are ignored. Ignored if `fmt` is a
+            `logging.Formatter`. Defaults to `False`.
 
     Returns:
         logging.Formatter: The specified `logging.Formatter`
@@ -229,11 +236,22 @@ def get_formatter(  # noqa: PLR0913
     from copy import deepcopy
 
     from snaplog._color import ColorFormatter
+    from snaplog._csv import CsvFormatter
     from snaplog._json import JsonFormatter
 
     # Return original or copy of existing formatter if one is passed
     if isinstance(fmt, _logging.Formatter):
         return deepcopy(fmt) if copy else fmt
+    # Return a CsvFormatter if csv mode is active
+    if csv is not False:
+        return CsvFormatter(
+            fmt=fmt,
+            datefmt=datefmt,
+            style=style,
+            validate=validate,
+            defaults=defaults,
+            csv=csv,
+        )
     # Return a JsonFormatter if json mode is active
     if json is not False:
         return JsonFormatter(
@@ -269,19 +287,25 @@ def get_formatter_from_spec(
     *,
     color: "_ColorSpec" = "level",
     json: "bool | _JsonSpec" = False,
+    csv: "bool | _CsvSpec" = False,
 ) -> "logging.Formatter":
     """
-    Returns a `logging.Formatter` configured using a `_FormatterSpec`.
+    Returns a `logging.Formatter` configured using a
+    `_FormatterSpec`.
 
     Args:
         spec (_FormatterSpec): Specification of formatter
-        color (_ColorSpec, optional): Color mode for the formatter.
-            Passed through to `get_formatter` when the dict spec
-            does not already contain a `"color"` key.
-            Defaults to `"level"`.
+        color (_ColorSpec, optional): Color mode for the
+            formatter. Passed through to `get_formatter` when
+            the dict spec does not already contain a `"color"`
+            key. Defaults to `"level"`.
         json (bool | _JsonSpec, optional): JSON output mode.
-            Passed through to `get_formatter` when the dict spec
-            does not already contain a `"json"` key.
+            Passed through to `get_formatter` when the dict
+            spec does not already contain a `"json"` key.
+            Defaults to `False`.
+        csv (bool | _CsvSpec, optional): CSV output mode.
+            Passed through to `get_formatter` when the dict
+            spec does not already contain a `"csv"` key.
             Defaults to `False`.
 
     Returns:
@@ -289,12 +313,13 @@ def get_formatter_from_spec(
     """
     # If a dict, specify as keyword arguments
     if isinstance(spec, dict):
-        # Dict's own color key takes precedence; only inject if absent
+        # Dict's own keys take precedence; only inject if absent
         spec["color"] = spec.get("color", color)
         spec["json"] = spec.get("json", json)
+        spec["csv"] = spec.get("csv", csv)
         return get_formatter(**spec)
     # If here, just pass spec as main argument
-    return get_formatter(fmt=spec, color=color, json=json)
+    return get_formatter(fmt=spec, color=color, json=json, csv=csv)
 
 
 def get_filter(
@@ -1139,57 +1164,67 @@ def get_logger(  # noqa: PLR0913
     filters: "_FilterSpec | Sequence[_FilterSpec]" = (),
     color: "_ColorSpec" = "level",
     json: "bool | _JsonSpec" = False,
+    csv: "bool | _CsvSpec" = False,
 ) -> "logging.Logger":
     """
     Returns a `logging.Logger` configured according
     to the provided specifications.
 
-    Note that the `snaplog` defaults for `name` (`"log"`) and `level`
-    (`20`) differ from those of `logging.getLogger` (`None` and `30`,
-    respectively).
+    Note that the `snaplog` defaults for `name` (`"log"`) and
+    `level` (`20`) differ from those of `logging.getLogger`
+    (`None` and `30`, respectively).
 
     Args:
-        name (str | None, optional): Name to apply to the logger. If
-            `None`, uses the root logger. Defaults to `"log"`.
-        level (str | int, optional): Logging level to use if `quiet`
-            is `False`. Valid log levels include a log level string
-            from the options provided by `snaplog.get_log_levels()`,
-            the `int` equivalents of those log levels as defined by
-            the `logging` library, or any other `int`.
-            Defaults to `20`.
+        name (str | None, optional): Name to apply to the
+            logger. If `None`, uses the root logger.
+            Defaults to `"log"`.
+        level (str | int, optional): Logging level to use if
+            `quiet` is `False`. Valid log levels include a log
+            level string from the options provided by
+            `snaplog.get_log_levels()`, the `int` equivalents
+            of those log levels as defined by the `logging`
+            library, or any other `int`. Defaults to `20`.
         handlers (_HandlerSpec | Sequence[_HandlerSpec], optional):
-            Specification of any `logging.Handler`s to add to the
-            logger. Multiple handlers can be specified by providing a
-            sequence of handler specifications. Specification of each
-            handler is similar to when using the
-            `snaplog.get_handler` interface, except if using keyword
-            arguments, they must be wrapped into a `dict` and
-            provided as the second item of a `tuple`, where the
-            first item is the argument for `core`.
+            Specification of any `logging.Handler`s to add
+            to the logger. Multiple handlers can be specified
+            by providing a sequence of handler specifications.
+            Specification of each handler is similar to when
+            using the `snaplog.get_handler` interface, except
+            if using keyword arguments, they must be wrapped
+            into a `dict` and provided as the second item of
+            a `tuple`, where the first item is the argument
+            for `core`.
             Defaults to `()` (no handlers).
         formatter (_FormatterSpec | _NoDefaultType, optional):
-            Specification of a `logging.Formatter` to add to all
-            handlers created for the logger that do not have an
-            alternative formatter specified. If `_NoDefault`, no
-            formatters are added. Defaults to `_NoDefault`.
+            Specification of a `logging.Formatter` to add to
+            all handlers created for the logger that do not
+            have an alternative formatter specified. If
+            `_NoDefault`, no formatters are added.
+            Defaults to `_NoDefault`.
         filters (_FilterSpec | Sequence[_FilterSpec], optional):
-            Specification of any `logging.Filter`s to add to the
-            logger. Multiple filters can be specified by providing
-            a sequence of filter specifications. Specification of
-            each filter is the same as when using the
-            `snaplog.get_handler` inteface.
+            Specification of any `logging.Filter`s to add to
+            the logger. Multiple filters can be specified by
+            providing a sequence of filter specifications.
+            Specification of each filter is the same as when
+            using the `snaplog.get_handler` inteface.
             Defaults to `()` (no filters).
-        color (_ColorSpec, optional): Color mode to apply to the
-            formatter. Either a bare `_ColorMode` string or a
-            tuple of `(_ColorMode, colormap)` for per-level color
-            overrides. When `formatter` is `_NoDefault` and the
-            mode is not `"off"`, a `ColorFormatter` is created.
-            When `formatter` is a spec, `color` is passed through
-            to `get_formatter_from_spec`. Ignored if `json` is
-            not `False`. Defaults to `"level"`.
-        json (bool | _JsonSpec, optional): JSON output mode. If
-            not `False`, a `JsonFormatter` is created and `color` is
-            ignored. Defaults to `False`.
+        color (_ColorSpec, optional): Color mode to apply to
+            the formatter. Either a bare `_ColorMode` string or
+            a tuple of `(_ColorMode, colormap)` for per-level
+            color overrides. When `formatter` is `_NoDefault`
+            and the mode is not `"off"`, a `ColorFormatter` is
+            created. When `formatter` is a spec, `color` is
+            passed through to `get_formatter_from_spec`.
+            Ignored if `csv` or `json` is not `False`.
+            Defaults to `"level"`.
+        json (bool | _JsonSpec, optional): JSON output mode.
+            If not `False`, a `JsonFormatter` is created and
+            `color` is ignored. Ignored if `csv` is not
+            `False`. Defaults to `False`.
+        csv (bool | _CsvSpec, optional): CSV output mode.
+            If not `False`, a `CsvFormatter` is created and
+            `json` and `color` are ignored.
+            Defaults to `False`.
 
     Returns:
         logging.Logger: The speficied `logging.Logger`
@@ -1215,8 +1250,12 @@ def get_logger(  # noqa: PLR0913
     # Get formatter if applicable
     resolved_formatter: _logging.Formatter | None
     if isinstance(formatter, _NoDefaultType):
-        # Auto-create a formatter when json or color mode is active
-        if json is not False:
+        # Auto-create formatter: csv > json > color priority
+        if csv is not False:
+            resolved_formatter = get_formatter(
+                fmt=_get_default_fmt(resolved_name), csv=csv
+            )
+        elif json is not False:
             resolved_formatter = get_formatter(
                 fmt=_get_default_fmt(resolved_name), json=json
             )
@@ -1228,7 +1267,7 @@ def get_logger(  # noqa: PLR0913
             resolved_formatter = None
     else:
         resolved_formatter = get_formatter_from_spec(
-            spec=formatter, color=color, json=json
+            spec=formatter, color=color, json=json, csv=csv
         )
 
     # Set formatter for handlers as applicable

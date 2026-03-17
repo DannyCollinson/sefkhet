@@ -16,6 +16,7 @@ if _TYPE_CHECKING:  # pragma: no cover
     from snaplog._typing import (
         _ArgsType,
         _ColorSpec,
+        _CsvSpec,
         _ExcInfoType,
         _FilterSpec,
         _FilterType,
@@ -59,6 +60,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         filters: "_FilterSpec | Sequence[_FilterSpec]" = (),
         color: "_ColorSpec" = "level",
         json: "bool | _JsonSpec" = False,
+        csv: "bool | _CsvSpec" = False,
     ) -> None:
         """
         The base logger class for `snaplog`.
@@ -68,54 +70,65 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         configurations and implements the standard `logging.Logger`
         interface for compatibility.
 
-        Note that the `snaplog` defaults for `name` (`"logX"`, where `X`
-        is the cumulative number of `SnapLogger` instances created with
-        a default name) and `level` (`20`) differ from those of
-        `logging.getLogger` (`None` and `30`, respectively).
+        Note that the `snaplog` defaults for `name` (`"logX"`, where
+        `X` is the cumulative number of `SnapLogger` instances
+        created with a default name) and `level` (`20`) differ from
+        those of `logging.getLogger` (`None` and `30`,
+        respectively).
 
         Args:
-            name (str | _NoDefaultType | None, optional): Name to apply
-                to the logger. If `None`, uses the root logger. If
-                `_NoDefault`, uses `"logX"`, where `X` is the cumulative
-                number of `SnapLogger` instances created with a default
-                name. Defaults to `_NoDefault`.
-            level (str | int, optional): Logging level to apply to the
-                logger. Valid log levels include a log level string from
-                the options provided by `snaplog.get_log_levels()`, the
-                `int` equivalents of those log levels as defined by the
-                `logging` library, or any other `int`. Defaults to `20`.
+            name (str | _NoDefaultType | None, optional): Name to
+                apply to the logger. If `None`, uses the root
+                logger. If `_NoDefault`, uses `"logX"`, where `X`
+                is the cumulative number of `SnapLogger` instances
+                created with a default name.
+                Defaults to `_NoDefault`.
+            level (str | int, optional): Logging level to apply to
+                the logger. Valid log levels include a log level
+                string from the options provided by
+                `snaplog.get_log_levels()`, the `int` equivalents
+                of those log levels as defined by the `logging`
+                library, or any other `int`. Defaults to `20`.
             handlers (_HandlerSpec | Sequence[_HandlerSpec], optional):
-                Specification of any `logging.Handler`s to add to the
-                logger. Multiple handlers can be specified by providing
-                a sequence of handler specifications. Specification of
+                Specification of any `logging.Handler`s to add
+                to the logger. Multiple handlers can be specified
+                by providing a sequence of handler specs. Spec of
                 each handler is similar to when using the
                 `snaplog.get_handler` interface, except if using
-                keyword arguments, they must be wrapped into a `dict`
-                and provided as the second item of a `tuple`, where the
-                first item is the argument for `core`. Note that if
-                `None`, a default `logging.StreamHandler` that logs to
-                `sys.stderr` is created. Defaults to `None`.
+                keyword arguments, they must be wrapped into a
+                `dict` and provided as the second item of a
+                `tuple`, where the first item is the argument
+                for `core`. Note that if `None`, a default
+                `logging.StreamHandler` that logs to `sys.stderr`
+                is created. Defaults to `None`.
             formatter (_FormatterSpec | _NoDefaultType, optional):
-                Specification of a `logging.Formatter` to add to all
-                handlers created for the logger that do not have an
-                alternative formatter specified. If `_NoDefault`, no
-                formatters are added. Defaults to `_NoDefault`.
+                Specification of a `logging.Formatter` to add to
+                all handlers created for the logger that do not
+                have an alternative formatter specified. If
+                `_NoDefault`, no formatters are added.
+                Defaults to `_NoDefault`.
             filters (_FilterSpec | Sequence[_FilterSpec], optional):
-                Specification of any `logging.Filter`s to add to the
-                logger. Multiple filters can be specified by providing a
-                sequence of filter specifications. Specification of each
-                filter is the same as when using the
-                `snaplog.get_handler` inteface.
+                Specification of any `logging.Filter`s to add to
+                the logger. Multiple filters can be specified by
+                providing a sequence of filter specifications.
+                Specification of each filter is the same as when
+                using the `snaplog.get_handler` inteface.
                 Defaults to `()` (no filters).
-            color (_ColorSpec, optional): Color mode for the formatter.
-                Either a bare `_ColorMode` string or a tuple of
-                `(_ColorMode, colormap)` for per-level color overrides.
-                Passed through to `get_logger`. If mode is not `"off"`,
-                a `ColorFormatter` is used. Ignored if `json` is
-                not `False`. Defaults to `"level"`.
-            json (bool | _JsonSpec, optional): JSON output mode. If
-                not `False`, a `JsonFormatter` is used and `color` is
-                ignored. Defaults to `False`.
+            color (_ColorSpec, optional): Color mode for the
+                formatter. Either a bare `_ColorMode` string or a
+                tuple of `(_ColorMode, colormap)` for per-level
+                color overrides. Passed through to `get_logger`.
+                If mode is not `"off"`, a `ColorFormatter` is
+                used. Ignored if `csv` or `json` is not `False`.
+                Defaults to `"level"`.
+            json (bool | _JsonSpec, optional): JSON output mode.
+                If not `False`, a `JsonFormatter` is used and
+                `color` is ignored. Ignored if `csv` is not
+                `False`. Defaults to `False`.
+            csv (bool | _CsvSpec, optional): CSV output mode.
+                If not `False`, a `CsvFormatter` is used and
+                `json` and `color` are ignored.
+                Defaults to `False`.
         """
         from snaplog._functional import get_formatter_from_spec, get_logger
         from snaplog._typing import _NoDefaultType
@@ -140,6 +153,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             filters=filters,
             color=color,
             json=json,
+            csv=csv,
         )
 
         # Save standard logging.Logger attributes
@@ -587,7 +601,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         Log a message with level `ERROR` on this logger.
 
         Mirrors the interface of `logging.Logger.exception`.
-        Exception info is captured by default (``exc_info=True``),
+        Exception info is captured by default (`exc_info=True`),
         matching the standard-library behaviour.
         """
         self.logger.log(
@@ -790,8 +804,8 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         Sets the logging level of the logger to the specified level.
 
         See `logging.Logger`'s `setLevel` method for details.
-        Supports snaplog shorthand strings (e.g. ``"d"``,
-        ``"i"``, ``"w"``, ``"e"``, ``"c"``).
+        Supports snaplog shorthand strings
+        (e.g. `"d"`, `"i"`, `"w"`, `"e"`, `"c"`).
 
         Args:
             level (str | int): Level to use

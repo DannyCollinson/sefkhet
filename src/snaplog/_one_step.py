@@ -14,6 +14,7 @@ if _TYPE_CHECKING:  # pragma: no cover
 
     from snaplog._typing import (
         _ColorSpec,
+        _CsvSpec,
         _ExcInfoType,
         _FilterSpec,
         _FormatterSpec,
@@ -47,59 +48,73 @@ def configure_default_logger(  # noqa: PLR0913
     force: bool = False,
     color: "_ColorSpec" = "level",
     json: "bool | _JsonSpec" = False,
+    csv: "bool | _CsvSpec" = False,
 ) -> None:
     """
     Configures the default logger used by `snaplog`.
 
     Args:
-        name (str | _NoDefaultType|  None, optional): Name to assign to
-            default logger. If `_NoDefault`, uses `"snaplogger"`.
-            Defaults to `_NoDefault`.
-        level (int | _NoDefaultType, optional): Logging level to assign
-            to default logger and/or handler. If `_NoDefault`, uses `20`.
+        name (str | _NoDefaultType | None, optional): Name to
+            assign to default logger. If `_NoDefault`, uses
+            `"snaplogger"`. Defaults to `_NoDefault`.
+        level (int | _NoDefaultType, optional): Logging level
+            to assign to default logger and/or handler. If
+            `_NoDefault`, uses `20`.
             Defaults to `_NoDefault`.
         handlers (_HandlerSpec | Sequence[_HandlerSpec] | _NoDefaultType, optional):
-            Specification of any `logging.Handler`s to add to the
-            default logger. Multiple handlers can be specified by
-            providing a sequence of handler specifications.
-            Specification of each handler is similar to when using the
-            `snaplog.get_handler` interface, except if using keyword
-            arguments, they must be wrapped into a `dict` and provided
-            as the second item of a `tuple`, where the first item is the
-            argument for `core`. If `_NoDefault`, then
-            `snaplog.get_handler` is called and its result used as
-            `handlers`. Defaults to `_NoDefault`.
+            Specification of any `logging.Handler`s to add to
+            the default logger. Multiple handlers can be
+            specified by providing a sequence of handler
+            specifications. Specification of each handler is
+            similar to when using the `snaplog.get_handler`
+            interface, except if using keyword arguments, they
+            must be wrapped into a `dict` and provided as the
+            second item of a `tuple`, where the first item is
+            the argument for `core`. If `_NoDefault`, then
+            `snaplog.get_handler` is called and its result used
+            as `handlers`. Defaults to `_NoDefault`.
         formatter (_FormatterSpec | _NoDefaultType, optional):
-            Specification of a `logging.Formatter` to add to all
-            handlers created for the logger that do not have an
-            alternative formatter specified. If `_NoDefault`, then
-            `snaplog.get_formatter` is called and its result used as
-            `formatter`. Defaults to `_NoDefault`.
+            Specification of a `logging.Formatter` to add to
+            all handlers created for the logger that do not
+            have an alternative formatter specified. If
+            `_NoDefault`, then `snaplog.get_formatter` is
+            called and its result used as `formatter`.
+            Defaults to `_NoDefault`.
         filters (_FilterSpec | Sequence[_FilterSpec] | _NoDefaultType, optional):
-            Specification of any `logging.Filter`s to add to the logger.
-            Multiple filters can be specified by providing a sequence of
-            filter specifications. Specification of each filter is the
-            same as when using the `snaplog.get_handler` inteface. If
-            `_NoDefault`, then `snaplog.get_filter` is called and its
-            result used as `filters`. Defaults to `_NoDefault`.
+            Specification of any `logging.Filter`s to add to
+            the logger. Multiple filters can be specified by
+            providing a sequence of filter specifications.
+            Specification of each filter is the same as when
+            using the `snaplog.get_handler` inteface. If
+            `_NoDefault`, then `snaplog.get_filter` is called
+            and its result used as `filters`.
+            Defaults to `_NoDefault`.
         spec (_LoggerSpec | _NoDefaultType, optional): If not
-            `_NoDefault` and all other arguments are `_NoDefault`, then
-            the logger is created according to `spec`; otherwise, this
-            parameter is ignored. Defaults to `_NoDefault`.
-        force (bool, optional): If `True`, the default logger will be
-            reconfigured if it has already been configured; otherwise,
-            the default logger will not be reconfigured. Ignored if the
-            default logger has not already been configured.
+            `_NoDefault` and all other arguments are
+            `_NoDefault`, then the logger is created according
+            to `spec`; otherwise, this parameter is ignored.
+            Defaults to `_NoDefault`.
+        force (bool, optional): If `True`, the default logger
+            will be reconfigured if it has already been
+            configured; otherwise, the default logger will not
+            be reconfigured. Ignored if the default logger has
+            not already been configured. Defaults to `False`.
+        color (_ColorSpec, optional): Color mode for the
+            formatter. Either a bare `_ColorMode` string or a
+            tuple of `(_ColorMode, colormap)` for per-level
+            color overrides. Passed through to `get_logger` in
+            the non-spec path. Ignored if `csv` or `json` is
+            not `False`. Defaults to `"level"`.
+        json (bool | _JsonSpec, optional): JSON output mode.
+            If not `False`, a `JsonFormatter` is used and
+            `color` is ignored. Passed through to `get_logger`
+            in the non-spec path. Ignored if `csv` is not
+            `False`. Defaults to `False`.
+        csv (bool | _CsvSpec, optional): CSV output mode. If
+            not `False`, a `CsvFormatter` is used and `json`
+            and `color` are ignored. Passed through to
+            `get_logger` in the non-spec path.
             Defaults to `False`.
-        color (_ColorSpec, optional): Color mode for the formatter.
-            Either a bare `_ColorMode` string or a tuple of
-            `(_ColorMode, colormap)` for per-level color overrides.
-            Passed through to `get_logger` in the non-spec path.
-            Ignored if `json` is not `False`. Defaults to `"level"`.
-        json (bool | _JsonSpec, optional): JSON output mode. If
-            not `False`, a `JsonFormatter` is used and `color` is
-            ignored. Passed through to `get_logger` in the
-            non-spec path. Defaults to `False`.
     """  # noqa: E501,W505
     from snaplog._functional import (
         _get_default_fmt,
@@ -140,7 +155,9 @@ def configure_default_logger(  # noqa: PLR0913
         else handlers
     )
     formatter = (
-        get_formatter(fmt=_get_default_fmt(name), color=color, json=json)
+        get_formatter(
+            fmt=_get_default_fmt(name), color=color, json=json, csv=csv
+        )
         if isinstance(formatter, _NoDefaultType)
         else formatter
     )
@@ -160,6 +177,7 @@ def configure_default_logger(  # noqa: PLR0913
             filters=filters,
             color=color,
             json=json,
+            csv=csv,
         )
 
 

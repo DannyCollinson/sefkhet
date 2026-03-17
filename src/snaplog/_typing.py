@@ -59,6 +59,14 @@ class _JsonSpec(TypedDict, total=False):
     sort_keys: bool
 
 
+# Define typed dict for CSV formatter spec
+class _CsvSpec(TypedDict, total=False):
+    fields: Sequence[str]
+    delimiter: str
+    quoting: int
+    header: bool
+
+
 # Define type alias for handler type discriminator
 type _HandlerType = Literal[
     "file", "watched_file", "rotating_file", "timed_rotating_file"
@@ -75,6 +83,7 @@ class _FormatterKwargs(TypedDict, total=False):
     copy: bool
     color: _ColorSpec
     json: bool | _JsonSpec
+    csv: bool | _CsvSpec
 
 
 # Define type alias for valid formatter specs
@@ -201,6 +210,7 @@ class _LoggerKwargs(TypedDict, total=False):
     filters: _FilterSpec | Sequence[_FilterSpec]
     color: _ColorSpec
     json: bool | _JsonSpec
+    csv: bool | _CsvSpec
 
 
 # Define type alias for valid logger specs

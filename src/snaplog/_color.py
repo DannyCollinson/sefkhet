@@ -156,7 +156,17 @@ class ColorFormatter(_logging.Formatter):
         color: "_ColorSpec",
     ) -> None:
         """
-        Creates a `ColorFormatter` with the given format and color mode.
+        A `logging.Formatter` subclass that applies ANSI color codes
+        to log output based on the log record's level.
+
+        The scope of colorization is controlled by the `color` mode:
+
+        - `"off"`: no colorization; output is identical to
+        `logging.Formatter`
+        - `"full"`: the entire formatted line is wrapped in color
+        - `"level"`: only the level name is wrapped in color
+        - `"msg"`: only the message is wrapped in color
+        - `"partial"`: everything except the message is colored
 
         Args:
             fmt (str | None, optional): Format string. Defaults to

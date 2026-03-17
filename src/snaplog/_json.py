@@ -133,7 +133,7 @@ class JsonFormatter(_logging.Formatter):
     as JSON objects.
 
     Each log line is a single JSON object with configurable
-    fields. Extra attributes passed via ``extra={...}`` are
+    fields. Extra attributes passed via `extra={...}` are
     automatically included. Exception and stack info are
     serialised as strings when present.
     """
@@ -149,7 +149,13 @@ class JsonFormatter(_logging.Formatter):
         json: "Literal[True] | _JsonSpec",
     ) -> None:
         """
-        Creates a `JsonFormatter` with the given JSON spec.
+        A `logging.Formatter` subclass that outputs log records
+        as JSON objects.
+
+        Each log line is a single JSON object with configurable
+        fields. Extra attributes passed via `extra={...}` are
+        automatically included. Exception and stack info are
+        serialised as strings when present.
 
         Args:
             fmt (str | None, optional): Format string (unused in
@@ -176,6 +182,7 @@ class JsonFormatter(_logging.Formatter):
             validate=validate,
             defaults=defaults,
         )
+
         # Parse the JSON-specific options
         (
             self._json_fields,
@@ -214,9 +221,13 @@ class JsonFormatter(_logging.Formatter):
             data["stack_info"] = self.formatStack(record.stack_info)
 
         # Append extra fields
-        already = set(data.keys()) | _STANDARD_RECORD_ATTRS
+        existing_fields = set(data.keys()) | _STANDARD_RECORD_ATTRS
         data.update(
-            {k: v for k, v in record.__dict__.items() if k not in already}
+            {
+                k: v
+                for k, v in record.__dict__.items()
+                if k not in existing_fields
+            }
         )
 
         # Return using json library for auto-formatting

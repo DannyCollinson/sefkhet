@@ -25,6 +25,7 @@ logger.log("I <3 snaplog!")
 
 # Make top-level utilities available
 from snaplog._color import ColorFormatter, get_level_color
+from snaplog._csv import CsvFormatter
 from snaplog._functional import (
     add_filters_to_target,
     add_handlers_to_logger,
@@ -49,6 +50,7 @@ __all__ = [  # noqa: RUF022
     "__version__",
     # Classes
     "ColorFormatter",
+    "CsvFormatter",
     "JsonFormatter",
     "SnapLogger",
     # Functions
