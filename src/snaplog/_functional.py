@@ -46,6 +46,7 @@ if _TYPE_CHECKING:  # pragma: no cover
         _FormatterSpec,
         _HandlerSpec,
         _HandlerType,
+        _JsonSpec,
         _LoggerSpec,
         _NoDefaultType,
         _StrOrPathLike,
@@ -170,6 +171,7 @@ def get_formatter(  # noqa: PLR0913
     defaults: "Mapping[str, Any] | None" = None,
     copy: bool = False,
     color: "_ColorSpec" = "level",
+    json: "bool | _JsonSpec" = False,
 ) -> "logging.Formatter":
     """
     Returns a `logging.Formatter` configured
@@ -214,7 +216,12 @@ def get_formatter(  # noqa: PLR0913
             tuple of `(_ColorMode, colormap)` for per-level color
             overrides. If the mode is not `"off"`, a
             `ColorFormatter` is returned. Ignored if `fmt` is a
-            `logging.Formatter`. Defaults to `"level"`.
+            `logging.Formatter` or if `json` is not `False`.
+            Defaults to `"level"`.
+        json (bool | _JsonSpec, optional): JSON output mode. If
+            not `False`, a `JsonFormatter` is returned and `color` is
+            ignored. Ignored if `fmt` is a `logging.Formatter`.
+            Defaults to `False`.
 
     Returns:
         logging.Formatter: The specified `logging.Formatter`
@@ -222,10 +229,21 @@ def get_formatter(  # noqa: PLR0913
     from copy import deepcopy
 
     from snaplog._color import ColorFormatter
+    from snaplog._json import JsonFormatter
 
     # Return original or copy of existing formatter if one is passed
     if isinstance(fmt, _logging.Formatter):
         return deepcopy(fmt) if copy else fmt
+    # Return a JsonFormatter if json mode is active
+    if json is not False:
+        return JsonFormatter(
+            fmt=fmt,
+            datefmt=datefmt,
+            style=style,
+            validate=validate,
+            defaults=defaults,
+            json=json,
+        )
     # Return a ColorFormatter if color mode is active
     if color != "off":
         return ColorFormatter(
@@ -247,7 +265,10 @@ def get_formatter(  # noqa: PLR0913
 
 
 def get_formatter_from_spec(
-    spec: "_FormatterSpec", *, color: "_ColorSpec" = "level"
+    spec: "_FormatterSpec",
+    *,
+    color: "_ColorSpec" = "level",
+    json: "bool | _JsonSpec" = False,
 ) -> "logging.Formatter":
     """
     Returns a `logging.Formatter` configured using a `_FormatterSpec`.
@@ -258,6 +279,10 @@ def get_formatter_from_spec(
             Passed through to `get_formatter` when the dict spec
             does not already contain a `"color"` key.
             Defaults to `"level"`.
+        json (bool | _JsonSpec, optional): JSON output mode.
+            Passed through to `get_formatter` when the dict spec
+            does not already contain a `"json"` key.
+            Defaults to `False`.
 
     Returns:
         logging.Formatter: The specified formatter
@@ -266,9 +291,10 @@ def get_formatter_from_spec(
     if isinstance(spec, dict):
         # Dict's own color key takes precedence; only inject if absent
         spec["color"] = spec.get("color", color)
+        spec["json"] = spec.get("json", json)
         return get_formatter(**spec)
     # If here, just pass spec as main argument
-    return get_formatter(fmt=spec, color=color)
+    return get_formatter(fmt=spec, color=color, json=json)
 
 
 def get_filter(
@@ -1112,6 +1138,7 @@ def get_logger(  # noqa: PLR0913
     formatter: "_FormatterSpec | _NoDefaultType" = _NoDefault,
     filters: "_FilterSpec | Sequence[_FilterSpec]" = (),
     color: "_ColorSpec" = "level",
+    json: "bool | _JsonSpec" = False,
 ) -> "logging.Logger":
     """
     Returns a `logging.Logger` configured according
@@ -1124,19 +1151,21 @@ def get_logger(  # noqa: PLR0913
     Args:
         name (str | None, optional): Name to apply to the logger. If
             `None`, uses the root logger. Defaults to `"log"`.
-        level (str | int, optional): Logging level to use if `quiet` is
-            `False`. Valid log levels include a log level string from
-            the options provided by `snaplog.get_log_levels()`, the
-            `int` equivalents of those log levels as defined by the
-            `logging` library, or any other `int`. Defaults to `20`.
+        level (str | int, optional): Logging level to use if `quiet`
+            is `False`. Valid log levels include a log level string
+            from the options provided by `snaplog.get_log_levels()`,
+            the `int` equivalents of those log levels as defined by
+            the `logging` library, or any other `int`.
+            Defaults to `20`.
         handlers (_HandlerSpec | Sequence[_HandlerSpec], optional):
             Specification of any `logging.Handler`s to add to the
             logger. Multiple handlers can be specified by providing a
             sequence of handler specifications. Specification of each
-            handler is similar to when using the `snaplog.get_handler`
-            interface, except if using keyword arguments, they must be
-            wrapped into a `dict` and provided as the second item of a
-            `tuple`, where the first item is the argument for `core`.
+            handler is similar to when using the
+            `snaplog.get_handler` interface, except if using keyword
+            arguments, they must be wrapped into a `dict` and
+            provided as the second item of a `tuple`, where the
+            first item is the argument for `core`.
             Defaults to `()` (no handlers).
         formatter (_FormatterSpec | _NoDefaultType, optional):
             Specification of a `logging.Formatter` to add to all
@@ -1144,10 +1173,11 @@ def get_logger(  # noqa: PLR0913
             alternative formatter specified. If `_NoDefault`, no
             formatters are added. Defaults to `_NoDefault`.
         filters (_FilterSpec | Sequence[_FilterSpec], optional):
-            Specification of any `logging.Filter`s to add to the logger.
-            Multiple filters can be specified by providing a sequence of
-            filter specifications. Specification of each filter is the
-            same as when using the `snaplog.get_handler` inteface.
+            Specification of any `logging.Filter`s to add to the
+            logger. Multiple filters can be specified by providing
+            a sequence of filter specifications. Specification of
+            each filter is the same as when using the
+            `snaplog.get_handler` inteface.
             Defaults to `()` (no filters).
         color (_ColorSpec, optional): Color mode to apply to the
             formatter. Either a bare `_ColorMode` string or a
@@ -1155,7 +1185,11 @@ def get_logger(  # noqa: PLR0913
             overrides. When `formatter` is `_NoDefault` and the
             mode is not `"off"`, a `ColorFormatter` is created.
             When `formatter` is a spec, `color` is passed through
-            to `get_formatter_from_spec`. Defaults to `"level"`.
+            to `get_formatter_from_spec`. Ignored if `json` is
+            not `False`. Defaults to `"level"`.
+        json (bool | _JsonSpec, optional): JSON output mode. If
+            not `False`, a `JsonFormatter` is created and `color` is
+            ignored. Defaults to `False`.
 
     Returns:
         logging.Logger: The speficied `logging.Logger`
@@ -1181,8 +1215,12 @@ def get_logger(  # noqa: PLR0913
     # Get formatter if applicable
     resolved_formatter: _logging.Formatter | None
     if isinstance(formatter, _NoDefaultType):
-        # Only auto-create a formatter when color mode is active
-        if color != "off":
+        # Auto-create a formatter when json or color mode is active
+        if json is not False:
+            resolved_formatter = get_formatter(
+                fmt=_get_default_fmt(resolved_name), json=json
+            )
+        elif color != "off":
             resolved_formatter = get_formatter(
                 fmt=_get_default_fmt(resolved_name), color=color
             )
@@ -1190,7 +1228,7 @@ def get_logger(  # noqa: PLR0913
             resolved_formatter = None
     else:
         resolved_formatter = get_formatter_from_spec(
-            spec=formatter, color=color
+            spec=formatter, color=color, json=json
         )
 
     # Set formatter for handlers as applicable

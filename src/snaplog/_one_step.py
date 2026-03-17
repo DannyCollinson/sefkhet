@@ -18,6 +18,7 @@ if _TYPE_CHECKING:  # pragma: no cover
         _FilterSpec,
         _FormatterSpec,
         _HandlerSpec,
+        _JsonSpec,
         _LoggerSpec,
         _NoDefaultType,
     )
@@ -45,6 +46,7 @@ def configure_default_logger(  # noqa: PLR0913
     spec: "_LoggerSpec | _NoDefaultType" = _NoDefault,
     force: bool = False,
     color: "_ColorSpec" = "level",
+    json: "bool | _JsonSpec" = False,
 ) -> None:
     """
     Configures the default logger used by `snaplog`.
@@ -93,7 +95,11 @@ def configure_default_logger(  # noqa: PLR0913
             Either a bare `_ColorMode` string or a tuple of
             `(_ColorMode, colormap)` for per-level color overrides.
             Passed through to `get_logger` in the non-spec path.
-            Defaults to `"level"`.
+            Ignored if `json` is not `False`. Defaults to `"level"`.
+        json (bool | _JsonSpec, optional): JSON output mode. If
+            not `False`, a `JsonFormatter` is used and `color` is
+            ignored. Passed through to `get_logger` in the
+            non-spec path. Defaults to `False`.
     """  # noqa: E501,W505
     from snaplog._functional import (
         _get_default_fmt,
@@ -120,7 +126,7 @@ def configure_default_logger(  # noqa: PLR0913
         # Use thread lock to ensure only one default logger gets made
         with _lock:
             # Double-check inside the lock to avoid redundant creation
-            if _default_logger is not None and not force:
+            if _default_logger is not None and not force:  # pragma: no cover
                 return
             _default_logger = get_logger_from_spec(spec=spec)
         return
@@ -134,7 +140,7 @@ def configure_default_logger(  # noqa: PLR0913
         else handlers
     )
     formatter = (
-        get_formatter(fmt=_get_default_fmt(name), color=color)
+        get_formatter(fmt=_get_default_fmt(name), color=color, json=json)
         if isinstance(formatter, _NoDefaultType)
         else formatter
     )
@@ -144,7 +150,7 @@ def configure_default_logger(  # noqa: PLR0913
     # and use thread lock to ensure only one default logger gets made
     with _lock:
         # Double-check inside the lock to avoid redundant creation
-        if _default_logger is not None and not force:
+        if _default_logger is not None and not force:  # pragma: no cover
             return
         _default_logger = get_logger(
             name=name,
@@ -153,6 +159,7 @@ def configure_default_logger(  # noqa: PLR0913
             formatter=formatter,
             filters=filters,
             color=color,
+            json=json,
         )
 
 

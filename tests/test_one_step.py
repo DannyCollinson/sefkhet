@@ -339,7 +339,7 @@ class TestConcurrentRecord:  # pylint: disable=too-few-public-methods
         def _log(i: int) -> None:
             try:
                 record(f"concurrent msg {i}")
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001 # pragma: no cover
                 errors.append(exc)
 
         threads = [threading.Thread(target=_log, args=(i,)) for i in range(20)]
@@ -363,7 +363,7 @@ class TestConcurrentConfigureDefaultLogger:
         def _configure(i: int) -> None:
             try:
                 configure_default_logger(name=f"concurrent_{i}", force=True)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001 # pragma: no cover
                 errors.append(exc)
 
         threads = [
@@ -385,13 +385,13 @@ class TestConcurrentConfigureDefaultLogger:
         def _configure() -> None:
             try:
                 configure_default_logger()
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001 # pragma: no cover
                 errors.append(exc)
 
         def _rec(i: int) -> None:
             try:
                 record(f"msg {i}")
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001 # pragma: no cover
                 errors.append(exc)
 
         threads: list[threading.Thread] = []
@@ -417,7 +417,7 @@ class TestConcurrentConfigureDefaultLogger:
             try:
                 for j in range(50):
                     record(f"t{tid}-m{j}")
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001 # pragma: no cover
                 errors.append(exc)
 
         threads = [threading.Thread(target=_rec, args=(i,)) for i in range(20)]

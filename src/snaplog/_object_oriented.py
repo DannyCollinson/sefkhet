@@ -22,6 +22,7 @@ if _TYPE_CHECKING:  # pragma: no cover
         _FormatStyle,
         _FormatterSpec,
         _HandlerSpec,
+        _JsonSpec,
         _NoDefaultType,
         _SysExcInfoType,
     )
@@ -57,6 +58,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         formatter: "_FormatterSpec | _NoDefaultType" = _NoDefault,
         filters: "_FilterSpec | Sequence[_FilterSpec]" = (),
         color: "_ColorSpec" = "level",
+        json: "bool | _JsonSpec" = False,
     ) -> None:
         """
         The base logger class for `snaplog`.
@@ -109,7 +111,11 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
                 Either a bare `_ColorMode` string or a tuple of
                 `(_ColorMode, colormap)` for per-level color overrides.
                 Passed through to `get_logger`. If mode is not `"off"`,
-                a `ColorFormatter` is used. Defaults to `"level"`.
+                a `ColorFormatter` is used. Ignored if `json` is
+                not `False`. Defaults to `"level"`.
+            json (bool | _JsonSpec, optional): JSON output mode. If
+                not `False`, a `JsonFormatter` is used and `color` is
+                ignored. Defaults to `False`.
         """
         from snaplog._functional import get_formatter_from_spec, get_logger
         from snaplog._typing import _NoDefaultType
@@ -133,6 +139,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             formatter=formatter,
             filters=filters,
             color=color,
+            json=json,
         )
 
         # Save standard logging.Logger attributes

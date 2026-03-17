@@ -625,7 +625,7 @@ class TestSnapLoggerConcurrency:
             try:
                 snap = SnapLogger()
                 results.append(snap.name)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001 # pragma: no cover
                 errors.append(exc)
 
         threads = [threading.Thread(target=_create) for _ in range(20)]
@@ -842,7 +842,7 @@ class TestSnapLoggerIntegration:  # pylint: disable=too-few-public-methods
         snap.info("queued msg")
         # Stop the listener to flush
         for h in snap.handlers:
-            if (
+            if (  # pragma: no branch
                 isinstance(h, logging.handlers.QueueHandler)
                 and h.listener is not None
             ):

@@ -50,6 +50,15 @@ type _ColorMode = Literal["full", "partial", "level", "msg", "off"]
 type _ColorMap = Callable[[int], str] | Mapping[int, str]
 type _ColorSpec = _ColorMode | tuple[_ColorMode, _ColorMap]
 
+
+# Define typed dict for JSON formatter spec
+class _JsonSpec(TypedDict, total=False):
+    fields: Sequence[str]
+    indent: int | None
+    ensure_ascii: bool
+    sort_keys: bool
+
+
 # Define type alias for handler type discriminator
 type _HandlerType = Literal[
     "file", "watched_file", "rotating_file", "timed_rotating_file"
@@ -65,6 +74,7 @@ class _FormatterKwargs(TypedDict, total=False):
     defaults: Mapping[str, Any] | None
     copy: bool
     color: _ColorSpec
+    json: bool | _JsonSpec
 
 
 # Define type alias for valid formatter specs
@@ -190,6 +200,7 @@ class _LoggerKwargs(TypedDict, total=False):
     formatter: _FormatterSpec
     filters: _FilterSpec | Sequence[_FilterSpec]
     color: _ColorSpec
+    json: bool | _JsonSpec
 
 
 # Define type alias for valid logger specs
