@@ -20,6 +20,7 @@ if _TYPE_CHECKING:  # pragma: no cover
         _FormatterSpec,
         _HandlerSpec,
         _JsonSpec,
+        _LogfmtSpec,
         _LoggerSpec,
         _NoDefaultType,
     )
@@ -49,6 +50,7 @@ def configure_default_logger(  # noqa: PLR0913
     color: "_ColorSpec" = "level",
     json: "bool | _JsonSpec" = False,
     csv: "bool | _CsvSpec" = False,
+    logfmt: "bool | _LogfmtSpec" = False,
 ) -> None:
     """
     Configures the default logger used by `snaplog`.
@@ -103,17 +105,23 @@ def configure_default_logger(  # noqa: PLR0913
             formatter. Either a bare `_ColorMode` string or a
             tuple of `(_ColorMode, colormap)` for per-level
             color overrides. Passed through to `get_logger` in
-            the non-spec path. Ignored if `csv` or `json` is
-            not `False`. Defaults to `"level"`.
+            the non-spec path. Ignored if `csv`, `json`, or
+            `logfmt` is not `False`. Defaults to `"level"`.
         json (bool | _JsonSpec, optional): JSON output mode.
             If not `False`, a `JsonFormatter` is used and
             `color` is ignored. Passed through to `get_logger`
             in the non-spec path. Ignored if `csv` is not
             `False`. Defaults to `False`.
         csv (bool | _CsvSpec, optional): CSV output mode. If
-            not `False`, a `CsvFormatter` is used and `json`
-            and `color` are ignored. Passed through to
-            `get_logger` in the non-spec path.
+            not `False`, a `CsvFormatter` is used and `json`,
+            `logfmt`, and `color` are ignored. Passed through
+            to `get_logger` in the non-spec path.
+            Defaults to `False`.
+        logfmt (bool | _LogfmtSpec, optional): Logfmt output
+            mode. If not `False`, a `LogfmtFormatter` is used
+            and `color` is ignored. Passed through to
+            `get_logger` in the non-spec path. Ignored if
+            `csv` or `json` is not `False`.
             Defaults to `False`.
     """  # noqa: E501,W505
     from snaplog._functional import (
@@ -156,7 +164,11 @@ def configure_default_logger(  # noqa: PLR0913
     )
     formatter = (
         get_formatter(
-            fmt=_get_default_fmt(name), color=color, json=json, csv=csv
+            fmt=_get_default_fmt(name),
+            color=color,
+            json=json,
+            csv=csv,
+            logfmt=logfmt,
         )
         if isinstance(formatter, _NoDefaultType)
         else formatter
@@ -178,6 +190,7 @@ def configure_default_logger(  # noqa: PLR0913
             color=color,
             json=json,
             csv=csv,
+            logfmt=logfmt,
         )
 
 

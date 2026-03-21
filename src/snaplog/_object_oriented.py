@@ -24,6 +24,7 @@ if _TYPE_CHECKING:  # pragma: no cover
         _FormatterSpec,
         _HandlerSpec,
         _JsonSpec,
+        _LogfmtSpec,
         _NoDefaultType,
         _SysExcInfoType,
     )
@@ -61,6 +62,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         color: "_ColorSpec" = "level",
         json: "bool | _JsonSpec" = False,
         csv: "bool | _CsvSpec" = False,
+        logfmt: "bool | _LogfmtSpec" = False,
     ) -> None:
         """
         The base logger class for `snaplog`.
@@ -119,16 +121,21 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
                 tuple of `(_ColorMode, colormap)` for per-level
                 color overrides. Passed through to `get_logger`.
                 If mode is not `"off"`, a `ColorFormatter` is
-                used. Ignored if `csv` or `json` is not `False`.
-                Defaults to `"level"`.
+                used. Ignored if `csv`, `json`, or `logfmt` is
+                not `False`. Defaults to `"level"`.
             json (bool | _JsonSpec, optional): JSON output mode.
                 If not `False`, a `JsonFormatter` is used and
                 `color` is ignored. Ignored if `csv` is not
                 `False`. Defaults to `False`.
             csv (bool | _CsvSpec, optional): CSV output mode.
                 If not `False`, a `CsvFormatter` is used and
-                `json` and `color` are ignored.
+                `json`, `logfmt`, and `color` are ignored.
                 Defaults to `False`.
+            logfmt (bool | _LogfmtSpec, optional): Logfmt
+                output mode. If not `False`, a
+                `LogfmtFormatter` is used and `color` is
+                ignored. Ignored if `csv` or `json` is not
+                `False`. Defaults to `False`.
         """
         from snaplog._functional import get_formatter_from_spec, get_logger
         from snaplog._typing import _NoDefaultType
@@ -154,6 +161,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             color=color,
             json=json,
             csv=csv,
+            logfmt=logfmt,
         )
 
         # Save standard logging.Logger attributes

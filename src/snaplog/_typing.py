@@ -67,6 +67,12 @@ class _CsvSpec(TypedDict, total=False):
     header: bool
 
 
+# Define typed dict for logfmt formatter spec
+class _LogfmtSpec(TypedDict, total=False):
+    fields: Sequence[str]
+    sort_keys: bool
+
+
 # Define type alias for handler type discriminator
 type _HandlerType = Literal[
     "file", "watched_file", "rotating_file", "timed_rotating_file"
@@ -84,6 +90,7 @@ class _FormatterKwargs(TypedDict, total=False):
     color: _ColorSpec
     json: bool | _JsonSpec
     csv: bool | _CsvSpec
+    logfmt: bool | _LogfmtSpec
 
 
 # Define type alias for valid formatter specs
@@ -211,6 +218,7 @@ class _LoggerKwargs(TypedDict, total=False):
     color: _ColorSpec
     json: bool | _JsonSpec
     csv: bool | _CsvSpec
+    logfmt: bool | _LogfmtSpec
 
 
 # Define type alias for valid logger specs

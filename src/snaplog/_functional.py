@@ -48,6 +48,7 @@ if _TYPE_CHECKING:  # pragma: no cover
         _HandlerSpec,
         _HandlerType,
         _JsonSpec,
+        _LogfmtSpec,
         _LoggerSpec,
         _NoDefaultType,
         _StrOrPathLike,
@@ -174,6 +175,7 @@ def get_formatter(  # noqa: PLR0913
     color: "_ColorSpec" = "level",
     json: "bool | _JsonSpec" = False,
     csv: "bool | _CsvSpec" = False,
+    logfmt: "bool | _LogfmtSpec" = False,
 ) -> "logging.Formatter":
     """
     Returns a `logging.Formatter` configured
@@ -218,17 +220,22 @@ def get_formatter(  # noqa: PLR0913
             tuple of `(_ColorMode, colormap)` for per-level color
             overrides. If the mode is not `"off"`, a
             `ColorFormatter` is returned. Ignored if `fmt` is a
-            `logging.Formatter` or if `csv` or `json` is not
-            `False`. Defaults to `"level"`.
+            `logging.Formatter` or if `csv`, `json`, or `logfmt`
+            is not `False`. Defaults to `"level"`.
         json (bool | _JsonSpec, optional): JSON output mode. If
             not `False`, a `JsonFormatter` is returned and `color`
             is ignored. Ignored if `fmt` is a
             `logging.Formatter` or if `csv` is not `False`.
             Defaults to `False`.
         csv (bool | _CsvSpec, optional): CSV output mode. If
-            not `False`, a `CsvFormatter` is returned and `json`
-            and `color` are ignored. Ignored if `fmt` is a
-            `logging.Formatter`. Defaults to `False`.
+            not `False`, a `CsvFormatter` is returned and `json`,
+            `logfmt`, and `color` are ignored. Ignored if `fmt`
+            is a `logging.Formatter`. Defaults to `False`.
+        logfmt (bool | _LogfmtSpec, optional): Logfmt output
+            mode. If not `False`, a `LogfmtFormatter` is
+            returned and `color` is ignored. Ignored if `fmt`
+            is a `logging.Formatter` or if `csv` or `json` is
+            not `False`. Defaults to `False`.
 
     Returns:
         logging.Formatter: The specified `logging.Formatter`
@@ -238,6 +245,7 @@ def get_formatter(  # noqa: PLR0913
     from snaplog._color import ColorFormatter
     from snaplog._csv import CsvFormatter
     from snaplog._json import JsonFormatter
+    from snaplog._logfmt import LogfmtFormatter
 
     # Return original or copy of existing formatter if one is passed
     if isinstance(fmt, _logging.Formatter):
@@ -261,6 +269,16 @@ def get_formatter(  # noqa: PLR0913
             validate=validate,
             defaults=defaults,
             json=json,
+        )
+    # Return a LogfmtFormatter if logfmt mode is active
+    if logfmt is not False:
+        return LogfmtFormatter(
+            fmt=fmt,
+            datefmt=datefmt,
+            style=style,
+            validate=validate,
+            defaults=defaults,
+            logfmt=logfmt,
         )
     # Return a ColorFormatter if color mode is active
     if color != "off":
@@ -288,6 +306,7 @@ def get_formatter_from_spec(
     color: "_ColorSpec" = "level",
     json: "bool | _JsonSpec" = False,
     csv: "bool | _CsvSpec" = False,
+    logfmt: "bool | _LogfmtSpec" = False,
 ) -> "logging.Formatter":
     """
     Returns a `logging.Formatter` configured using a
@@ -307,6 +326,10 @@ def get_formatter_from_spec(
             Passed through to `get_formatter` when the dict
             spec does not already contain a `"csv"` key.
             Defaults to `False`.
+        logfmt (bool | _LogfmtSpec, optional): Logfmt output
+            mode. Passed through to `get_formatter` when the
+            dict spec does not already contain a `"logfmt"`
+            key. Defaults to `False`.
 
     Returns:
         logging.Formatter: The specified formatter
@@ -317,9 +340,12 @@ def get_formatter_from_spec(
         spec["color"] = spec.get("color", color)
         spec["json"] = spec.get("json", json)
         spec["csv"] = spec.get("csv", csv)
+        spec["logfmt"] = spec.get("logfmt", logfmt)
         return get_formatter(**spec)
     # If here, just pass spec as main argument
-    return get_formatter(fmt=spec, color=color, json=json, csv=csv)
+    return get_formatter(
+        fmt=spec, color=color, json=json, csv=csv, logfmt=logfmt
+    )
 
 
 def get_filter(
@@ -1165,6 +1191,7 @@ def get_logger(  # noqa: PLR0913
     color: "_ColorSpec" = "level",
     json: "bool | _JsonSpec" = False,
     csv: "bool | _CsvSpec" = False,
+    logfmt: "bool | _LogfmtSpec" = False,
 ) -> "logging.Logger":
     """
     Returns a `logging.Logger` configured according
@@ -1215,16 +1242,20 @@ def get_logger(  # noqa: PLR0913
             and the mode is not `"off"`, a `ColorFormatter` is
             created. When `formatter` is a spec, `color` is
             passed through to `get_formatter_from_spec`.
-            Ignored if `csv` or `json` is not `False`.
-            Defaults to `"level"`.
+            Ignored if `csv`, `json`, or `logfmt` is not
+            `False`. Defaults to `"level"`.
         json (bool | _JsonSpec, optional): JSON output mode.
             If not `False`, a `JsonFormatter` is created and
             `color` is ignored. Ignored if `csv` is not
             `False`. Defaults to `False`.
         csv (bool | _CsvSpec, optional): CSV output mode.
             If not `False`, a `CsvFormatter` is created and
-            `json` and `color` are ignored.
+            `json`, `logfmt`, and `color` are ignored.
             Defaults to `False`.
+        logfmt (bool | _LogfmtSpec, optional): Logfmt output
+            mode. If not `False`, a `LogfmtFormatter` is
+            created and `color` is ignored. Ignored if `csv`
+            or `json` is not `False`. Defaults to `False`.
 
     Returns:
         logging.Logger: The speficied `logging.Logger`
@@ -1250,7 +1281,7 @@ def get_logger(  # noqa: PLR0913
     # Get formatter if applicable
     resolved_formatter: _logging.Formatter | None
     if isinstance(formatter, _NoDefaultType):
-        # Auto-create formatter: csv > json > color priority
+        # Auto-create formatter: csv > json > logfmt > color
         if csv is not False:
             resolved_formatter = get_formatter(
                 fmt=_get_default_fmt(resolved_name), csv=csv
@@ -1258,6 +1289,10 @@ def get_logger(  # noqa: PLR0913
         elif json is not False:
             resolved_formatter = get_formatter(
                 fmt=_get_default_fmt(resolved_name), json=json
+            )
+        elif logfmt is not False:
+            resolved_formatter = get_formatter(
+                fmt=_get_default_fmt(resolved_name), logfmt=logfmt
             )
         elif color != "off":
             resolved_formatter = get_formatter(
@@ -1267,7 +1302,7 @@ def get_logger(  # noqa: PLR0913
             resolved_formatter = None
     else:
         resolved_formatter = get_formatter_from_spec(
-            spec=formatter, color=color, json=json, csv=csv
+            spec=formatter, color=color, json=json, csv=csv, logfmt=logfmt
         )
 
     # Set formatter for handlers as applicable

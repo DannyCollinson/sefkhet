@@ -37,6 +37,7 @@ from snaplog._functional import (
     get_logger,
 )
 from snaplog._json import JsonFormatter
+from snaplog._logfmt import LogfmtFormatter
 from snaplog._object_oriented import SnapLogger
 from snaplog._one_step import configure_default_logger, log, rec, record
 
@@ -52,6 +53,7 @@ __all__ = [  # noqa: RUF022
     "ColorFormatter",
     "CsvFormatter",
     "JsonFormatter",
+    "LogfmtFormatter",
     "SnapLogger",
     # Functions
     "add_filters_to_target",
