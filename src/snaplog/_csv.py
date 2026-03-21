@@ -131,7 +131,7 @@ class CsvFormatter(_logging.Formatter):
         import csv
         import io
 
-        from snaplog._json import (
+        from snaplog._constants import (
             _KNOWN_FIELDS,
             _STANDARD_RECORD_ATTRS,
             _extract_known_field,

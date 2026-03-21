@@ -22,51 +22,6 @@ _DEFAULT_JSON_FIELDS: tuple[str, ...] = (
 )
 
 
-# Define fields with existing formatter interpolations
-_KNOWN_FIELDS: frozenset[str] = frozenset(
-    {
-        "timestamp",
-        "level",
-        "levelno",
-        "message",
-        "logger",
-        "module",
-        "funcName",
-        "lineno",
-        "pathname",
-    }
-)
-
-# Attributes that are standard on every LogRecord and should
-# not be treated as "extra" fields.
-_STANDARD_RECORD_ATTRS: frozenset[str] = frozenset(
-    {
-        "args",
-        "created",
-        "exc_info",
-        "exc_text",
-        "filename",
-        "funcName",
-        "levelname",
-        "levelno",
-        "lineno",
-        "message",
-        "module",
-        "msecs",
-        "msg",
-        "name",
-        "pathname",
-        "process",
-        "processName",
-        "relativeCreated",
-        "stack_info",
-        "taskName",
-        "thread",
-        "threadName",
-    }
-)
-
-
 def _parse_json_spec(
     spec: "Literal[True] | _JsonSpec",
 ) -> "tuple[tuple[str, ...], int | None, bool, bool]":
@@ -92,39 +47,6 @@ def _parse_json_spec(
     ensure_ascii = spec.get("ensure_ascii", False)
     sort_keys = spec.get("sort_keys", False)
     return fields, indent, ensure_ascii, sort_keys
-
-
-def _extract_known_field(
-    field: str, record: "logging.LogRecord", formatter: "logging.Formatter"
-) -> object:
-    """
-    Extracts a known field value from a `LogRecord`.
-
-    Args:
-        field (str): The field name to extract
-        record (logging.LogRecord): The log record
-        formatter (logging.Formatter): The formatter instance,
-            used for `formatTime`
-
-    Returns:
-        object: The extracted field value
-    """
-    # Handle special time and message cases
-    if field == "timestamp":
-        return formatter.formatTime(record, formatter.datefmt)
-    if field == "message":
-        return record.getMessage()
-    # All remaining known fields are simple record attributes
-    attr_map: dict[str, str] = {
-        "level": "levelname",
-        "levelno": "levelno",
-        "logger": "name",
-        "module": "module",
-        "funcName": "funcName",
-        "lineno": "lineno",
-        "pathname": "pathname",
-    }
-    return getattr(record, attr_map[field])
 
 
 class JsonFormatter(_logging.Formatter):
@@ -202,6 +124,12 @@ class JsonFormatter(_logging.Formatter):
             str: JSON-formatted log record string
         """
         import json
+
+        from snaplog._constants import (
+            _KNOWN_FIELDS,
+            _STANDARD_RECORD_ATTRS,
+            _extract_known_field,
+        )
 
         data: dict[str, object] = {}
 
