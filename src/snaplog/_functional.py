@@ -806,6 +806,57 @@ def _wrap_handler_in_queue(
     return queue_handler
 
 
+def _wrap_handler_in_memory(
+    handler: "logging.Handler",
+    *,
+    capacity: int,
+    flush_level: int,
+    flush_on_close: bool,
+) -> "logging.handlers.MemoryHandler":
+    """
+    Returns a `logging.handlers.MemoryHandler` that buffers
+    records and flushes them to the original handler.
+
+    Records are buffered until the buffer reaches `capacity`
+    or a record at or above `flush_level` is emitted, at
+    which point all buffered records are flushed to the
+    target handler.
+
+    Args:
+        handler (logging.Handler): The target handler to
+            flush buffered records to
+        capacity (int): Maximum number of records to buffer
+            before flushing. Must be positive.
+        flush_level (int): Log level that triggers an
+            immediate flush of the buffer
+        flush_on_close (bool): Whether to flush buffered
+            records when the handler is closed
+
+    Raises:
+        ValueError: If `capacity` is not positive
+
+    Returns:
+        logging.handlers.MemoryHandler: Memory handler that
+            buffers records and flushes to `handler`
+    """
+    import logging.handlers
+
+    # Guard: do not double-wrap an existing MemoryHandler
+    if isinstance(handler, logging.handlers.MemoryHandler):
+        return handler
+
+    if capacity <= 0:
+        msg = f"Argument 'capacity' must be positive; got {capacity}."
+        raise ValueError(msg)
+
+    return logging.handlers.MemoryHandler(
+        capacity=capacity,
+        flushLevel=flush_level,
+        target=handler,
+        flushOnClose=flush_on_close,
+    )
+
+
 def get_handler(  # noqa: PLR0913
     core: "_StrOrPathLike | _TextIOLike | logging.Handler | None" = None,
     *,
@@ -828,6 +879,10 @@ def get_handler(  # noqa: PLR0913
     rotator: "Callable[[str, str], None] | None" = None,
     copy: bool = False,
     queued: bool = False,
+    buffered: bool = False,
+    capacity: int = 1024,
+    flush_level: "int | str | None" = None,
+    flush_on_close: bool = True,
 ) -> "logging.Handler":
     """
     Returns a `logging.Handler` configured
@@ -920,11 +975,14 @@ def get_handler(  # noqa: PLR0913
             original filter is used; if a compatible `Callable` or class
             with `filter` method, it will be added as a filter directly.
             Defaults to `()` (no filters).
-        handler_type (_HandlerType, optional): Type of file handler
-            to create when `core` is a path. One of `"file"`,
-            `"watched_file"`, `"rotating_file"`, or
-            `"timed_rotating_file"`. Ignored if not creating a file
-            handler. Defaults to `"file"`.
+        handler_type (_HandlerType, optional): Type of handler
+            to create. One of `"file"`, `"watched_file"`,
+            `"rotating_file"`, `"timed_rotating_file"`, or
+            `"memory"`. When `"memory"`, the handler created
+            from `core` is wrapped in a
+            `logging.handlers.MemoryHandler`. File handler
+            types are ignored if not creating a file handler.
+            Defaults to `"file"`.
         mode (str, optional): Mode used to open the log file. Ignored
             if not creating a file handler or if using
             `"timed_rotating_file"`. Defaults to `"a"`.
@@ -974,6 +1032,28 @@ def get_handler(  # noqa: PLR0913
             registered with `atexit` for clean shutdown. If `core` is
             already a `QueueHandler`, it is returned as-is.
             Defaults to `False`.
+        buffered (bool, optional): If `True`, wraps the created
+            handler in a `logging.handlers.MemoryHandler` that
+            buffers records and flushes them to the target when
+            the buffer reaches `capacity` or a record at or
+            above `flush_level` is emitted. If `core` is already
+            a `MemoryHandler`, it is returned as-is.
+            Defaults to `False`.
+        capacity (int, optional): Maximum number of records to
+            buffer before flushing. Only used when `buffered`
+            is `True` or `handler_type` is `"memory"`. Must be
+            positive. Defaults to `1024`.
+        flush_level (int | str | None, optional): Log level
+            that triggers an immediate flush of the buffer.
+            Accepts an integer level, a string (parsed via
+            `_parse_log_level`), or `None` for the default of
+            `logging.ERROR`. Only used when `buffered` is
+            `True` or `handler_type` is `"memory"`.
+            Defaults to `None`.
+        flush_on_close (bool, optional): Whether to flush
+            buffered records when the handler is closed. Only
+            used when `buffered` is `True` or `handler_type`
+            is `"memory"`. Defaults to `True`.
 
     Raises:
         ValueError: Raised if `core` fails to specify a valid handler
@@ -1023,8 +1103,28 @@ def get_handler(  # noqa: PLR0913
     # Add filters if specified
     add_filters_to_target(target=handler, filters=filters)
 
+    # Handle memory/buffering handlers
+    if handler_type == "memory" or buffered:
+        import logging as _logging
+
+        resolved_flush_level: int = (
+            _parse_log_level(flush_level)
+            if isinstance(flush_level, str)
+            else (flush_level if flush_level is not None else _logging.ERROR)
+        )
+        # Wrap the handler in a memory handler if not one already
+        handler = _wrap_handler_in_memory(
+            handler,
+            capacity=capacity,
+            flush_level=resolved_flush_level,
+            flush_on_close=flush_on_close,
+        )
+
+    # Handle queue handler/listener
     if queued:
+        # Wrap handler in queue handler w/ listener if not one already
         handler = _wrap_handler_in_queue(handler)
+
     return handler
 
 

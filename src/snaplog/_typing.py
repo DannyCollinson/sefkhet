@@ -75,7 +75,7 @@ class _LogfmtSpec(TypedDict, total=False):
 
 # Define type alias for handler type discriminator
 type _HandlerType = Literal[
-    "file", "watched_file", "rotating_file", "timed_rotating_file"
+    "file", "watched_file", "rotating_file", "timed_rotating_file", "memory"
 ]
 
 
@@ -162,6 +162,10 @@ class _HandlerKwargs(TypedDict, total=False):
     level: int | None
     copy: bool
     queued: bool
+    buffered: bool
+    capacity: int
+    flush_level: int | str | None
+    flush_on_close: bool
     # Ignored unless creating file handler
     handler_type: _HandlerType
     mode: str
@@ -191,6 +195,13 @@ class _TimedRotatingFileHandlerKwargs(_HandlerKwargs, total=False):
     rotator: Callable[[str, str], None] | None
 
 
+class _MemoryHandlerKwargs(_HandlerKwargs, total=False):
+    """Kwargs for creating a `logging.handlers.MemoryHandler`."""
+
+    handler_type: Required[Literal["memory"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+    capacity: Required[int]  # type: ignore[misc] # pyright: ignore[reportGeneralTypeIssues]
+
+
 # Define type alias for valid handler specs
 type _HandlerSpec = (
     _StrOrPathLike  # File path, special string, or existing handler name
@@ -200,6 +211,10 @@ type _HandlerSpec = (
     | tuple[_StrOrPathLike | _TextIOLike | logging.Handler, _HandlerKwargs]
     | tuple[_StrOrPathLike, _RotatingFileHandlerKwargs]
     | tuple[_StrOrPathLike, _TimedRotatingFileHandlerKwargs]
+    | tuple[
+        _StrOrPathLike | _TextIOLike | logging.Handler | None,
+        _MemoryHandlerKwargs,
+    ]
     | None  # Default stderr handler
 )
 

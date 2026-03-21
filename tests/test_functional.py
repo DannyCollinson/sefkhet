@@ -22,6 +22,7 @@ from snaplog._functional import (
     _parse_filters_arg,
     _parse_handlers_arg,
     _parse_log_level,
+    _wrap_handler_in_memory,
     _wrap_handler_in_queue,
     add_filters_to_target,
     add_handlers_to_logger,
@@ -1762,6 +1763,221 @@ class TestQueueHandler:
         assert output.startswith(color)
         assert _ANSI_RESET in output
         assert "colorful" in output
+
+
+class TestMemoryHandler:
+    """Tests for buffered (MemoryHandler) support in `get_handler`."""
+
+    @staticmethod
+    def test_buffered_false_returns_plain_handler() -> None:
+        """buffered=False (default) returns a non-MemoryHandler."""
+        handler = get_handler(core="null", buffered=False)
+        assert not isinstance(handler, logging.handlers.MemoryHandler)
+        handler.close()
+
+    @staticmethod
+    def test_buffered_true_returns_memory_handler() -> None:
+        """buffered=True returns a MemoryHandler."""
+        handler = get_handler(core="null", buffered=True)
+        assert isinstance(handler, logging.handlers.MemoryHandler)
+        handler.close()
+
+    @staticmethod
+    def test_memory_handler_target() -> None:
+        """.target is the original handler."""
+        stream = io.StringIO()
+        real = logging.StreamHandler(stream)
+        handler = get_handler(core=real, buffered=True, level=None)
+        assert isinstance(handler, logging.handlers.MemoryHandler)
+        assert handler.target is real
+        handler.close()
+
+    @staticmethod
+    def test_memory_handler_default_capacity() -> None:
+        """Default capacity is 1024."""
+        handler = get_handler(core="null", buffered=True)
+        assert isinstance(handler, logging.handlers.MemoryHandler)
+        assert handler.capacity == 1024
+        handler.close()
+
+    @staticmethod
+    def test_memory_handler_custom_capacity() -> None:
+        """Custom capacity is respected."""
+        handler = get_handler(core="null", buffered=True, capacity=50)
+        assert isinstance(handler, logging.handlers.MemoryHandler)
+        assert handler.capacity == 50
+        handler.close()
+
+    @staticmethod
+    def test_memory_handler_flush_level_default() -> None:
+        """Default flushLevel is logging.ERROR."""
+        handler = get_handler(core="null", buffered=True)
+        assert isinstance(handler, logging.handlers.MemoryHandler)
+        assert handler.flushLevel == logging.ERROR
+        handler.close()
+
+    @staticmethod
+    def test_memory_handler_flush_level_int() -> None:
+        """Custom int flush level."""
+        handler = get_handler(
+            core="null", buffered=True, flush_level=logging.WARNING
+        )
+        assert isinstance(handler, logging.handlers.MemoryHandler)
+        assert handler.flushLevel == logging.WARNING
+        handler.close()
+
+    @staticmethod
+    def test_memory_handler_flush_level_string() -> None:
+        """String flush level parsed via _parse_log_level."""
+        handler = get_handler(core="null", buffered=True, flush_level="w")
+        assert isinstance(handler, logging.handlers.MemoryHandler)
+        assert handler.flushLevel == logging.WARNING
+        handler.close()
+
+    @staticmethod
+    def test_memory_handler_flush_on_close_default() -> None:
+        """Default flushOnClose is True."""
+        handler = get_handler(core="null", buffered=True)
+        assert isinstance(handler, logging.handlers.MemoryHandler)
+        assert handler.flushOnClose is True
+        handler.close()
+
+    @staticmethod
+    def test_memory_handler_flush_on_close_false() -> None:
+        """Setting flushOnClose to False."""
+        handler = get_handler(core="null", buffered=True, flush_on_close=False)
+        assert isinstance(handler, logging.handlers.MemoryHandler)
+        assert handler.flushOnClose is False
+        handler.close()
+
+    @staticmethod
+    def test_invalid_capacity_raises() -> None:
+        """capacity=0 raises ValueError."""
+        with pytest.raises(ValueError, match="capacity"):
+            get_handler(core="null", buffered=True, capacity=0)
+
+    @staticmethod
+    def test_negative_capacity_raises() -> None:
+        """Negative capacity raises ValueError."""
+        with pytest.raises(ValueError, match="capacity"):
+            get_handler(core="null", buffered=True, capacity=-1)
+
+    @staticmethod
+    def test_handler_type_memory() -> None:
+        """handler_type='memory' creates MemoryHandler."""
+        handler = get_handler(core="null", handler_type="memory", capacity=100)
+        assert isinstance(handler, logging.handlers.MemoryHandler)
+        assert handler.capacity == 100
+        handler.close()
+
+    @staticmethod
+    def test_already_memory_handler_not_double_wrapped() -> None:
+        """Passing a MemoryHandler does not double-wrap."""
+        target = logging.NullHandler()
+        existing = logging.handlers.MemoryHandler(capacity=10, target=target)
+        result = _wrap_handler_in_memory(
+            existing,
+            capacity=50,
+            flush_level=logging.ERROR,
+            flush_on_close=True,
+        )
+        assert result is existing
+        existing.close()
+
+    @staticmethod
+    def test_buffered_and_queued() -> None:
+        """Both buffered and queued: outer is QueueHandler."""
+        handler = get_handler(core="null", buffered=True, queued=True)
+        assert isinstance(handler, logging.handlers.QueueHandler)
+        assert handler.listener is not None
+        handler.listener.stop()
+        handler.close()
+
+    @staticmethod
+    def test_buffered_handler_e2e() -> None:
+        """Records buffer then flush on flushLevel."""
+        stream = io.StringIO()
+        real: logging.StreamHandler[io.StringIO] = logging.StreamHandler(stream)
+        real.setFormatter(logging.Formatter("%(message)s"))
+        real.setLevel(logging.DEBUG)
+        mh = get_handler(
+            core=real,
+            level=None,
+            buffered=True,
+            capacity=100,
+            flush_level=logging.ERROR,
+        )
+        assert isinstance(mh, logging.handlers.MemoryHandler)
+        logger = logging.getLogger("test_memory_e2e")
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(mh)
+        logger.info("buffered")
+        # Not yet flushed
+        assert not stream.getvalue()
+        # Trigger flush
+        logger.error("trigger")
+        assert "buffered" in stream.getvalue()
+        assert "trigger" in stream.getvalue()
+        logger.removeHandler(mh)
+        mh.close()
+
+    @staticmethod
+    def test_buffered_handler_flush_on_close_e2e() -> None:
+        """Close flushes buffered records."""
+        stream = io.StringIO()
+        real: logging.StreamHandler[io.StringIO] = logging.StreamHandler(stream)
+        real.setFormatter(logging.Formatter("%(message)s"))
+        real.setLevel(logging.DEBUG)
+        mh = get_handler(
+            core=real,
+            level=None,
+            buffered=True,
+            capacity=100,
+            flush_level=logging.CRITICAL,
+        )
+        assert isinstance(mh, logging.handlers.MemoryHandler)
+        logger = logging.getLogger("test_memory_close_e2e")
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(mh)
+        logger.info("will flush on close")
+        assert not stream.getvalue()
+        mh.close()
+        assert "will flush on close" in stream.getvalue()
+        logger.removeHandler(mh)
+
+    @staticmethod
+    def test_buffered_in_kwargs_dict() -> None:
+        """get_handler_from_spec with buffered=True in kwargs."""
+        stream = io.StringIO()
+        spec: tuple[Any, Any] = (stream, {"buffered": True, "level": None})
+        handler = get_handler_from_spec(spec)
+        assert isinstance(handler, logging.handlers.MemoryHandler)
+        handler.close()
+
+    @staticmethod
+    def test_formatter_on_target_not_memory_handler() -> None:
+        """Formatter is applied to target, not MemoryHandler."""
+        fmt = logging.Formatter("%(message)s")
+        stream = io.StringIO()
+        real = logging.StreamHandler(stream)
+        handler = get_handler(
+            core=real, formatter=fmt, buffered=True, level=None
+        )
+        assert isinstance(handler, logging.handlers.MemoryHandler)
+        assert handler.target is not None
+        assert handler.target.formatter is fmt
+        handler.close()
+
+    @staticmethod
+    def test_level_on_target_handler() -> None:
+        """Level set on target handler."""
+        stream = io.StringIO()
+        real = logging.StreamHandler(stream)
+        handler = get_handler(core=real, level=logging.WARNING, buffered=True)
+        assert isinstance(handler, logging.handlers.MemoryHandler)
+        assert handler.target is not None
+        assert handler.target.level == logging.WARNING
+        handler.close()
 
 
 class TestIntegrationCombinations:
