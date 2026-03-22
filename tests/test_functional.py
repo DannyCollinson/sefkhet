@@ -18,6 +18,7 @@ from snaplog._functional import (
     _DEFAULT_LOGGER_NAMES,
     _get_default_fmt,
     _maybe_create_handler,
+    _maybe_create_network_handler,
     _maybe_create_special_string_handler,
     _parse_filters_arg,
     _parse_handlers_arg,
@@ -40,11 +41,16 @@ from snaplog._functional import (
     set_formatter_for_logger,
 )
 from snaplog._typing import (
+    _DatagramHandlerKwargs,
+    _HTTPHandlerKwargs,
     _HandlerKwargs,
     _LoggerKwargs,
     _NoDefault,
     _RotatingFileHandlerKwargs,
+    _SMTPHandlerKwargs,
+    _SocketHandlerKwargs,
     _SupportsFilter,
+    _SysLogHandlerKwargs,
     _TimedRotatingFileHandlerKwargs,
 )
 
@@ -2033,3 +2039,422 @@ class TestIntegrationCombinations:
         assert result.level == logging.DEBUG
         assert len(result.handlers) == 2
         assert len(result.filters) == 1
+
+
+# ── Network handler defaults ──────────────────────────────────────
+
+
+_NET_DEFAULTS: dict[str, Any] = {
+    "address": ("localhost", 514),
+    "facility": 1,
+    "socktype": None,
+    "host": None,
+    "port": None,
+    "mailhost": None,
+    "fromaddr": None,
+    "toaddrs": None,
+    "subject": None,
+    "smtp_credentials": None,
+    "smtp_secure": None,
+    "smtp_timeout": 5.0,
+    "url": None,
+    "http_method": "GET",
+    "http_secure": False,
+    "http_credentials": None,
+    "http_context": None,
+}
+
+
+class TestMaybeCreateNetworkHandler:
+    """Tests for `_maybe_create_network_handler`."""
+
+    @staticmethod
+    def _call(handler_type: str, **overrides: Any) -> logging.Handler | None:
+        """
+        Call `_maybe_create_network_handler` with defaults.
+
+        Args:
+            handler_type (str): Handler type discriminator.
+            **overrides (Any): Overrides for defaults.
+
+        Returns:
+            logging.Handler | None: The created handler.
+        """
+        kw = {**_NET_DEFAULTS, **overrides}
+        return _maybe_create_network_handler(
+            handler_type=handler_type,  # type: ignore[arg-type] # pyright: ignore[reportArgumentType]
+            **kw,
+        )
+
+    def test_non_network_type_returns_none(self) -> None:
+        """Non-network handler_type returns None."""
+        result = self._call("file")
+        assert result is None
+
+    def test_syslog_default(self) -> None:
+        """SysLogHandler created with defaults."""
+        result = self._call("syslog")
+        assert isinstance(result, logging.handlers.SysLogHandler)
+
+    def test_syslog_custom_address(self) -> None:
+        """SysLogHandler respects custom address."""
+        result = self._call("syslog", address=("10.0.0.1", 1514))
+        assert isinstance(result, logging.handlers.SysLogHandler)
+        assert result.address == ("10.0.0.1", 1514)
+
+    def test_syslog_custom_facility(self) -> None:
+        """SysLogHandler respects custom facility."""
+        result = self._call("syslog", facility=3)
+        assert isinstance(result, logging.handlers.SysLogHandler)
+        assert result.facility == 3
+
+    def test_syslog_custom_socktype(self) -> None:
+        """SysLogHandler respects custom socktype."""
+        import socket
+
+        result = self._call("syslog", socktype=socket.SOCK_DGRAM)
+        assert isinstance(result, logging.handlers.SysLogHandler)
+        assert result.socktype == socket.SOCK_DGRAM
+
+    def test_socket_handler(self) -> None:
+        """SocketHandler created with host and port."""
+        result = self._call("socket", host="localhost", port=9000)
+        assert isinstance(result, logging.handlers.SocketHandler)
+        assert result.host == "localhost"
+        assert result.port == 9000
+
+    def test_datagram_handler(self) -> None:
+        """DatagramHandler created with host and port."""
+        result = self._call("datagram", host="localhost", port=9001)
+        assert isinstance(result, logging.handlers.DatagramHandler)
+        assert result.host == "localhost"
+        assert result.port == 9001
+
+    def test_smtp_handler(self) -> None:
+        """SMTPHandler created with required args."""
+        result = self._call(
+            "smtp",
+            mailhost="smtp.example.com",
+            fromaddr="a@b.com",
+            toaddrs=["c@d.com"],
+            subject="Alert",
+        )
+        assert isinstance(result, logging.handlers.SMTPHandler)
+        assert result.mailhost == "smtp.example.com"
+        assert result.fromaddr == "a@b.com"
+        assert result.toaddrs == ["c@d.com"]
+        assert result.subject == "Alert"
+
+    def test_smtp_handler_with_credentials(self) -> None:
+        """SMTPHandler passes credentials."""
+        result = self._call(
+            "smtp",
+            mailhost="smtp.example.com",
+            fromaddr="a@b.com",
+            toaddrs=["c@d.com"],
+            subject="Alert",
+            smtp_credentials=("user", "pass"),
+        )
+        assert isinstance(result, logging.handlers.SMTPHandler)
+        assert result.username == "user"
+        assert result.password == "pass"  # noqa: S105
+
+    def test_smtp_handler_with_secure(self) -> None:
+        """SMTPHandler passes secure tuple."""
+        result = self._call(
+            "smtp",
+            mailhost="smtp.example.com",
+            fromaddr="a@b.com",
+            toaddrs=["c@d.com"],
+            subject="Alert",
+            smtp_secure=(),
+        )
+        assert isinstance(result, logging.handlers.SMTPHandler)
+        assert result.secure == ()
+
+    def test_smtp_handler_with_timeout(self) -> None:
+        """SMTPHandler passes timeout."""
+        result = self._call(
+            "smtp",
+            mailhost="smtp.example.com",
+            fromaddr="a@b.com",
+            toaddrs=["c@d.com"],
+            subject="Alert",
+            smtp_timeout=10.0,
+        )
+        assert isinstance(result, logging.handlers.SMTPHandler)
+        assert result.timeout == pytest.approx(10.0)  # pyright: ignore[reportUnknownMemberType]
+
+    def test_http_handler(self) -> None:
+        """HTTPHandler created with host and url."""
+        result = self._call("http", host="example.com", url="/log")
+        assert isinstance(result, logging.handlers.HTTPHandler)
+        assert result.host == "example.com"
+        assert result.url == "/log"
+        assert result.method == "GET"
+        assert result.secure is False
+
+    def test_http_handler_custom_method(self) -> None:
+        """HTTPHandler respects custom method."""
+        result = self._call(
+            "http", host="example.com", url="/log", http_method="POST"
+        )
+        assert isinstance(result, logging.handlers.HTTPHandler)
+        assert result.method == "POST"
+
+    def test_http_handler_secure(self) -> None:
+        """HTTPHandler respects secure flag."""
+        result = self._call(
+            "http", host="example.com", url="/log", http_secure=True
+        )
+        assert isinstance(result, logging.handlers.HTTPHandler)
+        assert result.secure is True
+
+    def test_http_handler_credentials(self) -> None:
+        """HTTPHandler passes credentials."""
+        result = self._call(
+            "http",
+            host="example.com",
+            url="/log",
+            http_credentials=("user", "pass"),
+        )
+        assert isinstance(result, logging.handlers.HTTPHandler)
+        assert result.credentials == ("user", "pass")
+
+    def test_http_handler_context(self) -> None:
+        """HTTPHandler passes SSL context."""
+        import ssl
+
+        ctx = ssl.create_default_context()
+        result = self._call(
+            "http",
+            host="example.com",
+            url="/log",
+            http_secure=True,
+            http_context=ctx,
+        )
+        assert isinstance(result, logging.handlers.HTTPHandler)
+        assert result.context is ctx
+
+
+class TestNetworkHandlerViaMaybeCreateHandler:
+    """Network handlers through `_maybe_create_handler`."""
+
+    @staticmethod
+    def _call(handler_type: str, **extra: Any) -> logging.Handler | None:
+        """
+        Call `_maybe_create_handler` for network types.
+
+        Args:
+            handler_type (str): Handler type discriminator.
+            **extra (Any): Extra keyword arguments.
+
+        Returns:
+            logging.Handler | None: The created handler.
+        """
+        defaults: dict[str, Any] = {
+            "mode": "a",
+            "encoding": "utf-8",
+            "delay": False,
+            "errors": None,
+            "max_bytes": 0,
+            "backup_count": 0,
+            "when": "h",
+            "interval": 1,
+            "utc": False,
+            "at_time": None,
+            "namer": None,
+            "rotator": None,
+            "copy": False,
+            **_NET_DEFAULTS,
+        }
+        defaults.update(extra)
+        return _maybe_create_handler(
+            core=None,
+            handler_type=handler_type,  # type: ignore[arg-type] # pyright: ignore[reportArgumentType]
+            **defaults,
+        )
+
+    def test_syslog_not_stderr(self) -> None:
+        """handler_type='syslog' with core=None → SysLogHandler."""
+        result = self._call("syslog")
+        assert isinstance(result, logging.handlers.SysLogHandler)
+
+    def test_socket_not_stderr(self) -> None:
+        """handler_type='socket' with core=None → SocketHandler."""
+        result = self._call("socket", host="localhost", port=9000)
+        assert isinstance(result, logging.handlers.SocketHandler)
+
+    def test_datagram_not_stderr(self) -> None:
+        """handler_type='datagram' → DatagramHandler."""
+        result = self._call("datagram", host="localhost", port=9001)
+        assert isinstance(result, logging.handlers.DatagramHandler)
+
+    def test_smtp_not_stderr(self) -> None:
+        """handler_type='smtp' with core=None → SMTPHandler."""
+        result = self._call(
+            "smtp",
+            mailhost="smtp.example.com",
+            fromaddr="a@b.com",
+            toaddrs=["c@d.com"],
+            subject="Alert",
+        )
+        assert isinstance(result, logging.handlers.SMTPHandler)
+
+    def test_http_not_stderr(self) -> None:
+        """handler_type='http' with core=None → HTTPHandler."""
+        result = self._call("http", host="example.com", url="/log")
+        assert isinstance(result, logging.handlers.HTTPHandler)
+
+    def test_file_still_defaults_to_stderr(self) -> None:
+        """handler_type='file' with core=None → stderr."""
+        import sys
+
+        result = self._call("file")
+        assert isinstance(result, logging.StreamHandler)
+        assert result.stream is sys.stderr  # pyright: ignore[reportUnknownMemberType]
+
+
+class TestGetHandlerNetwork:
+    """Network handler tests for `get_handler`."""
+
+    @staticmethod
+    def test_syslog() -> None:
+        """get_handler creates SysLogHandler."""
+        handler = get_handler(handler_type="syslog")
+        assert isinstance(handler, logging.handlers.SysLogHandler)
+
+    @staticmethod
+    def test_socket() -> None:
+        """get_handler creates SocketHandler."""
+        handler = get_handler(
+            handler_type="socket", host="localhost", port=9000
+        )
+        assert isinstance(handler, logging.handlers.SocketHandler)
+
+    @staticmethod
+    def test_datagram() -> None:
+        """get_handler creates DatagramHandler."""
+        handler = get_handler(
+            handler_type="datagram", host="localhost", port=9001
+        )
+        assert isinstance(handler, logging.handlers.DatagramHandler)
+
+    @staticmethod
+    def test_smtp() -> None:
+        """get_handler creates SMTPHandler."""
+        handler = get_handler(
+            handler_type="smtp",
+            mailhost="smtp.example.com",
+            fromaddr="a@b.com",
+            toaddrs=["c@d.com"],
+            subject="Alert",
+        )
+        assert isinstance(handler, logging.handlers.SMTPHandler)
+
+    @staticmethod
+    def test_http() -> None:
+        """get_handler creates HTTPHandler."""
+        handler = get_handler(
+            handler_type="http", host="example.com", url="/log"
+        )
+        assert isinstance(handler, logging.handlers.HTTPHandler)
+
+    @staticmethod
+    def test_network_handler_with_name() -> None:
+        """Network handler respects name kwarg."""
+        handler = get_handler(handler_type="syslog", name="my_syslog")
+        assert handler.name == "my_syslog"
+
+    @staticmethod
+    def test_network_handler_with_level() -> None:
+        """Network handler respects level kwarg."""
+        handler = get_handler(handler_type="syslog", level=logging.WARNING)
+        assert handler.level == logging.WARNING
+
+    @staticmethod
+    def test_network_handler_with_formatter() -> None:
+        """Network handler respects formatter kwarg."""
+        handler = get_handler(handler_type="syslog", formatter="%(message)s")
+        assert handler.formatter is not None
+
+    @staticmethod
+    def test_network_handler_with_filters() -> None:
+        """Network handler respects filters kwarg."""
+        handler = get_handler(handler_type="syslog", filters="test_net")
+        assert len(handler.filters) == 1
+
+    @staticmethod
+    def test_network_handler_queued() -> None:
+        """Network handler can be wrapped in QueueHandler."""
+        handler = get_handler(handler_type="syslog", queued=True)
+        assert isinstance(handler, logging.handlers.QueueHandler)
+
+    @staticmethod
+    def test_network_handler_buffered() -> None:
+        """Network handler can be wrapped in MemoryHandler."""
+        handler = get_handler(handler_type="syslog", buffered=True, capacity=10)
+        assert isinstance(handler, logging.handlers.MemoryHandler)
+
+
+class TestGetHandlerFromSpecNetwork:
+    """Network handler specs for `get_handler_from_spec`."""
+
+    @staticmethod
+    def test_syslog_spec() -> None:
+        """SysLogHandler via spec tuple."""
+        spec = (None, _SysLogHandlerKwargs(handler_type="syslog"))
+        result = get_handler_from_spec(spec=spec)
+        assert isinstance(result, logging.handlers.SysLogHandler)
+
+    @staticmethod
+    def test_socket_spec() -> None:
+        """SocketHandler via spec tuple."""
+        spec = (
+            None,
+            _SocketHandlerKwargs(
+                handler_type="socket", host="localhost", port=9000
+            ),
+        )
+        result = get_handler_from_spec(spec=spec)
+        assert isinstance(result, logging.handlers.SocketHandler)
+
+    @staticmethod
+    def test_datagram_spec() -> None:
+        """DatagramHandler via spec tuple."""
+        spec = (
+            None,
+            _DatagramHandlerKwargs(
+                handler_type="datagram", host="localhost", port=9001
+            ),
+        )
+        result = get_handler_from_spec(spec=spec)
+        assert isinstance(result, logging.handlers.DatagramHandler)
+
+    @staticmethod
+    def test_smtp_spec() -> None:
+        """SMTPHandler via spec tuple."""
+        spec = (
+            None,
+            _SMTPHandlerKwargs(
+                handler_type="smtp",
+                mailhost="smtp.example.com",
+                fromaddr="a@b.com",
+                toaddrs=["c@d.com"],
+                subject="Alert",
+            ),
+        )
+        result = get_handler_from_spec(spec=spec)
+        assert isinstance(result, logging.handlers.SMTPHandler)
+
+    @staticmethod
+    def test_http_spec() -> None:
+        """HTTPHandler via spec tuple."""
+        spec = (
+            None,
+            _HTTPHandlerKwargs(
+                handler_type="http", host="example.com", url="/log"
+            ),
+        )
+        result = get_handler_from_spec(spec=spec)
+        assert isinstance(result, logging.handlers.HTTPHandler)

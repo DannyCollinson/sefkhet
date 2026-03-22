@@ -6,6 +6,30 @@ from typing import TYPE_CHECKING as _TYPE_CHECKING
 from snaplog._typing import _NoDefault
 
 
+if _TYPE_CHECKING:  # pragma: no cover
+    import datetime
+    import logging
+    import logging.handlers  # noqa: TC004
+    from collections.abc import Callable, Mapping, Sequence
+    from typing import Any
+
+    from snaplog._typing import (
+        _ColorSpec,
+        _CsvSpec,
+        _FilterSpec,
+        _FormatStyle,
+        _FormatterSpec,
+        _HandlerSpec,
+        _HandlerType,
+        _JsonSpec,
+        _LogfmtSpec,
+        _LoggerSpec,
+        _NoDefaultType,
+        _StrOrPathLike,
+        _TextIOLike,
+    )
+
+
 _DEFAULT_FMT = "%(asctime)s | %(levelname)s | %(message)s"
 _DEFAULT_FMT_WITH_NAME = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
 _DEFAULT_LOGGER_NAMES: frozenset[str | None] = frozenset(
@@ -30,30 +54,6 @@ def _get_default_fmt(name: str | None) -> str:
     if name in _DEFAULT_LOGGER_NAMES:
         return _DEFAULT_FMT
     return _DEFAULT_FMT_WITH_NAME
-
-
-if _TYPE_CHECKING:  # pragma: no cover
-    import datetime
-    import logging
-    import logging.handlers  # noqa: TC004
-    from collections.abc import Callable, Mapping, Sequence
-    from typing import Any
-
-    from snaplog._typing import (
-        _ColorSpec,
-        _CsvSpec,
-        _FilterSpec,
-        _FormatStyle,
-        _FormatterSpec,
-        _HandlerSpec,
-        _HandlerType,
-        _JsonSpec,
-        _LogfmtSpec,
-        _LoggerSpec,
-        _NoDefaultType,
-        _StrOrPathLike,
-        _TextIOLike,
-    )
 
 
 # Define log level mapping for log functions
@@ -476,6 +476,111 @@ def _maybe_create_special_string_handler(
     return handler
 
 
+def _maybe_create_network_handler(  # noqa: PLR0913, C901
+    handler_type: "_HandlerType",
+    *,
+    address: str | tuple[str, int],
+    facility: int,
+    socktype: int | None,
+    syslog_timeout: float | None,
+    host: str,
+    port: int | None,
+    mailhost: str | tuple[str, int] | None,
+    fromaddr: str | None,
+    toaddrs: "str | Sequence[str]",
+    subject: str | None,
+    smtp_credentials: tuple[str, str] | None,
+    smtp_secure: tuple[()] | tuple[str] | tuple[str, str] | None,
+    smtp_timeout: float,
+    url: str | None,
+    http_method: str,
+    http_secure: bool,
+    http_credentials: tuple[str, str] | None,
+    http_context: "Any | None",
+) -> "logging.Handler | None":
+    """
+    Returns a network `logging.Handler` if `handler_type`
+    specifies a network handler; otherwise, returns `None`.
+
+    Args:
+        handler_type (_HandlerType): Type of handler to create
+        address (str | tuple[str, int]): Address for `SysLogHandler`.
+            Defaults to `("localhost", 514)`.
+        facility (int): Facility code for `SysLogHandler`
+        socktype (int | None): Socket type for `SysLogHandler`
+        syslog_timeout (float | None): Timeout for `SysLogHandler`.
+            Ignored if Python version is not 3.14+.
+        host (str): Host for `SocketHandler`, `DatagramHandler`,
+            or `HTTPHandler`
+        port (int | None): Port for `SocketHandler` or `DatagramHandler`
+        mailhost (str | tuple[str, int] | None): Mail server
+            for `SMTPHandler`
+        fromaddr (str | None): Sender address for `SMTPHandler`
+        toaddrs (str | Sequence[str]): Recipient address(es)
+            for `SMTPHandler`
+        subject (str | None): Email subject for `SMTPHandler`
+        smtp_credentials (tuple[str, str] | None): Username/password
+            tuple for `SMTPHandler`
+        smtp_secure (tuple[()] | tuple[str] | tuple[str, str] | None):
+            TLS settings for `SMTPHandler`
+        smtp_timeout (float): Timeout for `SMTPHandler`
+        url (str | None): URL path for `HTTPHandler`
+        http_method (str): HTTP method for `HTTPHandler`
+        http_secure (bool): Whether to use HTTPS for `HTTPHandler`
+        http_credentials (tuple[str, str] | None): Username/password
+            for `HTTPHandler`.
+        http_context (Any | None): SSL context for `HTTPHandler`
+
+    Returns:
+        logging.Handler | None: A network handler if `handler_type` is a
+            network type; otherwise, `None`
+    """
+    import logging.handlers
+
+    # Check handler type and extract relevant kwargs for each
+    match handler_type:
+        case "syslog":
+            import sys
+
+            # Use timeout kwarg if python version supports it (3.14+)
+            if sys.version_info >= (3, 14):
+                return logging.handlers.SysLogHandler(
+                    address=address,
+                    facility=facility,
+                    socktype=socktype,
+                    timeout=syslog_timeout,
+                )
+            return logging.handlers.SysLogHandler(
+                address=address, facility=facility, socktype=socktype
+            )
+        case "socket":
+            return logging.handlers.SocketHandler(host=host, port=port)
+        case "datagram":
+            return logging.handlers.DatagramHandler(host=host, port=port)
+        case "smtp":
+            return logging.handlers.SMTPHandler(
+                mailhost=mailhost,
+                fromaddr=fromaddr,
+                toaddrs=toaddrs,
+                subject=subject,
+                credentials=smtp_credentials,
+                secure=smtp_secure,
+                timeout=smtp_timeout,
+            )
+        case "http":
+            return logging.handlers.HTTPHandler(
+                host=host,
+                url=url,
+                method=http_method,
+                secure=http_secure,
+                credentials=http_credentials,
+                context=http_context,
+            )
+        # If no valid handler type matched, return None
+        case _:
+            return None
+
+
 def _maybe_create_handler(  # noqa: PLR0913, C901
     core: "_StrOrPathLike | _TextIOLike | logging.Handler | None",
     *,
@@ -493,6 +598,24 @@ def _maybe_create_handler(  # noqa: PLR0913, C901
     namer: "Callable[[str], str] | None",
     rotator: "Callable[[str, str], None] | None",
     copy: bool,
+    address: "str | tuple[str, int]" = ("localhost", 514),
+    facility: int = 1,
+    socktype: int | None = None,
+    syslog_timeout: float | None = None,
+    host: str | None = None,
+    port: int | None = None,
+    mailhost: "str | tuple[str, int] | None" = None,
+    fromaddr: str | None = None,
+    toaddrs: "str | Sequence[str] | None" = None,
+    subject: str | None = None,
+    smtp_credentials: "tuple[str, str] | None" = None,
+    smtp_secure: ("tuple[()] | tuple[str] | tuple[str, str] | None") = None,
+    smtp_timeout: float = 5.0,
+    url: str | None = None,
+    http_method: str = "GET",
+    http_secure: bool = False,
+    http_credentials: "tuple[str, str] | None" = None,
+    http_context: "Any | None" = None,
 ) -> "logging.Handler | None":
     """
     Returns a `logging.Handler` if a valid handler is specified;
@@ -500,10 +623,11 @@ def _maybe_create_handler(  # noqa: PLR0913, C901
     about what makes a valid handler specification.
 
     Args:
-        core (_StrOrPathLike | _TextIOLike | logging.Handler | None):
-            Specification of the handler
-        handler_type (_HandlerType): Type of file handler to create.
-            Ignored if not creating a file handler.
+        core (_StrOrPathLike | _TextIOLike
+            | logging.Handler | None):
+            Specification of the handler.
+        handler_type (_HandlerType): Type of handler to create.
+            Ignored if not creating a file or network handler.
         mode (str): File open mode. Ignored for
             `TimedRotatingFileHandler` and non-file handlers.
         encoding (str | None): File encoding. Ignored if not
@@ -511,34 +635,77 @@ def _maybe_create_handler(  # noqa: PLR0913, C901
         delay (bool): If `True`, file is not opened until a
             message is emitted. Ignored if not creating a file
             handler.
-        errors (str | None): Encoding error handling. Ignored if
-            not creating a file handler.
+        errors (str | None): Encoding error handling. Ignored
+            if not creating a file handler.
         max_bytes (int): Maximum file size in bytes before
             rotation. Only used for `RotatingFileHandler`.
-        backup_count (int): Number of backup files to keep. Only
-            used for rotating file handlers.
-        when (str): Interval type for timed rotation. Only used
-            for `TimedRotatingFileHandler`.
-        interval (int): Interval count for timed rotation. Only
+        backup_count (int): Number of backup files to keep.
+            Only used for rotating file handlers.
+        when (str): Interval type for timed rotation. Only
             used for `TimedRotatingFileHandler`.
+        interval (int): Interval count for timed rotation.
+            Only used for `TimedRotatingFileHandler`.
         utc (bool): If `True`, UTC time is used for rotation.
             Only used for `TimedRotatingFileHandler`.
-        at_time (datetime.time | None): Specific time of day for
-            rotation. Only used for `TimedRotatingFileHandler`.
-        namer (Callable[[str], str] | None): Callable to generate
-            rotated file names. Only used for
+        at_time (datetime.time | None): Specific time of day
+            for rotation. Only used for
             `TimedRotatingFileHandler`.
-        rotator (Callable[[str, str], None] | None): Callable to
-            perform file rotation. Only used for
+        namer (Callable[[str], str] | None): Callable to
+            generate rotated file names. Only used for
+            `TimedRotatingFileHandler`.
+        rotator (Callable[[str, str], None] | None): Callable
+            to perform file rotation. Only used for
             `TimedRotatingFileHandler`.
         copy (bool): If `True`, returns a deep copy of the
-            original instance of `core`; otherwise, the original
-            instance is returned. Ignored if `core` is not a
-            `logging.Handler`. Defaults to `False`.
+            original instance of `core`; otherwise, the
+            original instance is returned. Ignored if `core`
+            is not a `logging.Handler`. Defaults to `False`.
+        address (str | tuple[str, int]): Address for
+            `SysLogHandler`. Defaults to
+            `("localhost", 514)`.
+        facility (int): Facility code for `SysLogHandler`.
+            Defaults to `1` (`LOG_USER`).
+        socktype (int | None): Socket type for
+            `SysLogHandler`. Defaults to `None`.
+        syslog_timeout (float | None): Timeout for `SysLogHandler`.
+            Ignored if Python version is not 3.14+. Defaults to `None`.
+        host (str | None): Host for `SocketHandler`,
+            `DatagramHandler`, or `HTTPHandler`. Defaults
+            to `None`.
+        port (int | None): Port for `SocketHandler` or
+            `DatagramHandler`. Defaults to `None`.
+        mailhost (str | tuple[str, int] | None): Mail server
+            for `SMTPHandler`. Defaults to `None`.
+        fromaddr (str | None): Sender address for
+            `SMTPHandler`. Defaults to `None`.
+        toaddrs (str | Sequence[str] | None): Recipient
+            address(es) for `SMTPHandler`. Defaults to
+            `None`.
+        subject (str | None): Email subject for
+            `SMTPHandler`. Defaults to `None`.
+        smtp_credentials (tuple[str, str] | None):
+            Username/password tuple for `SMTPHandler`.
+            Defaults to `None`.
+        smtp_secure (tuple[()] | tuple[str]
+            | tuple[str, str] | None): TLS settings for
+            `SMTPHandler`. Defaults to `None`.
+        smtp_timeout (float): Timeout for `SMTPHandler`.
+            Defaults to `5.0`.
+        url (str): URL path for `HTTPHandler`. Defaults to `None`.
+        http_method (str): HTTP method for `HTTPHandler`.
+            Defaults to `"GET"`.
+        http_secure (bool): Whether to use HTTPS for
+            `HTTPHandler`. Defaults to `False`.
+        http_credentials (tuple[str, str] | None):
+            Username/password for `HTTPHandler`. Defaults
+            to `None`.
+        http_context (Any | None): SSL context for
+            `HTTPHandler`. Defaults to `None`.
 
     Returns:
-        logging.Handler | None: If a valid handler was specified,
-            then a `logging.Handler`; otherwise, `None`
+        logging.Handler | None: If a valid handler was
+            specified, then a `logging.Handler`; otherwise,
+            `None`
     """
     import logging.handlers
     import os
@@ -555,8 +722,32 @@ def _maybe_create_handler(  # noqa: PLR0913, C901
     if isinstance(core, _logging.Handler):
         handler = deepcopy(core) if copy else core
 
+    # Try to create a network handler before defaulting
+    if handler is None:
+        handler = _maybe_create_network_handler(
+            handler_type=handler_type,
+            address=address,
+            facility=facility,
+            socktype=socktype,
+            syslog_timeout=syslog_timeout,
+            host=host,
+            port=port,
+            mailhost=mailhost,
+            fromaddr=fromaddr,
+            toaddrs=toaddrs,
+            subject=subject,
+            smtp_credentials=smtp_credentials,
+            smtp_secure=smtp_secure,
+            smtp_timeout=smtp_timeout,
+            url=url,
+            http_method=http_method,
+            http_secure=http_secure,
+            http_credentials=http_credentials,
+            http_context=http_context,
+        )
+
     # Handle default case of None using default stderr stream handler
-    if core is None:
+    if handler is None and core is None:
         handler = _logging.StreamHandler(stream=sys.stderr)
 
     # Handle cases of special strings
@@ -883,6 +1074,23 @@ def get_handler(  # noqa: PLR0913
     capacity: int = 1024,
     flush_level: "int | str | None" = None,
     flush_on_close: bool = True,
+    address: "str | tuple[str, int]" = ("localhost", 514),
+    facility: int = 1,
+    socktype: int | None = None,
+    host: str | None = None,
+    port: int | None = None,
+    mailhost: "str | tuple[str, int] | None" = None,
+    fromaddr: str | None = None,
+    toaddrs: "str | Sequence[str] | None" = None,
+    subject: str | None = None,
+    smtp_credentials: "tuple[str, str] | None" = None,
+    smtp_secure: ("tuple[()] | tuple[str] | tuple[str, str] | None") = None,
+    smtp_timeout: float = 5.0,
+    url: str | None = None,
+    http_method: str = "GET",
+    http_secure: bool = False,
+    http_credentials: "tuple[str, str] | None" = None,
+    http_context: "Any | None" = None,
 ) -> "logging.Handler":
     """
     Returns a `logging.Handler` configured
@@ -897,23 +1105,27 @@ def get_handler(  # noqa: PLR0913
     1.  If `core` is a `logging.Handler` already, a deep copy is
         created if `copy` is `True` and otherwise the original handler
         is used, in which case the handler is of the same type as `core`
-    2.  If `core` is `None`, a default `logging.StreamHandler` is
+    2.  If `handler_type` is one of `"syslog"`, `"socket"`,
+        `"datagram"`, `"smtp"`, or `"http"`, a network handler
+        is created using the corresponding keyword arguments,
+        regardless of `core`
+    3.  If `core` is `None`, a default `logging.StreamHandler` is
         created, which logs to `sys.stderr`
-    3.  If `core` matches an existing `logging.Handler` by name, as
-        checked by `logging.getHandlerByName(core)`, a deep copy is
-        created if `copy` is `True` and otherwise the original handler
-        is used, in which case the handler is of the same type as the
-        matched handler
-    4.  If `core` is the string `"stdout"`, a default
-        `logging.StreamHandler` is created, which logs to `sys.stdout`
-    5.  If `core` is the string `"stderr"`, a default
-        `logging.StreamHandler` is created, which logs to `sys.stderr`
-    6.  If `core` is the string `"null"`, a default
-        `logging.NullHandler` is created, which silences logging
-    7.  If `core` is a `_StrOrPathLike`, then a file handler is
+    4.  If `core` matches an existing `logging.Handler` by name,
+        as checked by `logging.getHandlerByName(core)`, a deep
+        copy is created if `copy` is `True` and otherwise the
+        original handler is used
+    5.  If `core` is the string `"stdout"`, a default
+        `logging.StreamHandler` is created for `sys.stdout`
+    6.  If `core` is the string `"stderr"`, a default
+        `logging.StreamHandler` is created for `sys.stderr`
+    7.  If `core` is the string `"null"`, a default
+        `logging.NullHandler` is created
+    8.  If `core` is a `_StrOrPathLike`, then a file handler is
         created based on `handler_type`:
 
-        a.  `"file"` (default): `logging.FileHandler(filename=core)`
+        a.  `"file"` (default):
+            `logging.FileHandler(filename=core)`
         b.  `"watched_file"`:
             `logging.handlers.WatchedFileHandler(filename=core)`
         c.  `"rotating_file"`:
@@ -922,11 +1134,11 @@ def get_handler(  # noqa: PLR0913
             `logging.handlers.TimedRotatingFileHandler(
             filename=core)`
 
-    8.  If `core` is a `_TextIOLike`, then
-        `logging.StreamHandler(stream=core)` is created, which logs
-        to the stream `core`
-    9.  At this point, `core` should have matched one of the options
-        above, so if it hasn't, a `ValueError` is raised
+    9.  If `core` is a `_TextIOLike`, then
+        `logging.StreamHandler(stream=core)` is created
+    10. At this point, `core` should have matched one of the
+        options above, so if it hasn't, a `ValueError` is
+        raised
 
     *Note that capitalization variants of the strings in items 4-6
     will also match the corresponding special string.*
@@ -977,11 +1189,16 @@ def get_handler(  # noqa: PLR0913
             Defaults to `()` (no filters).
         handler_type (_HandlerType, optional): Type of handler
             to create. One of `"file"`, `"watched_file"`,
-            `"rotating_file"`, `"timed_rotating_file"`, or
-            `"memory"`. When `"memory"`, the handler created
-            from `core` is wrapped in a
-            `logging.handlers.MemoryHandler`. File handler
-            types are ignored if not creating a file handler.
+            `"rotating_file"`, `"timed_rotating_file"`,
+            `"memory"`, `"syslog"`, `"socket"`, `"datagram"`,
+            `"smtp"`, or `"http"`. When `"memory"`, the handler
+            created from `core` is wrapped in a
+            `logging.handlers.MemoryHandler`. Network handler
+            types (`"syslog"`, `"socket"`, `"datagram"`,
+            `"smtp"`, `"http"`) create the corresponding
+            `logging.handlers` handler using their dedicated
+            keyword arguments. File handler types are ignored
+            if not creating a file handler.
             Defaults to `"file"`.
         mode (str, optional): Mode used to open the log file. Ignored
             if not creating a file handler or if using
@@ -1054,6 +1271,59 @@ def get_handler(  # noqa: PLR0913
             buffered records when the handler is closed. Only
             used when `buffered` is `True` or `handler_type`
             is `"memory"`. Defaults to `True`.
+        address (str | tuple[str, int], optional): Address
+            for `SysLogHandler`. Can be a Unix socket path
+            or a `(host, port)` tuple. Only used for
+            `"syslog"`. Defaults to `("localhost", 514)`.
+        facility (int, optional): Syslog facility code.
+            Only used for `"syslog"`. Defaults to `1`
+            (`LOG_USER`).
+        socktype (int | None, optional): Socket type for
+            `SysLogHandler`. Only used for `"syslog"`.
+            Defaults to `None`.
+        host (str | None, optional): Host for
+            `SocketHandler`, `DatagramHandler`, or
+            `HTTPHandler`. Defaults to `None`.
+        port (int | None, optional): Port for
+            `SocketHandler` or `DatagramHandler`.
+            Defaults to `None`.
+        mailhost (str | tuple[str, int] | None, optional):
+            Mail server host or `(host, port)` tuple for
+            `SMTPHandler`. Defaults to `None`.
+        fromaddr (str | None, optional): Sender address
+            for `SMTPHandler`. Defaults to `None`.
+        toaddrs (str | Sequence[str] | None, optional):
+            Recipient address(es) for `SMTPHandler`.
+            Defaults to `None`.
+        subject (str | None, optional): Email subject for
+            `SMTPHandler`. Defaults to `None`.
+        smtp_credentials (tuple[str, str] | None, optional):
+            `(username, password)` tuple for SMTP
+            authentication. Only used for `"smtp"`.
+            Defaults to `None`.
+        smtp_secure (tuple | None, optional): TLS/SSL
+            settings for `SMTPHandler`. Accepts `()`,
+            `(keyfile,)`, or `(keyfile, certfile)`. Only
+            used for `"smtp"`. Defaults to `None`.
+        smtp_timeout (float, optional): Connection timeout
+            for `SMTPHandler`. Only used for `"smtp"`.
+            Defaults to `5.0`.
+        url (str | None, optional): URL path for
+            `HTTPHandler`. Only used for `"http"`.
+            Defaults to `None`.
+        http_method (str, optional): HTTP method for
+            `HTTPHandler`. Only used for `"http"`.
+            Defaults to `"GET"`.
+        http_secure (bool, optional): If `True`, HTTPS is
+            used for `HTTPHandler`. Only used for `"http"`.
+            Defaults to `False`.
+        http_credentials (tuple[str, str] | None, optional):
+            `(username, password)` tuple for HTTP
+            authentication. Only used for `"http"`.
+            Defaults to `None`.
+        http_context (Any | None, optional): SSL context
+            for `HTTPHandler`. Only used for `"http"`.
+            Defaults to `None`.
 
     Raises:
         ValueError: Raised if `core` fails to specify a valid handler
@@ -1080,6 +1350,23 @@ def get_handler(  # noqa: PLR0913
         namer=namer,
         rotator=rotator,
         copy=copy,
+        address=address,
+        facility=facility,
+        socktype=socktype,
+        host=host,
+        port=port,
+        mailhost=mailhost,
+        fromaddr=fromaddr,
+        toaddrs=toaddrs,
+        subject=subject,
+        smtp_credentials=smtp_credentials,
+        smtp_secure=smtp_secure,
+        smtp_timeout=smtp_timeout,
+        url=url,
+        http_method=http_method,
+        http_secure=http_secure,
+        http_credentials=http_credentials,
+        http_context=http_context,
     )
 
     # Raise an error if no handler was created
