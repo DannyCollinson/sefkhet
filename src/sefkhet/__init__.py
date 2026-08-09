@@ -1,32 +1,32 @@
 """
-Logging for Python in a snap.
+Complex logging setup made simple.
 
-The `snaplog` package aims to enable one-step configuration of the
-built-in `logging` package, making logging a snap.
+The `sefkhet` package aims to enable one-step configuration of the
+built-in `logging` package, making complex logging setup easy.
 
 The main utilities are the `record`/`rec` function
-and the `SnapLogger` class.
+and the `Scribe` class.
 
 Getting started is as easy as importing and calling `record`:
 ```
-from snaplog import record
+from sefkhet import record
 
-record("I <3 snaplog!")
+record("I <3 sefkhet!")
 ```
 
-You can also use the `SnapLogger` class for more fine-grained control:
+You can also use the `Scribe` class for more fine-grained control:
 ```
-import snaplog
+import sefkhet
 
-logger = snaplog.SnapLogger(handlers="example.log")
-logger.log("I <3 snaplog!")
+scribe = sefkhet.Scribe(handlers="example.log")
+scribe.log("I <3 sefkhet!")
 ```
 """
 
 # Make top-level utilities available
-from snaplog._color import ColorFormatter, get_level_color
-from snaplog._csv import CsvFormatter
-from snaplog._functional import (
+from sefkhet._color import ColorFormatter, get_level_color
+from sefkhet._csv import CsvFormatter
+from sefkhet._functional import (
     add_filters_to_target,
     add_handlers_to_logger,
     get_filter,
@@ -36,13 +36,13 @@ from snaplog._functional import (
     get_log_levels,
     get_logger,
 )
-from snaplog._json import JsonFormatter
-from snaplog._logfmt import LogfmtFormatter
-from snaplog._object_oriented import SnapLogger
-from snaplog._one_step import configure_default_logger, log, rec, record
+from sefkhet._json import JsonFormatter
+from sefkhet._logfmt import LogfmtFormatter
+from sefkhet._object_oriented import Scribe
+from sefkhet._one_step import configure_default_logger, log, rec, record
 
 # Make version number available
-from snaplog._version import __version__
+from sefkhet._version import __version__
 
 
 # Define public API
@@ -54,7 +54,7 @@ __all__ = [  # noqa: RUF022
     "CsvFormatter",
     "JsonFormatter",
     "LogfmtFormatter",
-    "SnapLogger",
+    "Scribe",
     # Functions
     "add_filters_to_target",
     "add_handlers_to_logger",

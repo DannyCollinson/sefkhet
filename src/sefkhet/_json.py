@@ -1,4 +1,4 @@
-"""JSON formatting utilities for `snaplog`."""
+"""JSON formatting utilities for `sefkhet`."""
 
 import logging as _logging
 from typing import TYPE_CHECKING as _TYPE_CHECKING
@@ -9,7 +9,7 @@ if _TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Mapping
     from typing import Any, Literal
 
-    from snaplog._typing import _FormatStyle, _JsonSpec
+    from sefkhet._typing import _FormatStyle, _JsonSpec
 
 
 # Define fields to include for a default JSON formatter
@@ -125,7 +125,7 @@ class JsonFormatter(_logging.Formatter):
         """
         import json
 
-        from snaplog._constants import (
+        from sefkhet._constants import (
             _KNOWN_FIELDS,
             _STANDARD_RECORD_ATTRS,
             _extract_known_field,

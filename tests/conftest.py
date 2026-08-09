@@ -1,4 +1,4 @@
-"""Shared fixtures for `snaplog` tests."""
+"""Shared fixtures for `sefkhet` tests."""
 
 import io
 import logging
@@ -8,9 +8,9 @@ from typing import Any
 
 import pytest
 
-import snaplog._one_step as _one_step_module
-from snaplog._object_oriented import SnapLogger
-from snaplog._typing import _SupportsFilter
+import sefkhet._one_step as _one_step_module
+from sefkhet._object_oriented import Scribe
+from sefkhet._typing import _SupportsFilter
 
 
 # Global-state isolation (autouse)
@@ -71,12 +71,12 @@ def reset_default_logger() -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)
-def reset_snap_counter() -> Generator[None]:
-    """Reset `SnapLogger._counter` to `0` around each test."""
-    original = SnapLogger._counter
-    SnapLogger._counter = 0
+def reset_scribe_counter() -> Generator[None]:
+    """Reset `Scribe._counter` to `0` around each test."""
+    original = Scribe._counter
+    Scribe._counter = 0
     yield
-    SnapLogger._counter = original
+    Scribe._counter = original
 
 
 # Helper fixtures

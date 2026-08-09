@@ -1,4 +1,4 @@
-"""Defines constants used in `snaplog`."""
+"""Defines constants used in `sefkhet`."""
 
 from typing import TYPE_CHECKING as _TYPE_CHECKING
 

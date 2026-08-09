@@ -1,4 +1,4 @@
-"""Typing definitions for `snaplog`."""
+"""Typing definitions for `sefkhet`."""
 
 import datetime
 import logging
@@ -89,7 +89,7 @@ type ColorSpec = ColorMode | tuple[ColorMode, ColorMap]
 
 
 class JsonSpec(TypedDict, total=False):
-    """Specifiers for a `snaplog.JsonFormatter`."""
+    """Specifiers for a `sefkhet.JsonFormatter`."""
 
     fields: Sequence[str]
     indent: int | None
@@ -98,7 +98,7 @@ class JsonSpec(TypedDict, total=False):
 
 
 class CsvSpec(TypedDict, total=False):
-    """Specifiers for a `snaplog.CsvFormatter`."""
+    """Specifiers for a `sefkhet.CsvFormatter`."""
 
     fields: Sequence[str]
     delimiter: str
@@ -107,7 +107,7 @@ class CsvSpec(TypedDict, total=False):
 
 
 class LogfmtSpec(TypedDict, total=False):
-    """Specifiers for a `snaplog.LogfmtFormatter`."""
+    """Specifiers for a `sefkhet.LogfmtFormatter`."""
 
     fields: Sequence[str]
     sort_keys: bool

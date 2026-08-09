@@ -1,11 +1,11 @@
-"""Object-oriented interface for `snaplog`."""
+"""Object-oriented interface for `sefkhet`."""
 
 import logging as _logging
 from typing import TYPE_CHECKING as _TYPE_CHECKING
 from typing import ParamSpec as _ParamSpec
 from typing import TypeVar as _TypeVar
 
-from snaplog._typing import _NoDefault
+from sefkhet._typing import _NoDefault
 
 
 if _TYPE_CHECKING:  # pragma: no cover
@@ -13,7 +13,7 @@ if _TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable, Mapping, Sequence
     from typing import Any, Concatenate
 
-    from snaplog._typing import (
+    from sefkhet._typing import (
         _ArgsType,
         _ColorSpec,
         _CsvSpec,
@@ -35,12 +35,12 @@ P = _ParamSpec("P")
 R = _TypeVar("R")
 
 
-class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
+class Scribe(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
     """
-    The base logger class for `snaplog`.
+    The base logger class for `sefkhet`.
 
-    A `SnapLogger` adds an intuitive interface to the `logging`
-    library and makes logging a snap. It includes helpful default
+    A `Scribe` adds an intuitive interface to the `logging`
+    library and makes complex logging easy. It includes helpful default
     configurations and implements the standard `logging.Logger`
     interface for compatibility.
     """
@@ -65,15 +65,15 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         logfmt: "bool | _LogfmtSpec" = False,
     ) -> None:
         """
-        The base logger class for `snaplog`.
+        The base logger class for `sefkhet`.
 
-        A `SnapLogger` adds an intuitive interface to the `logging`
-        library and makes logging a snap. It includes helpful default
+        A `Scribe` adds an intuitive interface to the `logging`
+        library and makes logging . It includes helpful default
         configurations and implements the standard `logging.Logger`
         interface for compatibility.
 
-        Note that the `snaplog` defaults for `name` (`"logX"`, where
-        `X` is the cumulative number of `SnapLogger` instances
+        Note that the `sefkhet` defaults for `name` (`"logX"`, where
+        `X` is the cumulative number of `Scribe` instances
         created with a default name) and `level` (`20`) differ from
         those of `logging.getLogger` (`None` and `30`,
         respectively).
@@ -82,13 +82,13 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             name (str | _NoDefaultType | None, optional): Name to
                 apply to the logger. If `None`, uses the root
                 logger. If `_NoDefault`, uses `"logX"`, where `X`
-                is the cumulative number of `SnapLogger` instances
+                is the cumulative number of `Scribe` instances
                 created with a default name.
                 Defaults to `_NoDefault`.
             level (str | int, optional): Logging level to apply to
                 the logger. Valid log levels include a log level
                 string from the options provided by
-                `snaplog.get_log_levels()`, the `int` equivalents
+                `sefkhet.get_log_levels()`, the `int` equivalents
                 of those log levels as defined by the `logging`
                 library, or any other `int`. Defaults to `20`.
             handlers (_HandlerSpec | Sequence[_HandlerSpec], optional):
@@ -96,7 +96,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
                 to the logger. Multiple handlers can be specified
                 by providing a sequence of handler specs. Spec of
                 each handler is similar to when using the
-                `snaplog.get_handler` interface, except if using
+                `sefkhet.get_handler` interface, except if using
                 keyword arguments, they must be wrapped into a
                 `dict` and provided as the second item of a
                 `tuple`, where the first item is the argument
@@ -114,7 +114,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
                 the logger. Multiple filters can be specified by
                 providing a sequence of filter specifications.
                 Specification of each filter is the same as when
-                using the `snaplog.get_handler` inteface.
+                using the `sefkhet.get_handler` inteface.
                 Defaults to `()` (no filters).
             color (_ColorSpec, optional): Color mode for the
                 formatter. Either a bare `_ColorMode` string or a
@@ -137,8 +137,8 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
                 ignored. Ignored if `csv` or `json` is not
                 `False`. Defaults to `False`.
         """
-        from snaplog._functional import get_formatter_from_spec, get_logger
-        from snaplog._typing import _NoDefaultType
+        from sefkhet._functional import get_formatter_from_spec, get_logger
+        from sefkhet._typing import _NoDefaultType
 
         # Call super init and create root logger
         super().__init__("root", level=0)
@@ -147,9 +147,9 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         if isinstance(name, _NoDefaultType):
             # Use thread lock to ensure that only
             # one of each number can be created
-            with SnapLogger._lock:
-                name = f"log{SnapLogger._counter}"
-                SnapLogger._counter += 1
+            with Scribe._lock:
+                name = f"log{Scribe._counter}"
+                Scribe._counter += 1
 
         # Create logger
         self.logger = get_logger(
@@ -183,30 +183,30 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
 
     @staticmethod
     def _update_logger_attributes_hook(
-        function: "Callable[Concatenate[SnapLogger, P], R]",
-    ) -> "Callable[Concatenate[SnapLogger, P], R]":
+        function: "Callable[Concatenate[Scribe, P], R]",
+    ) -> "Callable[Concatenate[Scribe, P], R]":
         """
         Update the instance attributes to reflect the logger's
         current attributes after the function `function` is run.
 
         Args:
-            function (Callable[Concatenate["SnapLogger", P], R]):
+            function (Callable[Concatenate["Scribe", P], R]):
                 Function to run, after which the attributes are updated
 
         Returns:
-            Callable[Concatenate["SnapLogger", P], R]: Wrapped function
+            Callable[Concatenate["Scribe", P], R]: Wrapped function
         """
         from functools import wraps
 
         @wraps(function)
-        def wrapper(self: "SnapLogger", *args: P.args, **kwargs: P.kwargs) -> R:
+        def wrapper(self: "Scribe", *args: P.args, **kwargs: P.kwargs) -> R:
             """
             Returns the output of running the wrapped function with the
             given arguments and updates the logger's attributes after
             the wrapped function finishes running.
 
             Args:
-                self (SnapLogger): The `SnapLogger` instance
+                self (Scribe): The `Scribe` instance
                 *args (P.args): Positional arguments to the
                     wrapped function
                 **kwargs (P.kwargs): Keyword arguments to the
@@ -250,7 +250,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             handlers (_HandlerSpec | Sequence[_HandlerSpec]):
                 Specification of `logging.Handlers` to add to logger
         """
-        from snaplog._functional import add_handlers_to_logger
+        from sefkhet._functional import add_handlers_to_logger
 
         add_handlers_to_logger(handlers=handlers, logger=self.logger)
 
@@ -311,7 +311,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
                 otherwise, only handlers without a formatter already set
                 will have their formatter set. Defaults to `False`.
         """
-        from snaplog._functional import get_formatter, set_formatter_for_logger
+        from sefkhet._functional import get_formatter, set_formatter_for_logger
 
         # Set new formatter for logger
         self.formatter = get_formatter(
@@ -342,7 +342,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             filters (_FilterSpec | Sequence[_FilterSpec]):
                 Specification of `logging.Filters` to add to logger
         """
-        from snaplog._functional import add_filters_to_target
+        from sefkhet._functional import add_filters_to_target
 
         add_filters_to_target(filters=filters, target=self.logger)
 
@@ -365,7 +365,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         Args:
             level (str | int): Valid log levels include a log level
                 string from the options provided by
-                `snaplog.get_log_levels()`, the `int` equivalents of
+                `sefkhet.get_log_levels()`, the `int` equivalents of
                 those log levels as defined by the `logging` library, or
                 any other `int`.
             msg (object): Message to log
@@ -382,7 +382,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
                 `logging.Logger`'s method `log` for details.
                 Defaults to `None`.
         """
-        from snaplog._functional import _parse_log_level
+        from sefkhet._functional import _parse_log_level
 
         # Determine level
         level = _parse_log_level(level=level, quiet=False)
@@ -409,7 +409,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         extra: "Mapping[str, object] | None" = None,
     ) -> None:
         """
-        Log/record a message using the `snaplog` API.
+        Log/record a message using the `sefkhet` API.
 
         *Note that this function's API differs from that of the
         `logging.Logger`'s `log` method: this function requires that
@@ -425,7 +425,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             level (str | int, optional): Logging level to use if
                 `quiet` is `False`. Valid log levels include a log level
                 string from the options provided by
-                `snaplog.get_log_levels()`, the `int` equivalents of
+                `sefkhet.get_log_levels()`, the `int` equivalents of
                 those log levels as defined by the `logging` library, or
                 any other `int`. Overriden by the `quiet` argument if it
                 is `True`. Defaults to `"debug"`.
@@ -442,7 +442,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
                 `logging.Logger`'s method `log` for details.
                 Defaults to `None`.
         """
-        from snaplog._functional import _parse_log_level
+        from sefkhet._functional import _parse_log_level
 
         # Determine level
         level = _parse_log_level(level=level, quiet=quiet)
@@ -469,7 +469,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         extra: "Mapping[str, object] | None" = None,
     ) -> None:
         """
-        Log/record a message using the `snaplog` API.
+        Log/record a message using the `sefkhet` API.
 
         Alias of `record`.
 
@@ -487,7 +487,7 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             level (str | int, optional): Logging level to use if
                 `quiet` is `False`. Valid log levels include a log level
                 string from the options provided by
-                `snaplog.get_log_levels()`, the `int` equivalents of
+                `sefkhet.get_log_levels()`, the `int` equivalents of
                 those log levels as defined by the `logging` library, or
                 any other `int`. Overriden by the `quiet` argument if it
                 is `True`. Defaults to `"debug"`.
@@ -812,13 +812,13 @@ class SnapLogger(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         Sets the logging level of the logger to the specified level.
 
         See `logging.Logger`'s `setLevel` method for details.
-        Supports snaplog shorthand strings
+        Supports `sefkhet` shorthand strings
         (e.g. `"d"`, `"i"`, `"w"`, `"e"`, `"c"`).
 
         Args:
             level (str | int): Level to use
         """
-        from snaplog._functional import _parse_log_level
+        from sefkhet._functional import _parse_log_level
 
         level = _parse_log_level(level=level, quiet=False)
         self.logger.setLevel(level=level)

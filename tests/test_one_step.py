@@ -1,30 +1,28 @@
-"""Tests for `snaplog._one_step`."""
+"""Tests for `sefkhet._one_step`."""
 
 import io
 import logging
 import threading
 from typing import cast
 
-import snaplog._one_step as _one_step_module
-from snaplog._color import ColorFormatter
-from snaplog._one_step import configure_default_logger, log, rec, record
+import sefkhet._one_step as _one_step_module
+from sefkhet._color import ColorFormatter
+from sefkhet._one_step import configure_default_logger, log, rec, record
 
 
 class TestConfigureDefaultLogger:
     """Tests for `configure_default_logger`."""
 
     @staticmethod
-    def test_default_call_creates_snaplogger() -> None:
-        """
-        Calling with all defaults creates a logger named 'snaplogger'.
-        """  # noqa: D200
+    def test_default_call_creates_scribe() -> None:
+        """Calling with all defaults creates a logger named 'scribe'."""
         configure_default_logger()
         assert _one_step_module._default_logger is not None
-        assert _one_step_module._default_logger.name == "snaplogger"
+        assert _one_step_module._default_logger.name == "scribe"
 
     @staticmethod
     def test_explicit_name() -> None:
-        """Passing name= uses that name instead of 'snaplogger'."""
+        """Passing name= uses that name instead of 'scribe'."""
         configure_default_logger(name="mylogger")
         assert _one_step_module._default_logger is not None
         assert _one_step_module._default_logger.name == "mylogger"
@@ -115,7 +113,7 @@ class TestConfigureDefaultLogger:
     @staticmethod
     def test_default_name_excludes_name_in_fmt() -> None:
         """
-        Default name 'snaplogger' excludes %(name)s from the
+        Default name 'scribe' excludes %(name)s from the
         auto-created formatter.
         """
         configure_default_logger()
@@ -197,7 +195,7 @@ class TestLog:
 
 
 class TestRecord:
-    """Tests for `record` (snap-style API)."""
+    """Tests for `record` (sefkhet-style API)."""
 
     @staticmethod
     def test_creates_default_logger() -> None:

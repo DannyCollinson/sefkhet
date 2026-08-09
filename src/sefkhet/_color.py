@@ -1,4 +1,4 @@
-"""Color formatting utilities for `snaplog`."""
+"""Color formatting utilities for `sefkhet`."""
 
 import logging as _logging
 from typing import TYPE_CHECKING as _TYPE_CHECKING
@@ -9,7 +9,7 @@ if _TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable, Mapping
     from typing import Any
 
-    from snaplog._typing import _ColorMode, _ColorSpec, _FormatStyle
+    from sefkhet._typing import _ColorMode, _ColorSpec, _FormatStyle
 
 
 # Define ANSI color strings

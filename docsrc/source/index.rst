@@ -6,7 +6,7 @@
    :maxdepth: 3
    :caption: Contents:
 
-   snaplog
+   sefkhet
    demos/DEMO.ipynb
    CHANGELOG
    CONTRIBUTING

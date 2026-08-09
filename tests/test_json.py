@@ -1,15 +1,15 @@
-"""Tests for `snaplog._json`."""
+"""Tests for `sefkhet._json`."""
 
 import json
 import logging
 
-import snaplog._one_step as _one_step_module
-from snaplog._color import ColorFormatter
-from snaplog._functional import get_formatter, get_logger
-from snaplog._json import _DEFAULT_JSON_FIELDS, JsonFormatter, _parse_json_spec
-from snaplog._object_oriented import SnapLogger
-from snaplog._one_step import configure_default_logger
-from snaplog._typing import _HandlerKwargs
+import sefkhet._one_step as _one_step_module
+from sefkhet._color import ColorFormatter
+from sefkhet._functional import get_formatter, get_logger
+from sefkhet._json import _DEFAULT_JSON_FIELDS, JsonFormatter, _parse_json_spec
+from sefkhet._object_oriented import Scribe
+from sefkhet._one_step import configure_default_logger
+from sefkhet._typing import _HandlerKwargs
 
 
 def _make_record(
@@ -358,11 +358,11 @@ class TestJsonIntegration:
         assert isinstance(logger.handlers[-1].formatter, JsonFormatter)
 
     @staticmethod
-    def test_snap_logger_json_true() -> None:
-        """SnapLogger(json=True) adds JsonFormatter."""
-        snap = SnapLogger(name="test_json_sl", json=True)
-        assert len(snap.handlers) >= 1
-        assert isinstance(snap.handlers[-1].formatter, JsonFormatter)
+    def test_scribe_json_true() -> None:
+        """Scribe(json=True) adds JsonFormatter."""
+        scribe = Scribe(name="test_json_sl", json=True)
+        assert len(scribe.handlers) >= 1
+        assert isinstance(scribe.handlers[-1].formatter, JsonFormatter)
 
     @staticmethod
     def test_configure_default_logger_json_true() -> None:
@@ -375,11 +375,11 @@ class TestJsonIntegration:
 
     @staticmethod
     def test_json_formatter_exported() -> None:
-        """JsonFormatter is accessible from snaplog package."""
-        import snaplog
+        """JsonFormatter is accessible from `sefkhet` package."""
+        import sefkhet
 
-        assert hasattr(snaplog, "JsonFormatter")
-        assert snaplog.JsonFormatter is JsonFormatter
+        assert hasattr(sefkhet, "JsonFormatter")
+        assert sefkhet.JsonFormatter is JsonFormatter
 
 
 class TestJsonFormatterEndToEnd:  # pylint: disable=too-few-public-methods
@@ -391,7 +391,7 @@ class TestJsonFormatterEndToEnd:  # pylint: disable=too-few-public-methods
         import io
 
         stream = io.StringIO()
-        snap = SnapLogger(
+        scribe = Scribe(
             name="test_json_e2e",
             level=logging.DEBUG,
             handlers=(
@@ -401,7 +401,7 @@ class TestJsonFormatterEndToEnd:  # pylint: disable=too-few-public-methods
             formatter="%(message)s",
             json=True,
         )
-        snap.info("hello json")
+        scribe.info("hello json")
         output = stream.getvalue().strip()
         data = json.loads(output)
         assert data["message"] == "hello json"

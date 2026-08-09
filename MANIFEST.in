@@ -5,8 +5,8 @@ include MANIFEST.in
 include CONTRIBUTING.md
 include CHANGELOG.md
 
-recursive-include src/snaplog *.py
-include src/snaplog/py.typed
+recursive-include src/sefkhet *.py
+include src/sefkhet/py.typed
 
 recursive-include docsrc *
 recursive-include tests *.py

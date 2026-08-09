@@ -1,21 +1,21 @@
-"""Tests for `snaplog._logfmt`."""
+"""Tests for `sefkhet._logfmt`."""
 
 import logging
 
-import snaplog._one_step as _one_step_module
-from snaplog._color import ColorFormatter
-from snaplog._csv import CsvFormatter
-from snaplog._functional import get_formatter, get_logger
-from snaplog._json import JsonFormatter
-from snaplog._logfmt import (
+import sefkhet._one_step as _one_step_module
+from sefkhet._color import ColorFormatter
+from sefkhet._csv import CsvFormatter
+from sefkhet._functional import get_formatter, get_logger
+from sefkhet._json import JsonFormatter
+from sefkhet._logfmt import (
     _DEFAULT_LOGFMT_FIELDS,
     LogfmtFormatter,
     _format_logfmt_value,
     _parse_logfmt_spec,
 )
-from snaplog._object_oriented import SnapLogger
-from snaplog._one_step import configure_default_logger
-from snaplog._typing import _HandlerKwargs
+from sefkhet._object_oriented import Scribe
+from sefkhet._one_step import configure_default_logger
+from sefkhet._typing import _HandlerKwargs
 
 
 def _make_record(
@@ -370,11 +370,11 @@ class TestLogfmtIntegration:
         assert isinstance(logger.handlers[-1].formatter, LogfmtFormatter)
 
     @staticmethod
-    def test_snap_logger_logfmt_true() -> None:
-        """SnapLogger(logfmt=True) adds LogfmtFormatter."""
-        snap = SnapLogger(name="test_logfmt_sl", logfmt=True)
-        assert len(snap.handlers) >= 1
-        assert isinstance(snap.handlers[-1].formatter, LogfmtFormatter)
+    def test_scribe_logfmt_true() -> None:
+        """Scribe(logfmt=True) adds LogfmtFormatter."""
+        scribe = Scribe(name="test_logfmt_sl", logfmt=True)
+        assert len(scribe.handlers) >= 1
+        assert isinstance(scribe.handlers[-1].formatter, LogfmtFormatter)
 
     @staticmethod
     def test_configure_default_logger_logfmt_true() -> None:
@@ -387,11 +387,11 @@ class TestLogfmtIntegration:
 
     @staticmethod
     def test_logfmt_formatter_exported() -> None:
-        """LogfmtFormatter is accessible from snaplog."""
-        import snaplog
+        """`LogfmtFormatter` is accessible from `sefkhet`."""
+        import sefkhet
 
-        assert hasattr(snaplog, "LogfmtFormatter")
-        assert snaplog.LogfmtFormatter is LogfmtFormatter
+        assert hasattr(sefkhet, "LogfmtFormatter")
+        assert sefkhet.LogfmtFormatter is LogfmtFormatter
 
 
 class TestLogfmtFormatterEndToEnd:
@@ -403,7 +403,7 @@ class TestLogfmtFormatterEndToEnd:
         import io
 
         stream = io.StringIO()
-        snap = SnapLogger(
+        scribe = Scribe(
             name="test_logfmt_e2e",
             level=logging.DEBUG,
             handlers=(
@@ -413,7 +413,7 @@ class TestLogfmtFormatterEndToEnd:
             formatter="%(message)s",
             logfmt=True,
         )
-        snap.info("hello logfmt")
+        scribe.info("hello logfmt")
         output = stream.getvalue().strip()
         assert "message=" in output
         assert "level=INFO" in output

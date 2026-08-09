@@ -1,39 +1,39 @@
-# `snaplog`
+# Sefkhet
 
-`snaplog` is a Python package that makes logging a snap.
+`sefkhet` is a Python package that provides simple setup for complex logging.
 
 ![PyPI](https://img.shields.io/pypi/v/my-package.svg)
 
-Check out the **[docs](https://dannycollinson.github.io/snaplog)** for in-depth information on `snaplog`, see the [demo](https://dannycollinson.github.io/snaplog/demos/DEMO.html#) for a demonstration of the package's functionality, or read below for how to get started!
+Check out the **[docs](https://dannycollinson.github.io/sefkhet)** for in-depth information on `sefkhet`, see the [demo](https://dannycollinson.github.io/sefkhet/demos/DEMO.html#) for a demonstration of the package's functionality, or read below for how to get started!
 
 ### Quick Links
 
-- [Docs](https://dannycollinson.github.io/snaplog)
-    - [API Reference](https://dannycollinson.github.io/snaplog/snaplog.html#)
-    - [Demo](https://dannycollinson.github.io/snaplog/demos/DEMO.html#)
-    - [Changelog](https://dannycollinson.github.io/snaplog/CHANGELOG.html#)
-- [GitHub](https://github.com/DannyCollinson/snaplog)
-    - [Issues](https://github.com/DannyCollinson/snaplog/issues)
-    - [Releases](https://github.com/DannyCollinson/snaplog/releases)
+- [Docs](https://dannycollinson.github.io/sefkhet)
+    - [API Reference](https://dannycollinson.github.io/sefkhet/sefkhet.html#)
+    - [Demo](https://dannycollinson.github.io/sefkhet/demos/DEMO.html#)
+    - [Changelog](https://dannycollinson.github.io/sefkhet/CHANGELOG.html#)
+- [GitHub](https://github.com/DannyCollinson/sefkhet)
+    - [Issues](https://github.com/DannyCollinson/sefkhet/issues)
+    - [Releases](https://github.com/DannyCollinson/sefkhet/releases)
 
 ## Installation
 
 Installation is via PyPI. The exact command depends on your preferred package manager, but for `pip`, it's:
 
 ```sh
-pip install snaplog
+pip install sefkhet
 ```
 
 ## Quickstart
 
-Below is a one-minute introduction to `snaplog`. For more detailed information, check out the [demo notebook](https://dannycollinson.github.io/snaplog/demos/DEMO.html#).
+Below is a one-minute introduction to `sefkhet`. For more detailed information, check out the [demo notebook](https://dannycollinson.github.io/sefkhet/demos/DEMO.html#).
 
 ### Import
 
 You can import the package using
 
 ```py3
-import snaplog
+import sefkhet
 ```
 
 
@@ -42,46 +42,46 @@ import snaplog
 After import, you can immediately start logging with the default configuration using
 
 ```py3
-snaplog.record("I <3 snaplog!")
+sefkhet.record("I <3 sefkhet!")
 # or
-snaplog.rec("I <3 snaplog!")
+sefkhet.rec("I <3 sefkhet!")
 ```
 
 Or, if you only need the `record`/`rec` function, you can do
 
 ```py3
-from snaplog import record
+from sefkhet import record
 
-record("I <3 snaplog!")
+record("I <3 sefkhet!")
 ```
 
 
-### `SnapLogger`
+### `Scribe`
 
-You can also use the `SnapLogger` class as follows:
+You can also use the `Scribe` class as follows:
 
 ```py3
-logger = snaplog.SnapLogger()
+scribe = sefkhet.Scribe()
 # then
-logger.record("I <3 snaplog!")
+scribe.record("I <3 sefkhet!")
 # or
-logger.rec("I <3 snaplog!")
+scribe.rec("I <3 sefkhet!")
 ```
 
 
 ## Contributing
 
-Check out the [Contributing Guide](https://dannycollinson.github.io/snaplog/CONTRIBUTING.html#) or `CONTRIBUTING.md` for details about contributing!
+Check out the [Contributing Guide](https://dannycollinson.github.io/sefkhet/CONTRIBUTING.html#) or `CONTRIBUTING.md` for details about contributing!
 
-If you come across any issues while using `snaplog` or think of any features that you would like to see added, please let us know by creating a new [GitHub Issue](https://github.com/DannyCollinson/snaplog/issues)!
+If you come across any issues while using `sefkhet` or think of any features that you would like to see added, please let us know by creating a new [GitHub Issue](https://github.com/DannyCollinson/sefkhet/issues)!
 
 
 ## Help
 
-If you have any questions about the package, you can refer to the [docs](https://dannycollinson.github.io/snaplog) and [source code](https://github.com/DannyCollinson/snaplog).
+If you have any questions about the package, you can refer to the [docs](https://dannycollinson.github.io/sefkhet) and [source code](https://github.com/DannyCollinson/sefkhet).
 
-If you have questions that are still unanswered or run into any issues while using the package, please let us know by creating a new [GitHub Issue](https://github.com/DannyCollinson/snaplog/issues).
+If you have questions that are still unanswered or run into any issues while using the package, please let us know by creating a new [GitHub Issue](https://github.com/DannyCollinson/sefkhet/issues).
 
 
-## Thanks for checking out `snaplog`!
+## Thanks for checking out `sefkhet`!
 ###

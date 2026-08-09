@@ -1,4 +1,4 @@
-"""Tests for `snaplog._functional`."""
+"""Tests for `sefkhet._functional`."""
 
 import atexit
 import io
@@ -10,9 +10,9 @@ from typing import Any
 
 import pytest
 
-import snaplog
-from snaplog._color import ColorFormatter
-from snaplog._functional import (
+import sefkhet
+from sefkhet._color import ColorFormatter
+from sefkhet._functional import (
     _DEFAULT_FMT,
     _DEFAULT_FMT_WITH_NAME,
     _DEFAULT_LOGGER_NAMES,
@@ -40,7 +40,7 @@ from snaplog._functional import (
     set_formatter_for_handler,
     set_formatter_for_logger,
 )
-from snaplog._typing import (
+from sefkhet._typing import (
     _DatagramHandlerKwargs,
     _HTTPHandlerKwargs,
     _HandlerKwargs,
@@ -65,8 +65,8 @@ class TestGetLogLevelMap:
         assert isinstance(result, dict)
 
     @staticmethod
-    def test_contains_snaplog_defaults() -> None:
-        """Contains all snaplog shorthand and full-name keys."""
+    def test_contains_sefkhet_defaults() -> None:
+        """Contains all `sefkhet` shorthand and full-name keys."""
         result = get_log_level_map()
         for key in (
             "debug",
@@ -427,13 +427,13 @@ class TestMaybeCreateHandler:
 
         Args:
             core (object): Used as `core` argument
-                to `snaplog._functional._maybe_create_handler`
+                to `sefkhet._functional._maybe_create_handler`
             copy (bool, optional): Used as `copy` argument
-                to `snaplog._functional._maybe_create_handler`
+                to `sefkhet._functional._maybe_create_handler`
 
         Returns:
             logging.Handler | None: Returns the result of calling
-                `snaplog._functional._maybe_create_handler` with
+                `sefkhet._functional._maybe_create_handler` with
                 default values for all file handler params
 
         """
@@ -1348,16 +1348,16 @@ class TestGetLoggerFromSpec:
 
 class TestPublicApi:  # pylint: disable=too-few-public-methods
     """
-    Verify symbols are exported from the top-level `snaplog` package.
+    Verify symbols are exported from the top-level `sefkhet` package.
     """  # noqa: D200
 
     @staticmethod
     def test_public_exports_accessible() -> None:
         """
-        All __all__ symbols are accessible on the snaplog namespace.
+        All __all__ symbols are accessible on the sefkhet namespace.
         """  # noqa: D200
-        for name in snaplog.__all__:
-            assert hasattr(snaplog, name), f"Missing export: {name}"
+        for name in sefkhet.__all__:
+            assert hasattr(sefkhet, name), f"Missing export: {name}"
 
 
 class TestGetDefaultFmt:
@@ -1366,7 +1366,7 @@ class TestGetDefaultFmt:
     @staticmethod
     def test_default_names_return_fmt_without_name() -> None:
         """Default logger names produce a format without %(name)s."""
-        for name in (None, "root", "log", "snaplogger"):
+        for name in (None, "root", "log", "scribe"):
             result = _get_default_fmt(name)
             assert result == _DEFAULT_FMT
             assert "%(name)s" not in result
@@ -1388,8 +1388,7 @@ class TestGetDefaultFmt:
     def test_default_logger_names_frozenset() -> None:
         """_DEFAULT_LOGGER_NAMES contains the expected values."""
         assert (
-            frozenset({None, "root", "log", "snaplogger"})
-            == _DEFAULT_LOGGER_NAMES
+            frozenset({None, "root", "log", "scribe"}) == _DEFAULT_LOGGER_NAMES
         )
 
     @staticmethod
@@ -1749,7 +1748,7 @@ class TestQueueHandler:
     @staticmethod
     def test_color_formatter_survives_queue() -> None:
         """ColorFormatter output survives the queue round-trip."""
-        from snaplog._color import _ANSI_RESET, get_level_color
+        from sefkhet._color import _ANSI_RESET, get_level_color
 
         stream = io.StringIO()
         real: logging.StreamHandler[io.StringIO] = logging.StreamHandler(stream)

@@ -1,16 +1,16 @@
-"""Tests for `snaplog._csv`."""
+"""Tests for `sefkhet._csv`."""
 
 import csv
 import logging
 
-import snaplog._one_step as _one_step_module
-from snaplog._color import ColorFormatter
-from snaplog._csv import _DEFAULT_CSV_FIELDS, CsvFormatter, _parse_csv_spec
-from snaplog._functional import get_formatter, get_logger
-from snaplog._json import JsonFormatter
-from snaplog._object_oriented import SnapLogger
-from snaplog._one_step import configure_default_logger
-from snaplog._typing import _HandlerKwargs
+import sefkhet._one_step as _one_step_module
+from sefkhet._color import ColorFormatter
+from sefkhet._csv import _DEFAULT_CSV_FIELDS, CsvFormatter, _parse_csv_spec
+from sefkhet._functional import get_formatter, get_logger
+from sefkhet._json import JsonFormatter
+from sefkhet._object_oriented import Scribe
+from sefkhet._one_step import configure_default_logger
+from sefkhet._typing import _HandlerKwargs
 
 
 def _make_record(
@@ -399,11 +399,11 @@ class TestCsvIntegration:
         assert isinstance(logger.handlers[-1].formatter, CsvFormatter)
 
     @staticmethod
-    def test_snap_logger_csv_true() -> None:
-        """SnapLogger(csv=True) adds CsvFormatter."""
-        snap = SnapLogger(name="test_csv_sl", csv=True)
-        assert len(snap.handlers) >= 1
-        assert isinstance(snap.handlers[-1].formatter, CsvFormatter)
+    def test_scribe_csv_true() -> None:
+        """Scribe(csv=True) adds CsvFormatter."""
+        scribe = Scribe(name="test_csv_sl", csv=True)
+        assert len(scribe.handlers) >= 1
+        assert isinstance(scribe.handlers[-1].formatter, CsvFormatter)
 
     @staticmethod
     def test_configure_default_logger_csv_true() -> None:
@@ -416,11 +416,11 @@ class TestCsvIntegration:
 
     @staticmethod
     def test_csv_formatter_exported() -> None:
-        """CsvFormatter is accessible from snaplog."""
-        import snaplog
+        """CsvFormatter is accessible from sefkhet."""
+        import sefkhet
 
-        assert hasattr(snaplog, "CsvFormatter")
-        assert snaplog.CsvFormatter is CsvFormatter
+        assert hasattr(sefkhet, "CsvFormatter")
+        assert sefkhet.CsvFormatter is CsvFormatter
 
 
 class TestCsvFormatterEndToEnd:
@@ -432,7 +432,7 @@ class TestCsvFormatterEndToEnd:
         import io
 
         stream = io.StringIO()
-        snap = SnapLogger(
+        scribe = Scribe(
             name="test_csv_e2e",
             level=logging.DEBUG,
             handlers=(
@@ -442,7 +442,7 @@ class TestCsvFormatterEndToEnd:
             formatter="%(message)s",
             csv=True,
         )
-        snap.info("hello csv")
+        scribe.info("hello csv")
         output = stream.getvalue().strip()
         rows = list(csv.reader([output]))
         assert len(rows) == 1
@@ -456,7 +456,7 @@ class TestCsvFormatterEndToEnd:
         import io
 
         stream = io.StringIO()
-        snap = SnapLogger(
+        scribe = Scribe(
             name="test_csv_comma",
             level=logging.DEBUG,
             handlers=(
@@ -466,7 +466,7 @@ class TestCsvFormatterEndToEnd:
             formatter="%(message)s",
             csv={"fields": ["message"]},
         )
-        snap.info("hello, world")
+        scribe.info("hello, world")
         output = stream.getvalue().strip()
         parts = next(csv.reader([output]))
         assert parts[0] == "hello, world"

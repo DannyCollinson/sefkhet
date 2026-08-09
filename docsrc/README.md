@@ -1,1 +1,1 @@
-Documentation source for `snaplog`. Built documentation goes into the `docs` directory.
+Documentation source for `sefkhet`. Built documentation goes into the `docs` directory.

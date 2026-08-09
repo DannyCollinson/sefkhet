@@ -1,10 +1,10 @@
-"""One-step logging interface for `snaplog`."""
+"""One-step logging interface for `sefkhet`."""
 
 import logging as _logging
 import threading as _threading
 from typing import TYPE_CHECKING as _TYPE_CHECKING
 
-from snaplog._typing import _NoDefault
+from sefkhet._typing import _NoDefault
 
 
 if _TYPE_CHECKING:  # pragma: no cover
@@ -12,7 +12,7 @@ if _TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Mapping, Sequence
     from typing import Any
 
-    from snaplog._typing import (
+    from sefkhet._typing import (
         _ColorSpec,
         _CsvSpec,
         _ExcInfoType,
@@ -53,12 +53,12 @@ def configure_default_logger(  # noqa: PLR0913
     logfmt: "bool | _LogfmtSpec" = False,
 ) -> None:
     """
-    Configures the default logger used by `snaplog`.
+    Configures the default logger used by `sefkhet`.
 
     Args:
         name (str | _NoDefaultType | None, optional): Name to
             assign to default logger. If `_NoDefault`, uses
-            `"snaplogger"`. Defaults to `_NoDefault`.
+            `"scribe"`. Defaults to `_NoDefault`.
         level (int | _NoDefaultType, optional): Logging level
             to assign to default logger and/or handler. If
             `_NoDefault`, uses `20`.
@@ -68,18 +68,18 @@ def configure_default_logger(  # noqa: PLR0913
             the default logger. Multiple handlers can be
             specified by providing a sequence of handler
             specifications. Specification of each handler is
-            similar to when using the `snaplog.get_handler`
+            similar to when using the `sefkhet.get_handler`
             interface, except if using keyword arguments, they
             must be wrapped into a `dict` and provided as the
             second item of a `tuple`, where the first item is
             the argument for `core`. If `_NoDefault`, then
-            `snaplog.get_handler` is called and its result used
+            `sefkhet.get_handler` is called and its result used
             as `handlers`. Defaults to `_NoDefault`.
         formatter (_FormatterSpec | _NoDefaultType, optional):
             Specification of a `logging.Formatter` to add to
             all handlers created for the logger that do not
             have an alternative formatter specified. If
-            `_NoDefault`, then `snaplog.get_formatter` is
+            `_NoDefault`, then `sefkhet.get_formatter` is
             called and its result used as `formatter`.
             Defaults to `_NoDefault`.
         filters (_FilterSpec | Sequence[_FilterSpec] | _NoDefaultType, optional):
@@ -87,8 +87,8 @@ def configure_default_logger(  # noqa: PLR0913
             the logger. Multiple filters can be specified by
             providing a sequence of filter specifications.
             Specification of each filter is the same as when
-            using the `snaplog.get_handler` inteface. If
-            `_NoDefault`, then `snaplog.get_filter` is called
+            using the `sefkhet.get_handler` inteface. If
+            `_NoDefault`, then `sefkhet.get_filter` is called
             and its result used as `filters`.
             Defaults to `_NoDefault`.
         spec (_LoggerSpec | _NoDefaultType, optional): If not
@@ -124,14 +124,14 @@ def configure_default_logger(  # noqa: PLR0913
             `csv` or `json` is not `False`.
             Defaults to `False`.
     """  # noqa: E501,W505
-    from snaplog._functional import (
+    from sefkhet._functional import (
         _get_default_fmt,
         get_formatter,
         get_handler,
         get_logger,
         get_logger_from_spec,
     )
-    from snaplog._typing import _NoDefaultType
+    from sefkhet._typing import _NoDefaultType
 
     # Make sure function operates on the module-level default logger
     global _default_logger  # noqa: PLW0603
@@ -154,8 +154,8 @@ def configure_default_logger(  # noqa: PLR0913
             _default_logger = get_logger_from_spec(spec=spec)
         return
 
-    # Set arguments to snaplog defaults if not given
-    name = "snaplogger" if isinstance(name, _NoDefaultType) else name
+    # Set arguments to sefkhet defaults if not given
+    name = "scribe" if isinstance(name, _NoDefaultType) else name
     level = 20 if isinstance(level, _NoDefaultType) else level
     handlers = (
         get_handler(level=level)
@@ -214,7 +214,7 @@ def log(  # noqa: PLR0913
     Args:
         level (int | str): Logging level to log message at. Valid log
             levels include a log level string from the options provided
-            by `snaplog.get_log_levels()`, the `int` equivalents of
+            by `sefkhet.get_log_levels()`, the `int` equivalents of
             those log levels as defined by the `logging`library, or any
             other `int`.
         msg (object): Message to log
@@ -233,7 +233,7 @@ def log(  # noqa: PLR0913
         logger (logging.Logger | _LoggerSpec | _NoDefaultType, optional):
             Specification of the `logging.Logger` to use to log the
             message. If a `logging.Logger`, then that logger will be
-            used; if the `snaplog` default logger is still `None` at the
+            used; if the `sefkhet` default logger is still `None` at the
             time of calling, the default logger will be instantiated
             using `logger` as the `spec` argument to
             `configure_default_logger`, which uses the default
@@ -245,8 +245,8 @@ def log(  # noqa: PLR0913
             according to the specification and used to log the message.
             Defaults to `_NoDefault`.
     """  # noqa: W505
-    from snaplog._functional import _parse_log_level, get_logger_from_spec
-    from snaplog._typing import _NoDefaultType
+    from sefkhet._functional import _parse_log_level, get_logger_from_spec
+    from sefkhet._typing import _NoDefaultType
 
     # Decide which logger to use if none given
     if not isinstance(logger, _logging.Logger):
@@ -268,7 +268,7 @@ def log(  # noqa: PLR0913
     level = _parse_log_level(level=level, quiet=False)
 
     # Log to indicated level
-    logger.log(  # type: ignore[union-attr] # pyright: ignore[reportOptionalMemberAccess]
+    logger.log(  # type: ignore[union-attr] # pyright: ignore[reportUnknownMemberType]
         level,
         msg,
         *args,
@@ -291,7 +291,7 @@ def record(  # noqa: PLR0913
     extra: "Mapping[str, object] | None" = None,
 ) -> None:
     """
-    Log a message according to the `snaplog` API
+    Log a message according to the `sefkhet` API
     using the default or a provided logger.
 
     *Note that this function's API differs from that of the
@@ -308,7 +308,7 @@ def record(  # noqa: PLR0913
             provide variables to interpolate into `msg`.
         level (str | int, optional): Logging level to log message at.
             Valid log levels include a log level string from the options
-            provided by `snaplog.get_log_levels()`, the `int`
+            provided by `sefkhet.get_log_levels()`, the `int`
             equivalents of those log levels as defined by the `logging`
             library, or any other `int`. Overriden by the `quiet`
             argument if it is `True`. Defaults to `"debug"`.
@@ -318,7 +318,7 @@ def record(  # noqa: PLR0913
         logger (logging.Logger | _LoggerSpec | _NoDefaultType, optional):
             Specification of the `logging.Logger` to use to log the
             message. If a `logging.Logger`, then that logger will be
-            used; if the `snaplog` default logger is still `None` at the
+            used; if the `sefkhet` default logger is still `None` at the
             time of calling, the default logger will be instantiated
             using `logger` as the `spec` argument to
             `configure_default_logger`, which uses the default
@@ -339,7 +339,7 @@ def record(  # noqa: PLR0913
             `logging.Logger`'s method `log` for details.
             Defaults to `None`.
     """  # noqa: W505
-    from snaplog._functional import _parse_log_level
+    from sefkhet._functional import _parse_log_level
 
     # Parse provided level
     level = _parse_log_level(level=level, quiet=quiet)
@@ -368,7 +368,7 @@ def rec(  # noqa: PLR0913
     logger: "logging.Logger | _LoggerSpec | _NoDefaultType" = _NoDefault,
 ) -> None:
     """
-    Log a message according to the `snaplog` API
+    Log a message according to the `sefkhet` API
     using the default or a provided logger.
 
     *Note that this function's API differs from that of the
@@ -385,7 +385,7 @@ def rec(  # noqa: PLR0913
             provide variables to interpolate into `msg`.
         level (str | int, optional): Logging level to log message at.
             Valid log levels include a log level string from the options
-            provided by `snaplog.get_log_levels()`, the `int`
+            provided by `sefkhet.get_log_levels()`, the `int`
             equivalents of those log levels as defined by the `logging`
             library, or any other `int`. Overriden by the `quiet`
             argument if it is `True`. Defaults to `"debug"`.
@@ -404,7 +404,7 @@ def rec(  # noqa: PLR0913
         logger (logging.Logger | _LoggerSpec | _NoDefaultType, optional):
             Specification of the `logging.Logger` to use to log the
             message. If a `logging.Logger`, then that logger will be
-            used; if the `snaplog` default logger is still `None` at the
+            used; if the `sefkhet` default logger is still `None` at the
             time of calling, the default logger will be instantiated
             using `logger` as the `spec` argument to
             `configure_default_logger`, which uses the default

@@ -2,9 +2,9 @@
 ########################################################################
 
 [project]
-name = "snaplog"
+name = "sefkhet"
 dynamic = ["version"]
-description = "Python package that makes logging a snap."
+description = "Sefkhet - simple setup for complex logging in Python."
 readme = "README.md"
 license-files = ["LICENSE.md"]
 authors = [{ name = "Danny Collinson", email = "danny@dannycollinson.com" }]
@@ -27,28 +27,28 @@ classifiers = [
 keywords = ["log", "logging", "logging-library", "logs"]
 
     [project.urls]
-    Homepage = "https://github.com/DannyCollinson/snaplog"
+    Homepage = "https://github.com/DannyCollinson/sefkhet"
     Documentation = "https://pages.github."
-    Issues = "https://github.com/DannyCollinson/snaplog/issues"
-    Repository = "https://github.com/DannyCollinson/snaplog"
+    Issues = "https://github.com/DannyCollinson/sefkhet/issues"
+    Repository = "https://github.com/DannyCollinson/sefkhet"
 
 [dependency-groups]
 dev = [
-    "bandit[toml]>=1.9.3",
-    "build>=1.4.0",
-    "ipykernel>=7.2.0",
-    "mypy>=1.19.1",
-    "myst-parser>=4.0.1",
+    "bandit[toml]>=1.9.4",
+    "build>=1.5.0",
+    "ipykernel>=7.3.0",
+    "mypy>=2.3.0",
+    "myst-parser>=5.1.0",
     "nbsphinx>=0.9.8",
-    "pydoclint>=0.8.3",
-    "pylint>=4.0.4",
+    "pydoclint>=0.9.1",
+    "pylint>=4.0.6",
     "pyright>=1.1.408",
-    "pytest-cov>=7.0.0",
-    "pytest>=9.0.2",
-    "ruff>=0.15.0",
+    "pytest-cov>=7.1.0",
+    "pytest>=9.1.1",
+    "ruff>=0.16.2",
     "sphinx-rtd-theme>=3.1.0",
-    "sphinx>=8.1.3",
-    "twine>=6.2.0",
+    "sphinx>=9.1.0",
+    "twine>=7.0.0",
 ]
 
 
@@ -65,13 +65,13 @@ include-package-data = true
 
     [tool.setuptools.packages.find]
     where = ["src"]
-    include = ["snaplog"]
+    include = ["sefkhet"]
 
     [tool.setuptools.package-data]
-    "snaplog" = ["py.typed"]
+    "sefkhet" = ["py.typed"]
 
     [tool.setuptools.dynamic]
-    version = { attr = "snaplog._version.__version__" }
+    version = { attr = "sefkhet._version.__version__" }
 
 
     # Dev tool config
@@ -275,7 +275,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "--cov=snaplog --cov-report=html --cov-branch"
+addopts = "--cov=sefkhet --cov-report=html --cov-branch"
 
 
 [tool.ruff]
@@ -392,7 +392,7 @@ extend-exclude = [
 
         [tool.ruff.lint.isort]
         case-sensitive = true
-        known-first-party = ["snaplog"]
+        known-first-party = ["sefkhet"]
         lines-after-imports = 2
         split-on-trailing-comma = false
 

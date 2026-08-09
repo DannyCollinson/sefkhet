@@ -1,1 +1,1 @@
-"""Tests for `snaplog`."""
+"""Tests for `sefkhet`."""

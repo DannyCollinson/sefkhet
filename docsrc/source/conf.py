@@ -9,13 +9,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path("../../src").resolve()))
 
-from snaplog import __version__  # pylint: disable=wrong-import-position
+from sefkhet import __version__  # pylint: disable=wrong-import-position
 
 
 # -- Project information -----------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "snaplog"
+project = "sefkhet"
 copyright = (  # pylint: disable=redefined-builtin # noqa: A001
     "2026, Danny Collinson"
 )
@@ -68,8 +68,8 @@ html_theme_options = {
     "style_nav_header_background": "#ffffff",
 }
 
-html_logo = "./_static/img/snaplog-logo.png"
-html_favicon = "./_static/img/snaplog-favicon.ico"
+html_logo = "./_static/img/sefkhet-logo.png"
+html_favicon = "./_static/img/sefkhet-favicon.ico"
 
 html_last_updated_fmt = "%Y-%m-%d at %H:%M UTC"
 html_last_updated_use_utc = True

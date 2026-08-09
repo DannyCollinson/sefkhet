@@ -1,4 +1,4 @@
-"""Logfmt formatting utilities for `snaplog`."""
+"""Logfmt formatting utilities for `sefkhet`."""
 
 import logging as _logging
 from typing import TYPE_CHECKING as _TYPE_CHECKING
@@ -9,7 +9,7 @@ if _TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Mapping
     from typing import Any, Literal
 
-    from snaplog._typing import _FormatStyle, _LogfmtSpec
+    from sefkhet._typing import _FormatStyle, _LogfmtSpec
 
 
 # Define fields to include for a default logfmt formatter
@@ -149,7 +149,7 @@ class LogfmtFormatter(_logging.Formatter):
         Returns:
             str: Logfmt-formatted log record string
         """
-        from snaplog._constants import (
+        from sefkhet._constants import (
             _KNOWN_FIELDS,
             _STANDARD_RECORD_ATTRS,
             _extract_known_field,

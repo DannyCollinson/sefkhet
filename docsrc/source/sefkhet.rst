@@ -5,7 +5,7 @@ API Reference
 Module contents
 ---------------
 
-.. automodule:: snaplog
+.. automodule:: sefkhet
    :members:
    :show-inheritance:
    :undoc-members:

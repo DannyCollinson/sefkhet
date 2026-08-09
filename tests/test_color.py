@@ -1,10 +1,10 @@
-"""Tests for `snaplog._color`."""
+"""Tests for `sefkhet._color`."""
 
 import contextlib
 import logging
 from unittest.mock import patch
 
-from snaplog._color import (
+from sefkhet._color import (
     _ANSI_RESET,
     _LEVELNAME_WIDTH,
     _MAGENTA,

@@ -1,9 +1,9 @@
-"""Functional interface for `snaplog`."""
+"""Functional interface for `sefkhet`."""
 
 import logging as _logging
 from typing import TYPE_CHECKING as _TYPE_CHECKING
 
-from snaplog._typing import _NoDefault
+from sefkhet._typing import _NoDefault
 
 
 if _TYPE_CHECKING:  # pragma: no cover
@@ -13,7 +13,7 @@ if _TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable, Mapping, Sequence
     from typing import Any
 
-    from snaplog._typing import (
+    from sefkhet._typing import (
         _ColorSpec,
         _CsvSpec,
         _FilterSpec,
@@ -33,7 +33,7 @@ if _TYPE_CHECKING:  # pragma: no cover
 _DEFAULT_FMT = "%(asctime)s | %(levelname)s | %(message)s"
 _DEFAULT_FMT_WITH_NAME = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
 _DEFAULT_LOGGER_NAMES: frozenset[str | None] = frozenset(
-    {None, "root", "log", "snaplogger"}
+    {None, "root", "log", "scribe"}
 )
 
 
@@ -42,7 +42,7 @@ def _get_default_fmt(name: str | None) -> str:
     Returns the default format string for a logger.
 
     If the logger name is one of the built-in defaults
-    (`None`, `"root"`, `"log"`, `"snaplogger"`), the format
+    (`None`, `"root"`, `"log"`, `"scribe"`), the format
     string omits `%(name)s`; otherwise, it includes it.
 
     Args:
@@ -107,7 +107,7 @@ def get_log_level_map() -> dict[str, int]:
         dict[str, int]: Mapping of all valid log level
             strings to their associated integer log levels
     """
-    # Start with snaplog defaults
+    # Start with sefkhet defaults
     valid_levels_map = LOG_LEVEL_STR_TO_INT.copy()
     # Add user customizations
     valid_levels_map.update(_logging.getLevelNamesMapping())
@@ -133,7 +133,7 @@ def _parse_log_level(level: str | int, *, quiet: bool = False) -> int:
     Args:
         level (str | int): Logging level to use if `quiet` is `False`.
             Valid log levels include a log level string from the options
-            provided by `snaplog.get_log_levels()`, the `int`
+            provided by `sefkhet.get_log_levels()`, the `int`
             equivalents of those log levels as defined by the `logging`
             library, or any other `int`.
         quiet (bool, optional): If `True`, forces the log level to
@@ -242,10 +242,10 @@ def get_formatter(  # noqa: PLR0913
     """
     from copy import deepcopy
 
-    from snaplog._color import ColorFormatter
-    from snaplog._csv import CsvFormatter
-    from snaplog._json import JsonFormatter
-    from snaplog._logfmt import LogfmtFormatter
+    from sefkhet._color import ColorFormatter
+    from sefkhet._csv import CsvFormatter
+    from sefkhet._json import JsonFormatter
+    from sefkhet._logfmt import LogfmtFormatter
 
     # Return original or copy of existing formatter if one is passed
     if isinstance(fmt, _logging.Formatter):
@@ -887,7 +887,7 @@ def _parse_filters_arg(
     Returns:
         tuple[_FilterSpec, ...]: Tuple of filter specs
     """
-    from snaplog._typing import _SupportsFilter
+    from sefkhet._typing import _SupportsFilter
 
     # Handle case of single string
     if isinstance(filters, str):
@@ -1161,20 +1161,20 @@ def get_handler(  # noqa: PLR0913
         formatter (_FormatterSpec | _NoDefaultType, optional):
             Specification of a `logging.Formatter` to attach to the
             created handler. The specification is similar to using the
-            `snaplog.get_formatter` interface. If the value is a `str`
+            `sefkhet.get_formatter` interface. If the value is a `str`
             or `None`, then a `logging.Formatter` is created with
             `formatter` as its format string; if a `logging.Formatter`,
             a deep copy of the provided formatter is created if `copy`
             is `True` and otherwise the original handler is used; and if
             a `dict`, it must contain entries for all desired
-            non-default arguments to `snaplog.get_formatter`. If
+            non-default arguments to `sefkhet.get_formatter`. If
             `_NoDefault`, then no formatter is attached to the handler.
             Defaults to `_NoDefault`.
         filters (_FilterSpec | Sequence[_FilterSpec], optional):
             Specification of `logging.Filter`s to attach to the created
             handler. If more than one filter is specified, then they are
             all added to the handler in order. Specification of each
-            filter is similar to using the `snaplog.get_filter`
+            filter is similar to using the `sefkhet.get_filter`
             interface, except this version supports passing either a
             `Callable` that takes a `logging.LogRecord` and returns
             either a `bool` or another `logging.LogRecord` or a class
@@ -1331,7 +1331,7 @@ def get_handler(  # noqa: PLR0913
     Returns:
         logging.Handler: The specified `logging.Handler`
     """  # noqa: W505
-    from snaplog._typing import _NoDefaultType
+    from sefkhet._typing import _NoDefaultType
 
     # Create the handler based on core
     handler = _maybe_create_handler(
@@ -1546,7 +1546,7 @@ def set_formatter_for_logger(  # noqa: PLR0913
             otherwise, only handlers without a formatter already set
             will have their formatter set. Defaults to `False`.
     """
-    from snaplog._typing import _NoDefaultType
+    from sefkhet._typing import _NoDefaultType
 
     # Resolve default fmt based on logger name
     if isinstance(fmt, _NoDefaultType):
@@ -1584,7 +1584,7 @@ def get_logger(  # noqa: PLR0913
     Returns a `logging.Logger` configured according
     to the provided specifications.
 
-    Note that the `snaplog` defaults for `name` (`"log"`) and
+    Note that the `sefkhet` defaults for `name` (`"log"`) and
     `level` (`20`) differ from those of `logging.getLogger`
     (`None` and `30`, respectively).
 
@@ -1595,7 +1595,7 @@ def get_logger(  # noqa: PLR0913
         level (str | int, optional): Logging level to use if
             `quiet` is `False`. Valid log levels include a log
             level string from the options provided by
-            `snaplog.get_log_levels()`, the `int` equivalents
+            `sefkhet.get_log_levels()`, the `int` equivalents
             of those log levels as defined by the `logging`
             library, or any other `int`. Defaults to `20`.
         handlers (_HandlerSpec | Sequence[_HandlerSpec], optional):
@@ -1603,7 +1603,7 @@ def get_logger(  # noqa: PLR0913
             to the logger. Multiple handlers can be specified
             by providing a sequence of handler specifications.
             Specification of each handler is similar to when
-            using the `snaplog.get_handler` interface, except
+            using the `sefkhet.get_handler` interface, except
             if using keyword arguments, they must be wrapped
             into a `dict` and provided as the second item of
             a `tuple`, where the first item is the argument
@@ -1620,7 +1620,7 @@ def get_logger(  # noqa: PLR0913
             the logger. Multiple filters can be specified by
             providing a sequence of filter specifications.
             Specification of each filter is the same as when
-            using the `snaplog.get_handler` inteface.
+            using the `sefkhet.get_handler` inteface.
             Defaults to `()` (no filters).
         color (_ColorSpec, optional): Color mode to apply to
             the formatter. Either a bare `_ColorMode` string or
@@ -1647,7 +1647,7 @@ def get_logger(  # noqa: PLR0913
     Returns:
         logging.Logger: The speficied `logging.Logger`
     """
-    from snaplog._typing import _NoDefaultType
+    from sefkhet._typing import _NoDefaultType
 
     # Resolve name, replacing default with "log"
     resolved_name: str | None = (
@@ -1712,7 +1712,7 @@ def get_logger_from_spec(spec: "_LoggerSpec") -> "logging.Logger":
     Returns:
         logging.Logger: The specified logger
     """
-    from snaplog._typing import _LoggerKwargs, _NoDefaultType
+    from sefkhet._typing import _LoggerKwargs, _NoDefaultType
 
     # Handle case of name only
     if spec is None or isinstance(spec, str):
