@@ -85,13 +85,13 @@ class LogfmtFormatter(_logging.Formatter):
     stack info are serialised as strings when present.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(  # ruff: ignore[too-many-arguments]
         self,
         fmt: str | None = None,
         datefmt: str | None = None,
         style: "_FormatStyle" = "%",
-        validate: bool = True,  # noqa: FBT001,FBT002
         *,
+        validate: bool = True,
         defaults: "Mapping[str, Any] | None" = None,
         logfmt: "Literal[True] | _LogfmtSpec",
     ) -> None:

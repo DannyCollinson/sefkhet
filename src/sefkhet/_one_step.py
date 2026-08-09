@@ -26,6 +26,9 @@ if _TYPE_CHECKING:  # pragma: no cover
     )
 
 
+type _HandlersArgType = _HandlerSpec | Sequence[_HandlerSpec] | _NoDefaultType
+type _FiltersArgType = _FilterSpec | Sequence[_FilterSpec] | _NoDefaultType
+
 # Define a default logger instance that we can use
 # for log function calls if a logger is not provided
 _default_logger: _logging.Logger | None = None
@@ -34,17 +37,13 @@ _default_logger: _logging.Logger | None = None
 _lock = _threading.Lock()
 
 
-def configure_default_logger(  # noqa: PLR0913
+def configure_default_logger(  # ruff: ignore[too-many-arguments]
     name: "str | _NoDefaultType | None" = _NoDefault,
     level: "int | _NoDefaultType" = _NoDefault,
     *,
-    handlers: (
-        "_HandlerSpec | Sequence[_HandlerSpec] | _NoDefaultType"
-    ) = _NoDefault,
+    handlers: "_HandlersArgType" = _NoDefault,
     formatter: "_FormatterSpec | _NoDefaultType" = _NoDefault,
-    filters: (
-        "_FilterSpec | Sequence[_FilterSpec] | _NoDefaultType"
-    ) = _NoDefault,
+    filters: "_FiltersArgType" = _NoDefault,
     spec: "_LoggerSpec | _NoDefaultType" = _NoDefault,
     force: bool = False,
     color: "_ColorSpec" = "level",
@@ -63,16 +62,14 @@ def configure_default_logger(  # noqa: PLR0913
             to assign to default logger and/or handler. If
             `_NoDefault`, uses `20`.
             Defaults to `_NoDefault`.
-        handlers (_HandlerSpec | Sequence[_HandlerSpec] | _NoDefaultType, optional):
-            Specification of any `logging.Handler`s to add to
-            the default logger. Multiple handlers can be
-            specified by providing a sequence of handler
-            specifications. Specification of each handler is
-            similar to when using the `sefkhet.get_handler`
-            interface, except if using keyword arguments, they
-            must be wrapped into a `dict` and provided as the
-            second item of a `tuple`, where the first item is
-            the argument for `core`. If `_NoDefault`, then
+        handlers (_HandlersArgType, optional): Specification of any
+            `logging.Handler`s to add to the default logger. Multiple
+            handlers can be specified by providing a sequence of handler
+            specifications. Specification of each handler is similar to
+            when using the `sefkhet.get_handler` interface, except if
+            using keyword arguments, they must be wrapped into a `dict`
+            and provided as the second item of a `tuple`, where the
+            first item is the argument for `core`. If `_NoDefault`, then
             `sefkhet.get_handler` is called and its result used
             as `handlers`. Defaults to `_NoDefault`.
         formatter (_FormatterSpec | _NoDefaultType, optional):
@@ -82,15 +79,13 @@ def configure_default_logger(  # noqa: PLR0913
             `_NoDefault`, then `sefkhet.get_formatter` is
             called and its result used as `formatter`.
             Defaults to `_NoDefault`.
-        filters (_FilterSpec | Sequence[_FilterSpec] | _NoDefaultType, optional):
-            Specification of any `logging.Filter`s to add to
-            the logger. Multiple filters can be specified by
-            providing a sequence of filter specifications.
-            Specification of each filter is the same as when
-            using the `sefkhet.get_handler` inteface. If
-            `_NoDefault`, then `sefkhet.get_filter` is called
-            and its result used as `filters`.
-            Defaults to `_NoDefault`.
+        filters (_FiltersArgType, default=_NoDefault): Specification of
+            any `logging.Filter`s to add to the logger. Multiple filters
+            can be specified by providing a sequence of filter
+            specifications. Specification of each filter is the same as
+            when using the `sefkhet.get_handler` inteface. If
+            `_NoDefault`, then `sefkhet.get_filter` is called and its
+            result used as `filters`. Defaults to `_NoDefault`.
         spec (_LoggerSpec | _NoDefaultType, optional): If not
             `_NoDefault` and all other arguments are
             `_NoDefault`, then the logger is created according
@@ -123,7 +118,7 @@ def configure_default_logger(  # noqa: PLR0913
             `get_logger` in the non-spec path. Ignored if
             `csv` or `json` is not `False`.
             Defaults to `False`.
-    """  # noqa: E501,W505
+    """
     from sefkhet._functional import (
         _get_default_fmt,
         get_formatter,
@@ -134,7 +129,7 @@ def configure_default_logger(  # noqa: PLR0913
     from sefkhet._typing import _NoDefaultType
 
     # Make sure function operates on the module-level default logger
-    global _default_logger  # noqa: PLW0603
+    global _default_logger  # ruff: ignore[global-statement]
 
     # Fast-path: skip if default logger is already configured and
     # force is false.
@@ -194,7 +189,7 @@ def configure_default_logger(  # noqa: PLR0913
         )
 
 
-def log(  # noqa: PLR0913
+def log(  # ruff: ignore[too-many-arguments]
     level: int | str,
     msg: object,
     *args: "Any",
@@ -230,12 +225,12 @@ def log(  # noqa: PLR0913
         extra (Mapping[str, object] | None, optional): See
             `logging.Logger`'s method `log` for details.
             Defaults to `None`.
-        logger (logging.Logger | _LoggerSpec | _NoDefaultType, optional):
-            Specification of the `logging.Logger` to use to log the
-            message. If a `logging.Logger`, then that logger will be
-            used; if the `sefkhet` default logger is still `None` at the
-            time of calling, the default logger will be instantiated
-            using `logger` as the `spec` argument to
+        logger (_LoggerArgType, default=_NoDefault): Specification of
+            the `logging.Logger` to use to log the message. If a
+            `logging.Logger`, then that logger will be used; if the
+            `sefkhet` default logger is still `None` at the time of
+            calling, the default logger will be instantiated using
+            `logger` as the `spec` argument to
             `configure_default_logger`, which uses the default
             configuration if `logger` is `_NoDefault`; if `_NoDefault`,
             the default logger will be used, and it will be instantiated
@@ -244,7 +239,7 @@ def log(  # noqa: PLR0913
             is a `_LoggerSpec`, a separate logger will be created
             according to the specification and used to log the message.
             Defaults to `_NoDefault`.
-    """  # noqa: W505
+    """
     from sefkhet._functional import _parse_log_level, get_logger_from_spec
     from sefkhet._typing import _NoDefaultType
 
@@ -279,7 +274,7 @@ def log(  # noqa: PLR0913
     )
 
 
-def record(  # noqa: PLR0913
+def record(  # ruff: ignore[too-many-arguments]
     msg: object,
     *args: "Any",
     level: str | int = "debug",
@@ -315,12 +310,12 @@ def record(  # noqa: PLR0913
         quiet (bool, optional): If `True`, forces the log to the
             `logging.DEBUG` level; otherwise, the `level` argument sets
             the log level. Defaults to `False`.
-        logger (logging.Logger | _LoggerSpec | _NoDefaultType, optional):
-            Specification of the `logging.Logger` to use to log the
-            message. If a `logging.Logger`, then that logger will be
-            used; if the `sefkhet` default logger is still `None` at the
-            time of calling, the default logger will be instantiated
-            using `logger` as the `spec` argument to
+        logger (_LoggerArgType, default=_NoDefault): Specification of
+            the `logging.Logger` to use to log the message. If a
+            `logging.Logger`, then that logger will be used; if the
+            `sefkhet` default logger is still `None` at the time of
+            calling, the default logger will be instantiated using
+            `logger` as the `spec` argument to
             `configure_default_logger`, which uses the default
             configuration if `logger` is `_NoDefault`; if `_NoDefault`,
             the default logger will be used, and it will be instantiated
@@ -338,7 +333,7 @@ def record(  # noqa: PLR0913
         extra (Mapping[str, object] | None, optional): See
             `logging.Logger`'s method `log` for details.
             Defaults to `None`.
-    """  # noqa: W505
+    """
     from sefkhet._functional import _parse_log_level
 
     # Parse provided level
@@ -356,7 +351,7 @@ def record(  # noqa: PLR0913
     )
 
 
-def rec(  # noqa: PLR0913
+def rec(  # ruff: ignore[too-many-arguments]
     msg: object,
     *args: "Any",
     level: str | int = "debug",
@@ -401,12 +396,12 @@ def rec(  # noqa: PLR0913
         extra (Mapping[str, object] | None, optional): See
             `logging.Logger`'s method `log` for details.
             Defaults to `None`.
-        logger (logging.Logger | _LoggerSpec | _NoDefaultType, optional):
-            Specification of the `logging.Logger` to use to log the
-            message. If a `logging.Logger`, then that logger will be
-            used; if the `sefkhet` default logger is still `None` at the
-            time of calling, the default logger will be instantiated
-            using `logger` as the `spec` argument to
+        logger (_LoggerArgType, default=_NoDefault): Specification of
+            the `logging.Logger` to use to log the message. If a
+            `logging.Logger`, then that logger will be used; if the
+            `sefkhet` default logger is still `None` at the time of
+            calling, the default logger will be instantiated using
+            `logger` as the `spec` argument to
             `configure_default_logger`, which uses the default
             configuration if `logger` is `_NoDefault`; if `_NoDefault`,
             the default logger will be used, and it will be instantiated
@@ -415,7 +410,7 @@ def rec(  # noqa: PLR0913
             is a `_LoggerSpec`, a separate logger will be created
             according to the specification and used to log the message.
             Defaults to `_NoDefault`.
-    """  # noqa: W505
+    """
     record(
         msg,
         *args,

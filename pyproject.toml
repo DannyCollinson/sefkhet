@@ -74,12 +74,16 @@ include-package-data = true
     version = { attr = "sefkhet._version.__version__" }
 
 
-    # Dev tool config
-    ########################################################################
+# Dev tool config
+########################################################################
 
 [tool.bandit]
 targets = ["*.ipynb", "*.py"]
-skips = ["B101"]              # assert-used (pytest)
+skips = [
+    "B101", # assert_used (need assert for pytest)
+    "B105", # hardcoded_password_string
+    "B106", # hardcoded_password_funcarg
+]
 
 
 [tool.mypy]
@@ -368,25 +372,26 @@ extend-exclude = [
         "YTT",   # flake8-2020
     ]
     ignore = [
-        "ANN401",  # any-type
-        "COM812",  # missing-trailing-comma
-        "CPY",     # flake8-copyright: missing-copyright-notice
-        "D203",    # incorrect-blank-line-before-class
-        "D205",    # missing-blank-line-after-summary
-        "D212",    # multi-line-summary-first-line
-        "D215",    # overindented-section-underline
-        "D400",    # missing-trailing-period
-        "D401",    # non-imperative-mood
-        "D407",    # missing-dashed-underline-after-section
-        "D408",    # missing-section-underline-after-name
-        "D409",    # mismatched-section-underline-length
-        "D413",    # missing-blank-line-after-last-section
-        "N999",    # invalid-module-name
-        "PLC0415", # import-outside-top-level
-        "S311",    # suspicious-non-cryptographic-random-usage
-        "T201",    # print
-        "TD002",   # missing-todo-author
-        "TD003",   # missing-todo-link
+        # flake8-copyright: missing-copyright-notice
+        "CPY",
+        "any-type",                                  # ANN401
+        "import-outside-top-level",                  # PLC0415
+        "incorrect-blank-line-before-class",         # D203
+        "invalid-module-name",                       # N999
+        "mismatched-section-underline-length",       # D409
+        "missing-blank-line-after-last-section",     # D413
+        "missing-blank-line-after-summary",          # D205
+        "missing-dashed-underline-after-section",    # D407
+        "missing-section-underline-after-name",      # D408
+        "missing-todo-author",                       # TD002
+        "missing-todo-link",                         # TD003
+        "missing-trailing-comma",                    # COM812
+        "missing-trailing-period",                   # D400
+        "multi-line-summary-first-line",             # D212
+        "non-imperative-mood",                       # D401
+        "overindented-section-underline",            # D215
+        "print",                                     # T201
+        "suspicious-non-cryptographic-random-usage", # S311
     ]
     preview = true
 
@@ -397,21 +402,32 @@ extend-exclude = [
         split-on-trailing-comma = false
 
         [tool.ruff.lint.per-file-ignores]
-        "*.ipynb" = ["ERA001", "PLR2004", "T20"]
-        "tests/**" = [
-            "ARG001",
-            "ARG002",
-            "ARG004",
-            "ARG005",
-            "N803",
-            "PLC0415",
-            "PLC2701",
-            "PLR2004",
-            "S101",
-            "SLF001",
+        "*.ipynb" = [
+            "T20",
+            "commented-out-code",     # ERA001
+            "magic-value-comparison", # PLR2004
         ]
-        "scratch/**" = ["D", "ERA001", "F401", "INP001"]
-        "**/*_object_oriented.py" = ["N802"]
+        "tests/**" = [
+            "assert",                        # S101
+            "import-outside-top-level",      # PLC0415
+            "import-private-name",           # PLC2701
+            "invalid-argument-name",         # N803
+            "magic-value-comparison",        # PLR2004
+            "private-member-access",         # SLF001
+            "unused-function-argument",      # ARG001
+            "unused-lambda-argument",        # ARG005
+            "unused-method-argument",        #ARG002
+            "unused-static-method-argument", # ARG004
+        ]
+        "scratch/**" = [
+            "D",
+            "commented-out-code",         # ERA001
+            "implicit-namespace-package", # INP001
+            "unused-import",              # F401
+        ]
+        "**/*_object_oriented.py" = [
+            "invalid-function-name", #N802
+        ]
 
         [tool.ruff.lint.pycodestyle]
         max-line-length = 80

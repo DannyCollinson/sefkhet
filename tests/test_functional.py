@@ -208,8 +208,9 @@ class TestGetFormatter:
         simple_formatter: logging.Formatter,
     ) -> None:
         """
-        Passing an existing Formatter with copy=True returns a deepcopy.
-        """  # noqa: D200
+        Passing an existing Formatter
+        with copy=True returns a deepcopy.
+        """
         result = get_formatter(fmt=simple_formatter, copy=True)
         assert result is not simple_formatter
         assert isinstance(result, logging.Formatter)
@@ -236,8 +237,9 @@ class TestGetFormatter:
     @staticmethod
     def test_datefmt_style_validate_passed_through() -> None:
         """
-        Arguments datefmt and style are forwarded to logging.Formatter.
-        """  # noqa: D200
+        Arguments datefmt and style are
+        forwarded to logging.Formatter.
+        """
         result = get_formatter(
             fmt="%(message)s", datefmt="%Y", style="%", validate=False
         )
@@ -270,8 +272,9 @@ class TestGetFormatterFromSpec:
         simple_formatter: logging.Formatter,
     ) -> None:
         """
-        A Formatter instance spec returns the same object (copy=False).
-        """  # noqa: D200
+        A Formatter instance spec returns
+        the same object (copy=False).
+        """
         result = get_formatter_from_spec(simple_formatter)
         assert result is simple_formatter
 
@@ -318,8 +321,9 @@ class TestGetFilterFromSpec:
     @staticmethod
     def test_filter_instance_spec(simple_filter: logging.Filter) -> None:
         """
-        A Filter instance spec returns the same object (copy=False).
-        """  # noqa: D200
+        A Filter instance spec returns
+        the same object (copy=False).
+        """
         result = get_filter_from_spec(simple_filter)
         assert result is simple_filter
 
@@ -401,8 +405,9 @@ class TestMaybeCreateSpecialStringHandler:
         named_handler: tuple[logging.NullHandler, str],
     ) -> None:
         """
-        A handler's registered name with copy=True returns a deepcopy.
-        """  # noqa: D200
+        A handler's registered name
+        with copy=True returns a deepcopy.
+        """
         hdlr, name = named_handler
         result = _maybe_create_special_string_handler(core=name, copy=True)
         assert result is not hdlr
@@ -459,8 +464,9 @@ class TestMaybeCreateHandler:
         self, null_handler: logging.NullHandler
     ) -> None:
         """
-        Passing an existing Handler with copy=False returns same object.
-        """  # noqa: D200
+        Passing an existing Handler
+        with copy=False returns same object.
+        """
         result = self._call(null_handler, copy=False)
         assert result is null_handler
 
@@ -468,8 +474,9 @@ class TestMaybeCreateHandler:
         self, null_handler: logging.NullHandler
     ) -> None:
         """
-        Passing an existing Handler with copy=True returns a deepcopy.
-        """  # noqa: D200
+        Passing an existing Handler
+        with copy=True returns a deepcopy.
+        """
         result = self._call(null_handler, copy=True)
         assert result is not null_handler
         assert isinstance(result, logging.NullHandler)
@@ -677,8 +684,9 @@ class TestMaybeCreateHandler:
         self, string_io_stream: io.StringIO
     ) -> None:
         """
-        A TextIOBase instance creates a StreamHandler for that stream.
-        """  # noqa: D200
+        A TextIOBase instance creates
+        a StreamHandler for that stream.
+        """
         result = self._call(string_io_stream)
         assert isinstance(result, logging.StreamHandler)
         assert result.stream is string_io_stream  # pyright: ignore[reportUnknownMemberType]
@@ -715,8 +723,9 @@ class TestSetFormatterForHandler:
         null_handler: logging.NullHandler, simple_formatter: logging.Formatter
     ) -> None:
         """
-        An existing Formatter with copy=True is deepcopied onto handler.
-        """  # noqa: D200
+        An existing Formatter with copy=True
+        is deepcopied onto handler.
+        """
         set_formatter_for_handler(null_handler, fmt=simple_formatter, copy=True)
         assert null_handler.formatter is not None
         assert null_handler.formatter is not simple_formatter
@@ -762,8 +771,9 @@ class TestParseFiltersArg:
     @staticmethod
     def test_tuple_filter_copy_pair(simple_filter: logging.Filter) -> None:
         """
-        A (Filter, bool) tuple is wrapped in a single-element tuple.
-        """  # noqa: D200
+        A (Filter, bool) tuple is wrapped
+        in a single-element tuple.
+        """
         pair = (simple_filter, True)
         result = _parse_filters_arg(pair)
         assert result == (pair,)
@@ -781,8 +791,9 @@ class TestAddFiltersToTarget:
     @staticmethod
     def test_str_filter_on_logger() -> None:
         """
-        A string filter is added to a logger (string branch in loop).
-        """  # noqa: D200
+        A string filter is added to
+        a logger (string branch in loop).
+        """
         logger = logging.getLogger("test_aft_str")
         add_filters_to_target(logger, "myapp")
         assert len(logger.filters) == 1
@@ -812,8 +823,9 @@ class TestAddFiltersToTarget:
         null_handler: logging.NullHandler, simple_filter: logging.Filter
     ) -> None:
         """
-        A (filter, False) adds original (tuple branch, copy=False).
-        """  # noqa: D200
+        A (filter, False) adds original
+        (tuple branch, copy=False).
+        """
         add_filters_to_target(null_handler, (simple_filter, False))
         assert len(null_handler.filters) == 1
         assert null_handler.filters[0] is simple_filter
@@ -1102,8 +1114,9 @@ class TestSetFormatterForLogger:
     @staticmethod
     def test_sets_formatter_on_handler_without_formatter() -> None:
         """
-        Handler with no formatter gets formatter set (condition True).
-        """  # noqa: D200
+        Handler with no formatter gets
+        formatter set (condition True).
+        """
         logger = logging.getLogger("test_sfl_no_fmt")
         handler = logging.NullHandler()
         logger.addHandler(handler)
@@ -1151,8 +1164,9 @@ class TestSetFormatterForLogger:
     @staticmethod
     def test_no_handlers_no_error() -> None:
         """
-        Logger with no handlers runs without error (empty loop branch).
-        """  # noqa: D200
+        Logger with no handlers runs
+        without error (empty loop branch).
+        """
         logger = logging.getLogger("test_sfl_no_handlers")
         assert len(logger.handlers) == 0
         set_formatter_for_logger(logger, "%(message)s")
@@ -1308,8 +1322,9 @@ class TestGetLoggerFromSpec:
     @staticmethod
     def test_tuple_str_int_kwargs_len3() -> None:
         """
-        (str, int, dict) covers the len(spec)==3 branch for kwargs.
-        """  # noqa: D200
+        (str, int, dict) covers the
+        len(spec)==3 branch for kwargs.
+        """
         result = get_logger_from_spec(
             ("test_glfs_len3", logging.DEBUG, {"filters": ()})
         )
@@ -1348,14 +1363,16 @@ class TestGetLoggerFromSpec:
 
 class TestPublicApi:  # pylint: disable=too-few-public-methods
     """
-    Verify symbols are exported from the top-level `sefkhet` package.
-    """  # noqa: D200
+    Verify symbols are exported from
+    the top-level `sefkhet` package.
+    """
 
     @staticmethod
     def test_public_exports_accessible() -> None:
         """
-        All __all__ symbols are accessible on the sefkhet namespace.
-        """  # noqa: D200
+        All __all__ symbols are accessible
+        on the `sefkhet` namespace.
+        """
         for name in sefkhet.__all__:
             assert hasattr(sefkhet, name), f"Missing export: {name}"
 
@@ -1541,8 +1558,9 @@ class TestGetLoggerColor:
     @staticmethod
     def test_color_full_with_nodefault_formatter_creates_formatter() -> None:
         """
-        color='full' + formatter=_NoDefault auto-creates ColorFormatter.
-        """  # noqa: D200
+        color='full' + formatter=_NoDefault
+        auto-creates ColorFormatter.
+        """
         logger = get_logger(
             name="test_gl_color_full", handlers="null", color="full"
         )
@@ -1564,8 +1582,9 @@ class TestGetLoggerColor:
     @staticmethod
     def test_color_off_with_nodefault_formatter_no_formatter() -> None:
         """
-        color='off' + formatter=_NoDefault: handlers have no formatter.
-        """  # noqa: D200
+        color='off' + formatter=_NoDefault:
+        handlers have no formatter.
+        """
         logger = get_logger(
             name="test_gl_color_off", handlers="null", color="off"
         )
@@ -2156,7 +2175,7 @@ class TestMaybeCreateNetworkHandler:
         )
         assert isinstance(result, logging.handlers.SMTPHandler)
         assert result.username == "user"
-        assert result.password == "pass"  # noqa: S105
+        assert result.password == "pass"  # ruff: ignore[hardcoded-password-string]
 
     def test_smtp_handler_with_secure(self) -> None:
         """SMTPHandler passes secure tuple."""

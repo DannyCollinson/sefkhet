@@ -92,7 +92,7 @@ class TestParseCsvSpec:
         assert header is False
 
 
-class TestCsvFormatter:  # noqa: PLR0904
+class TestCsvFormatter:  # ruff: ignore[too-many-public-methods]
     """Tests for `CsvFormatter`."""
 
     @staticmethod
@@ -221,11 +221,11 @@ class TestCsvFormatter:  # noqa: PLR0904
 
     @staticmethod
     def test_exc_info_serialized() -> None:
-        """exc_info is serialized when present."""  # noqa: DOC501
+        """exc_info is serialized when present."""  # ruff: ignore[docstring-missing-exception]
         fmt = CsvFormatter(csv={"fields": ["message"]})
         try:
             msg = "boom"
-            raise ValueError(msg)  # noqa: TRY301
+            raise ValueError(msg)  # ruff: ignore[raise-within-try]
         except ValueError:
             import sys
 

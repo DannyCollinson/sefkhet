@@ -46,7 +46,7 @@ from sefkhet._version import __version__
 
 
 # Define public API
-__all__ = [  # noqa: RUF022
+__all__ = [  # ruff: ignore[unsorted-dunder-all]
     # Metadata
     "__version__",
     # Classes

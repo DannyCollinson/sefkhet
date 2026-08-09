@@ -218,11 +218,11 @@ class TestLogfmtFormatter:
 
     @staticmethod
     def test_exc_info_serialized() -> None:
-        """exc_info is serialized when present."""  # noqa: DOC501
+        """exc_info is serialized when present."""  # ruff: ignore[docstring-missing-exception]
         fmt = LogfmtFormatter(logfmt={"fields": ["message"]})
         try:
             msg = "boom"
-            raise ValueError(msg)  # noqa: TRY301
+            raise ValueError(msg)  # ruff: ignore[raise-within-try]
         except ValueError:
             import sys
 

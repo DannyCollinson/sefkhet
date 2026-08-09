@@ -159,13 +159,13 @@ def named_handler() -> Generator[tuple[logging.NullHandler, str]]:
     `WeakValueDictionary` used by `logging`.
 
     Yields:
-        Generator[tuple[logging.NullHandler, str]]: A
-            `(NullHandler, name)` pair
+        Generator[tuple[logging.NullHandler, str]]:
+            A `(NullHandler, name)` pair
     """
     name = "test_named_handler_fixture"
     hdlr = logging.NullHandler()
     hdlr.set_name(name)
-    yield hdlr, name  # noqa: PT022
+    yield hdlr, name  # ruff: ignore[pytest-useless-yield-fixture]
 
 
 @pytest.fixture
@@ -203,7 +203,7 @@ def protocol_filter() -> _SupportsFilter:
     """
 
     class _ProtocolOnlyFilter:  # pylint: disable=too-few-public-methods
-        def filter(  # noqa: PLR6301
+        def filter(  # ruff: ignore[no-self-use]
             self, record: logging.LogRecord, /
         ) -> bool | logging.LogRecord:
             return True  # pragma: no cover

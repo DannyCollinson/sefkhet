@@ -7,7 +7,6 @@ from unittest.mock import patch
 from sefkhet._color import (
     _ANSI_RESET,
     _LEVELNAME_WIDTH,
-    _MAGENTA,
     _PINK,
     ColorFormatter,
     _get_display_levelname,
@@ -141,7 +140,7 @@ class TestGetLevelColor:
         assert get_level_color(40) == get_level_color(49)
 
 
-class TestColorFormatter:  # noqa: PLR0904
+class TestColorFormatter:  # ruff: ignore[too-many-public-methods]
     """Tests for `ColorFormatter`."""
 
     @staticmethod
@@ -468,8 +467,9 @@ class TestGetDisplayLevelname:
     @staticmethod
     def test_registered_levels_padded_to_width() -> None:
         """
-        Registered level names are right-padded to _LEVELNAME_WIDTH.
-        """  # noqa: D200
+        Registered level names are
+        right-padded to _LEVELNAME_WIDTH.
+        """
         for name in ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"):
             result = _get_display_levelname(name)
             assert len(result) == _LEVELNAME_WIDTH
@@ -484,8 +484,9 @@ class TestGetDisplayLevelname:
     @staticmethod
     def test_unregistered_level_padded_to_width() -> None:
         """
-        Unregistered level names are also padded to _LEVELNAME_WIDTH.
-        """  # noqa: D200
+        Unregistered level names are
+        also padded to _LEVELNAME_WIDTH.
+        """
         result = _get_display_levelname("Level 5")
         assert len(result) == _LEVELNAME_WIDTH
         assert result.startswith("LEVEL_5")
@@ -517,8 +518,8 @@ class TestGetLevelColorEdgeCases:
 
     @staticmethod
     def test_very_large_level() -> None:
-        """Level 1_000_000 (>= 60) returns magenta."""
-        assert get_level_color(1_000_000) == _MAGENTA
+        """Level 1_000_000 (> 100) returns empty string."""
+        assert len(get_level_color(1_000_000)) == 0
 
     @staticmethod
     def test_negative_level() -> None:

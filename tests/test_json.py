@@ -90,7 +90,7 @@ class TestParseJsonSpec:
         assert sort_keys is False
 
 
-class TestJsonFormatter:  # noqa: PLR0904
+class TestJsonFormatter:  # ruff: ignore[too-many-public-methods]
     """Tests for `JsonFormatter`."""
 
     @staticmethod
@@ -206,11 +206,11 @@ class TestJsonFormatter:  # noqa: PLR0904
 
     @staticmethod
     def test_exc_info_serialized() -> None:
-        """exc_info is serialized when present."""  # noqa: DOC501
+        """exc_info is serialized when present."""  # ruff: ignore[docstring-missing-exception]
         fmt = JsonFormatter(json=True)
         try:
             msg = "boom"
-            raise ValueError(msg)  # noqa: TRY301
+            raise ValueError(msg)  # ruff: ignore[raise-within-try]
         except ValueError:
             import sys
 

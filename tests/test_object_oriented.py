@@ -19,16 +19,18 @@ class TestScribeInit:
     @staticmethod
     def test_auto_name_nodefault() -> None:
         """
-        _NoDefault name produces 'log0' when counter is reset to 0.
-        """  # noqa: D200
+        _NoDefault name produces 'log0'
+        when counter is reset to 0.
+        """
         scribe = Scribe()
         assert scribe.name == "log0"
 
     @staticmethod
     def test_auto_name_counter_increments() -> None:
         """
-        Each _NoDefault-named instance gets the next counter value.
-        """  # noqa: D200
+        Each _NoDefault-named instance
+        gets the next counter value.
+        """
         scribe0 = Scribe()
         scribe1 = Scribe()
         assert scribe0.name == "log0"
@@ -61,8 +63,9 @@ class TestScribeInit:
     @staticmethod
     def test_formatter_nodefault_is_none() -> None:
         """
-        formatter=_NoDefault (default) leaves self.formatter as None.
-        """  # noqa: D200
+        formatter=_NoDefault (default)
+        leaves self.formatter as None.
+        """
         scribe = Scribe(name="test_oo_fmt_none")
         assert scribe.formatter is None
 
@@ -93,8 +96,9 @@ class TestUpdateLoggerAttributesHook:
     @staticmethod
     def test_sync_after_add_handlers() -> None:
         """
-        Adding a handler syncs scribe.handlers to the internal logger.
-        """  # noqa: D200
+        Adding a handler syncs scribe.handlers
+        to the internal logger.
+        """
         scribe = Scribe(name="test_oo_hook_add_hdlr", handlers=())
         scribe.add_handlers("null")
         assert scribe.handlers is scribe.logger.handlers
@@ -102,7 +106,10 @@ class TestUpdateLoggerAttributesHook:
 
     @staticmethod
     def test_sync_after_set_level() -> None:
-        """Calling setLevel syncs scribe.level to the internal logger."""
+        """
+        Calling setLevel syncs scribe.level
+        to the internal logger.
+        """
         scribe = Scribe(name="test_oo_hook_set_level")
         scribe.setLevel(logging.ERROR)
         assert scribe.level == logging.ERROR
@@ -173,8 +180,9 @@ class TestScribeSetFormatter:
     @staticmethod
     def test_force_false_preserves_existing() -> None:
         """
-        force=False (default) does not replace a handler's formatter.
-        """  # noqa: D200
+        force=False (default) does not
+        replace a handler's formatter.
+        """
         scribe = Scribe(
             name="test_oo_sf_no_force",
             handlers=("null", _HandlerKwargs({"formatter": "%(message)s"})),
@@ -275,7 +283,7 @@ class TestScribeRecord:
         captured: list[logging.LogRecord] = []
 
         class _CaptureHandler(logging.Handler):
-            def emit(  # noqa: PLR6301
+            def emit(  # ruff: ignore[no-self-use]
                 self, record: logging.LogRecord
             ) -> None:
                 captured.append(record)
@@ -522,7 +530,9 @@ class TestScribeDelegateMethods:
         assert isinstance(record, logging.LogRecord)
 
     @staticmethod
-    def test_removeFilter(scribe: Scribe, simple_filter: logging.Filter) -> None:
+    def test_removeFilter(
+        scribe: Scribe, simple_filter: logging.Filter
+    ) -> None:
         """removeFilter() removes a filter and syncs scribe.filters."""
         scribe.addFilter(simple_filter)
         assert simple_filter in scribe.filters
@@ -534,7 +544,10 @@ class TestScribeDelegateMethods:
     def test_removeHandler(
         scribe: Scribe, null_handler: logging.NullHandler
     ) -> None:
-        """removeHandler() removes a handler and syncs scribe.handlers."""
+        """
+        removeHandler() removes a handler
+        and syncs scribe.handlers.
+        """
         scribe.addHandler(null_handler)
         assert null_handler in scribe.handlers
         scribe.removeHandler(null_handler)
@@ -621,7 +634,7 @@ class TestScribeConcurrency:
             try:
                 scribe = Scribe()
                 results.append(scribe.name)
-            except Exception as exc:  # noqa: BLE001 # pragma: no cover
+            except Exception as exc:  # ruff: ignore[blind-except] # pragma: no cover
                 errors.append(exc)
 
         threads = [threading.Thread(target=_create) for _ in range(20)]
@@ -716,7 +729,7 @@ class TestScribeExceptionExcInfo:
     def test_exception_captures_exc_info_by_default(
         string_io_stream: io.StringIO,
     ) -> None:
-        """exception() captures traceback by default."""  # noqa: DOC501
+        """exception() captures traceback by default."""  # ruff: ignore[docstring-missing-exception]
         scribe = Scribe(
             name="test_oo_exc_info_default",
             level=logging.DEBUG,
@@ -728,7 +741,7 @@ class TestScribeExceptionExcInfo:
         )
         msg = "boom"
         try:
-            raise ValueError(msg)  # noqa: TRY301
+            raise ValueError(msg)  # ruff: ignore[raise-within-try]
         except ValueError:
             scribe.exception("caught it")
         output = string_io_stream.getvalue()
@@ -741,7 +754,7 @@ class TestScribeExceptionExcInfo:
     def test_exception_exc_info_false_suppresses_traceback(
         string_io_stream: io.StringIO,
     ) -> None:
-        """exception(exc_info=False) suppresses traceback."""  # noqa: DOC501
+        """exception(exc_info=False) suppresses traceback."""  # ruff: ignore[docstring-missing-exception]
         scribe = Scribe(
             name="test_oo_exc_info_false",
             level=logging.DEBUG,
@@ -753,7 +766,7 @@ class TestScribeExceptionExcInfo:
         )
         msg = "boom"
         try:
-            raise ValueError(msg)  # noqa: TRY301
+            raise ValueError(msg)  # ruff: ignore[raise-within-try]
         except ValueError:
             scribe.exception("caught it", exc_info=False)
         output = string_io_stream.getvalue()

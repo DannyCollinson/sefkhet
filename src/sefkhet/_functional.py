@@ -9,7 +9,7 @@ from sefkhet._typing import _NoDefault
 if _TYPE_CHECKING:  # pragma: no cover
     import datetime
     import logging
-    import logging.handlers  # noqa: TC004
+    import logging.handlers  # ruff: ignore[runtime-import-in-type-checking-block]
     from collections.abc import Callable, Mapping, Sequence
     from typing import Any
 
@@ -29,6 +29,8 @@ if _TYPE_CHECKING:  # pragma: no cover
         _TextIOLike,
     )
 
+
+type _HandlerCoreType = _StrOrPathLike | _TextIOLike | logging.Handler
 
 _DEFAULT_FMT = "%(asctime)s | %(levelname)s | %(message)s"
 _DEFAULT_FMT_WITH_NAME = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
@@ -140,12 +142,12 @@ def _parse_log_level(level: str | int, *, quiet: bool = False) -> int:
             `logging.DEBUG`; otherwise, the `level` argument
             determines the log level. Defaults to `False`.
 
-    Raises:
-        ValueError: Raised if `level` is invalid
-
     Returns:
         int: The `int` representation of the log level specified by
             `level` and `quiet`
+
+    Raises:
+        ValueError: Raised if `level` is invalid
     """
     # Get valid log levels mapping
     valid_levels_map = get_log_level_map()
@@ -164,7 +166,7 @@ def _parse_log_level(level: str | int, *, quiet: bool = False) -> int:
     return level
 
 
-def get_formatter(  # noqa: PLR0913
+def get_formatter(  # ruff: ignore[too-many-arguments]
     fmt: ("str | logging.Formatter | None") = _DEFAULT_FMT,
     *,
     datefmt: str | None = None,
@@ -386,12 +388,12 @@ def get_filter_from_spec(spec: "_FilterSpec") -> "logging.Filter":
     Args:
         spec (_FilterSpec): Specification of filter
 
+    Returns:
+        logging.Filter: The specified filter
+
     Raises:
         TypeError: Raised if a specification doesn't specify a
             valid `logging.Filter`
-
-    Returns:
-        logging.Filter: The specified filter
     """
     # Handle case of single string
     if isinstance(spec, str):
@@ -407,7 +409,7 @@ def get_filter_from_spec(spec: "_FilterSpec") -> "logging.Filter":
         and len(
             spec  # pyright: ignore[reportUnknownArgumentType]
         )
-        == 2  # noqa: PLR2004
+        == 2  # ruff: ignore[magic-value-comparison]
         and isinstance(spec[0], _logging.Filter)
         and isinstance(spec[1], bool)
     ):
@@ -476,7 +478,7 @@ def _maybe_create_special_string_handler(
     return handler
 
 
-def _maybe_create_network_handler(  # noqa: PLR0913, C901
+def _maybe_create_network_handler(  # ruff: ignore[too-many-arguments,too-many-return-statements]
     handler_type: "_HandlerType",
     *,
     address: str | tuple[str, int],
@@ -581,8 +583,8 @@ def _maybe_create_network_handler(  # noqa: PLR0913, C901
             return None
 
 
-def _maybe_create_handler(  # noqa: PLR0913, C901
-    core: "_StrOrPathLike | _TextIOLike | logging.Handler | None",
+def _maybe_create_handler(  # ruff: ignore[complex-structure,too-many-arguments]
+    core: "_HandlerCoreType | None",
     *,
     handler_type: "_HandlerType",
     mode: str,
@@ -623,9 +625,7 @@ def _maybe_create_handler(  # noqa: PLR0913, C901
     about what makes a valid handler specification.
 
     Args:
-        core (_StrOrPathLike | _TextIOLike
-            | logging.Handler | None):
-            Specification of the handler.
+        core (_HandlerCoreType | None): Specification of the handler.
         handler_type (_HandlerType): Type of handler to create.
             Ignored if not creating a file or network handler.
         mode (str): File open mode. Ignored for
@@ -686,9 +686,8 @@ def _maybe_create_handler(  # noqa: PLR0913, C901
         smtp_credentials (tuple[str, str] | None):
             Username/password tuple for `SMTPHandler`.
             Defaults to `None`.
-        smtp_secure (tuple[()] | tuple[str]
-            | tuple[str, str] | None): TLS settings for
-            `SMTPHandler`. Defaults to `None`.
+        smtp_secure (tuple[()] | tuple[str] | tuple[str, str] | None):
+            TLS settings for `SMTPHandler`. Defaults to `None`.
         smtp_timeout (float): Timeout for `SMTPHandler`.
             Defaults to `5.0`.
         url (str): URL path for `HTTPHandler`. Defaults to `None`.
@@ -716,7 +715,7 @@ def _maybe_create_handler(  # noqa: PLR0913, C901
     from typing import TextIO
 
     # Create placeholder to track if handler is created
-    handler: _logging.Handler | None = None  # noqa: F823
+    handler: _logging.Handler | None = None  # ruff: ignore[undefined-local]
 
     # Handle case when a handler is provided
     if isinstance(core, _logging.Handler):
@@ -812,7 +811,7 @@ def _maybe_create_handler(  # noqa: PLR0913, C901
     return handler
 
 
-def set_formatter_for_handler(  # noqa: PLR0913
+def set_formatter_for_handler(  # ruff: ignore[too-many-arguments]
     handler: "logging.Handler",
     fmt: ("str | logging.Formatter | None") = _DEFAULT_FMT,
     *,
@@ -903,14 +902,14 @@ def _parse_filters_arg(
 
     if (
         isinstance(filters, tuple)
-        and len(filters) == 2  # noqa: PLR2004
+        and len(filters) == 2  # ruff: ignore[magic-value-comparison]
         and isinstance(filters[0], _logging.Filter)
         and isinstance(filters[1], bool)
     ):
-        return (filters,)  # type: ignore[return-value] # pyright: ignore[reportReturnType]
+        return (filters,)  # type: ignore[return-value]
 
     # If here, have a sequence of filters, so make sure it's a tuple
-    return tuple(filters)  # pyright: ignore[reportReturnType]
+    return tuple(filters)
 
 
 def add_filters_to_target(
@@ -1023,12 +1022,12 @@ def _wrap_handler_in_memory(
         flush_on_close (bool): Whether to flush buffered
             records when the handler is closed
 
-    Raises:
-        ValueError: If `capacity` is not positive
-
     Returns:
         logging.handlers.MemoryHandler: Memory handler that
             buffers records and flushes to `handler`
+
+    Raises:
+        ValueError: If `capacity` is not positive
     """
     import logging.handlers
 
@@ -1048,8 +1047,8 @@ def _wrap_handler_in_memory(
     )
 
 
-def get_handler(  # noqa: PLR0913
-    core: "_StrOrPathLike | _TextIOLike | logging.Handler | None" = None,
+def get_handler(  # ruff: ignore[too-many-arguments]
+    core: "_HandlerCoreType | None" = None,
     *,
     level: int | None = 20,
     name: str | None = None,
@@ -1147,11 +1146,11 @@ def get_handler(  # noqa: PLR0913
     `"null"`, and the name of any existing `logging.Handler`*
 
     Args:
-        core (_StrOrPathLike | _TextIOLike | logging.Handler | None, optional):
-            Specifies the core logger configuration, including type and
-            required arguments for that type, as applicable. The type of
-            handler created can be determined by the process defined
-            above. Defaults to `None`.
+        core (_HandlerCoreType | None, optional): Specifies the core
+            logger configuration, including type and required arguments
+            for that type, as applicable. The type of handler created
+            can be determined by the process defined above.
+            Defaults to `None`.
         name (str | None, optional): Name to assign to the created
             `logging.Handler`. If `None`, no name is assigned.
             Defaults to `None`.
@@ -1325,12 +1324,13 @@ def get_handler(  # noqa: PLR0913
             for `HTTPHandler`. Only used for `"http"`.
             Defaults to `None`.
 
+    Returns:
+        logging.Handler: The specified `logging.Handler`
+
     Raises:
         ValueError: Raised if `core` fails to specify a valid handler
 
-    Returns:
-        logging.Handler: The specified `logging.Handler`
-    """  # noqa: W505
+    """
     from sefkhet._typing import _NoDefaultType
 
     # Create the handler based on core
@@ -1427,10 +1427,7 @@ def get_handler_from_spec(spec: "_HandlerSpec") -> "logging.Handler":
     """
     # Create using keyword arguments if present, otherwise just core
     if isinstance(spec, tuple):
-        return get_handler(
-            core=spec[0],
-            **spec[1],  # pyright: ignore[reportArgumentType]
-        )
+        return get_handler(core=spec[0], **spec[1])
     return get_handler(core=spec)
 
 
@@ -1463,7 +1460,7 @@ def _parse_handlers_arg(
     # or just one with kwargs
     if (
         isinstance(handlers, tuple)
-        and len(handlers) == 2  # noqa: PLR2004
+        and len(handlers) == 2  # ruff: ignore[magic-value-comparison]
         and isinstance(handlers[1], dict)
     ):
         return (handlers,)  # pyright: ignore[reportReturnType]
@@ -1490,7 +1487,7 @@ def add_handlers_to_logger(
         logger.addHandler(hdlr=get_handler_from_spec(spec=handler))
 
 
-def set_formatter_for_logger(  # noqa: PLR0913
+def set_formatter_for_logger(  # ruff: ignore[too-many-arguments]
     logger: "logging.Logger",
     fmt: ("str | logging.Formatter | _NoDefaultType | None") = _NoDefault,
     *,
@@ -1568,7 +1565,7 @@ def set_formatter_for_logger(  # noqa: PLR0913
             handler.setFormatter(formatter)
 
 
-def get_logger(  # noqa: PLR0913
+def get_logger(  # ruff: ignore[too-many-arguments]
     name: str | None = "log",
     level: str | int = 20,
     *,
@@ -1738,7 +1735,7 @@ def get_logger_from_spec(spec: "_LoggerSpec") -> "logging.Logger":
     if isinstance(spec[1], int):
         level = spec[1]
         kwargs: _LoggerKwargs = (
-            spec[2] if len(spec) == 3 else {}  # noqa: PLR2004
+            spec[2] if len(spec) == 3 else {}  # ruff: ignore[magic-value-comparison]
         )
     else:
         kwargs = spec[1]

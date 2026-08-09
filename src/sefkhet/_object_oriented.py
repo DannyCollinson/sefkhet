@@ -35,7 +35,9 @@ P = _ParamSpec("P")
 R = _TypeVar("R")
 
 
-class Scribe(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
+class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
+    _logging.Logger
+):
     """
     The base logger class for `sefkhet`.
 
@@ -51,7 +53,7 @@ class Scribe(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
     _lock = threading.Lock()
     _counter = 0
 
-    def __init__(  # noqa: PLR0913
+    def __init__(  # ruff: ignore[too-many-arguments]
         self,
         name: "str | _NoDefaultType | None" = _NoDefault,
         level: str | int = 20,
@@ -255,7 +257,7 @@ class Scribe(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         add_handlers_to_logger(handlers=handlers, logger=self.logger)
 
     @_update_logger_attributes_hook
-    def set_formatter(  # noqa: PLR0913
+    def set_formatter(  # ruff: ignore[too-many-arguments]
         self,
         fmt: (
             "str | logging.Formatter | None"
@@ -348,7 +350,7 @@ class Scribe(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
 
     # Main logging methods
 
-    def log(  # noqa: PLR0913  # pylint: disable=arguments-differ
+    def log(  # ruff: ignore[too-many-arguments]  # pylint: disable=arguments-differ
         self,
         level: str | int,
         msg: object,
@@ -397,7 +399,7 @@ class Scribe(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             extra=extra,
         )
 
-    def record(  # noqa: PLR0913
+    def record(  # ruff: ignore[too-many-arguments]
         self,
         msg: object,
         *args: "Any",
@@ -457,7 +459,7 @@ class Scribe(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
             extra=extra,
         )
 
-    def rec(  # noqa: PLR0913
+    def rec(  # ruff: ignore[too-many-arguments]
         self,
         msg: object,
         *args: "Any",
@@ -759,7 +761,10 @@ class Scribe(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         self.logger.handle(record=record)
 
     @_update_logger_attributes_hook
-    def addFilter(self, filter: "_FilterType") -> None:  # noqa: A002
+    def addFilter(
+        self,
+        filter: "_FilterType",  # ruff: ignore[builtin-argument-shadowing]
+    ) -> None:
         """
         Adds the specified `logging.Filter` to the logger.
 
@@ -783,7 +788,10 @@ class Scribe(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         self.add_handlers(handlers=hdlr)
 
     @_update_logger_attributes_hook
-    def removeFilter(self, filter: "_FilterType") -> None:  # noqa: A002
+    def removeFilter(
+        self,
+        filter: "_FilterType",  # ruff: ignore[builtin-argument-shadowing]
+    ) -> None:
         """
         Removes the specified `logging.Filter` from the logger.
 
@@ -836,7 +844,7 @@ class Scribe(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
 
     def findCaller(
         self,
-        stack_info: bool = False,  # noqa: FBT001,FBT002
+        stack_info: bool = False,  # ruff: ignore[boolean-default-value-positional-argument,boolean-type-hint-positional-argument]
         stacklevel: int = 1,
     ) -> tuple[str, int, str, str | None]:
         """
@@ -935,7 +943,7 @@ class Scribe(_logging.Logger):  # noqa: PLR0904  # pylint: disable=R0902
         """
         return self.logger.isEnabledFor(level=level)
 
-    def makeRecord(  # noqa: PLR0913,PLR0917
+    def makeRecord(  # ruff: ignore[too-many-arguments,too-many-positional-arguments]
         self,
         name: str,
         level: int,

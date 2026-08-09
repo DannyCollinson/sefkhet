@@ -23,6 +23,19 @@ _ORANGE = "\033[38;5;214m"
 _RED = "\033[91m"
 _MAGENTA = "\033[35m"
 
+# Define thresholds for the color mappings (The first number
+# for which the number <= threshold is the color that is used)
+_COLOR_THRESHOLDS = {
+    0: _PINK,
+    9: _BLUE,
+    19: _GREEN,
+    29: _CYAN,
+    39: _YELLOW,
+    49: _ORANGE,
+    59: _RED,
+    100: _MAGENTA,
+}
+
 
 # Define width to pad level names to
 _LEVELNAME_WIDTH = 8
@@ -47,7 +60,7 @@ def _get_display_levelname(levelname: str) -> str:
     return levelname.ljust(_LEVELNAME_WIDTH)
 
 
-def get_level_color(level: int) -> str:  # noqa: PLR0911
+def get_level_color(level: int) -> str:
     """
     Returns the ANSI escape code string for the given integer log level.
 
@@ -60,7 +73,8 @@ def get_level_color(level: int) -> str:  # noqa: PLR0911
     - `30-39`: yellow
     - `40-49`: orange
     - `50-59`: red
-    - `>= 60`: magenta
+    - `60-100`: magenta
+    - `> 100`: none
 
     Args:
         level (int): Integer log level
@@ -68,21 +82,13 @@ def get_level_color(level: int) -> str:  # noqa: PLR0911
     Returns:
         str: ANSI escape code string for the given level
     """
-    if level <= 0:
-        return _PINK
-    if level <= 9:  # noqa: PLR2004
-        return _BLUE
-    if level <= 19:  # noqa: PLR2004
-        return _GREEN
-    if level <= 29:  # noqa: PLR2004
-        return _CYAN
-    if level <= 39:  # noqa: PLR2004
-        return _YELLOW
-    if level <= 49:  # noqa: PLR2004
-        return _ORANGE
-    if level <= 59:  # noqa: PLR2004
-        return _RED
-    return _MAGENTA
+    # The threshold dictionary is ordered from lowest to highest,
+    # so we iterate through until we find level <= threshold
+    for threshold, color in _COLOR_THRESHOLDS.items():
+        if level <= threshold:
+            return color
+    # If no threshold matched, return an empty string
+    return ""
 
 
 def _parse_color_spec(
@@ -145,13 +151,13 @@ class ColorFormatter(_logging.Formatter):
     - `"partial"`: everything except the message is colored
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(  # ruff: ignore[too-many-arguments]
         self,
         fmt: str | None = None,
         datefmt: str | None = None,
         style: "_FormatStyle" = "%",
-        validate: bool = True,  # noqa: FBT001,FBT002
         *,
+        validate: bool = True,
         defaults: "Mapping[str, Any] | None" = None,
         color: "_ColorSpec",
     ) -> None:

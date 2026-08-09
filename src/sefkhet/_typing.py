@@ -2,7 +2,6 @@
 
 import datetime
 import logging
-import logging.handlers
 import os
 from collections.abc import Callable, Mapping, Sequence
 from io import TextIOBase
@@ -234,7 +233,7 @@ class HandlerOpts(TypedDict, total=False):
 class StreamHandlerOpts(HandlerOpts, total=False):
     """Options for creating a `logging.StreamHandler`."""
 
-    core: StrOrPathLike | TextIOLike | logging.Handler | DefaultType
+    core: StrOrPathLike | TextIOLike | logging.Handler | DefaultType  # pyright: ignore[reportIncompatibleVariableOverride]
     handler_type: Literal["stream"]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
 
 
@@ -349,7 +348,6 @@ class SMTPHandlerOpts(HandlerOpts, total=False):
     """Kwargs for creating a `logging.handlers.SMTPHandler`."""
 
     handler_type: Required[Literal["smtp"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
-    logging.handlers.SMTPHandler()
 
 
 class HTTPHandlerOpts(HandlerOpts, total=False):

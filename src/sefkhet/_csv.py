@@ -62,13 +62,13 @@ class CsvFormatter(_logging.Formatter):
     serialised as strings when present.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(  # ruff: ignore[too-many-arguments]
         self,
         fmt: str | None = None,
         datefmt: str | None = None,
         style: "_FormatStyle" = "%",
-        validate: bool = True,  # noqa: FBT001,FBT002
         *,
+        validate: bool = True,
         defaults: "Mapping[str, Any] | None" = None,
         csv: "Literal[True] | _CsvSpec",
     ) -> None:
