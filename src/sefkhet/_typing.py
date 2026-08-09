@@ -348,30 +348,50 @@ class SMTPHandlerOpts(HandlerOpts, total=False):
     """Kwargs for creating a `logging.handlers.SMTPHandler`."""
 
     handler_type: Required[Literal["smtp"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+    mailhost: str | tuple[str, int]
+    fromaddr: str
+    toaddrs: str | list[str]
+    subject: str
+    credentials: tuple[str, str] | None
+    secure: tuple[()] | tuple[str] | tuple[str, str] | None
+    timeout: float
 
 
 class HTTPHandlerOpts(HandlerOpts, total=False):
     """Kwargs for creating a `logging.handlers.HTTPHandler`."""
 
     handler_type: Required[Literal["http"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+    host: str
+    url: str
+    method: Literal["GET", "POST"]
+    secure: bool
+    credentials: tuple[str, str] | None
+    context: SSLContext | None
 
 
 class SocketHandlerOpts(HandlerOpts, total=False):
     """Kwargs for creating a `logging.handlers.SocketHandler`."""
 
     handler_type: Required[Literal["socket"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+    host: str
+    port: int | None
 
 
 class DatagramHandlerOpts(HandlerOpts, total=False):
     """Kwargs for creating a `logging.handlers.DatagramHandler`."""
 
     handler_type: Required[Literal["datagram"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+    host: str
+    port: int | None
 
 
 class NTEventLogHandlerOpts(HandlerOpts, total=False):
     """Kwargs for creating a `logging.handlers.NTEventHandler`."""
 
     handler_type: Required[Literal["nt_event"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+    appname: str
+    dllname: str | None
+    logtype: str
 
 
 class A:
