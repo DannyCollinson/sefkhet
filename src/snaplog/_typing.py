@@ -22,16 +22,47 @@ from typing import (
 )
 
 
-# Define general helpers
+########################################################################
+# Default types
+########################################################################
 
 
-# Define type for arguments with no default
-# (stolen from typing typeshed)
-class NoDefaultType: ...  # pylint: disable=too-few-public-methods  # pragma: no branch
+class DefaultType:  # pylint: disable=too-few-public-methods
+    """
+    Sentinel to denote that an argument will set to a default
+    value within the function if another value is not specified.
+
+    Often used when the default setting is not representable using
+    normal default specifier syntax (e.g., the default comes from a
+    function call).
+    """
 
 
-# Define sentinel for having no default value
+class NoDefaultType:  # pylint: disable=too-few-public-methods
+    """
+    Sentinel to denote that an argument has no set default value.
+
+    Often used when an argument is ignored if not given,
+    the default value is inferred from the values of other arguments.
+    """
+
+
+class NotGivenType:
+    """
+    Sentinel to denote that a value was not given for an argument.
+
+    Used when `None` needs to be differentiated from "not given".
+    """
+
+
+# Create instances to use throughout the package
+Default = DefaultType()
 NoDefault = NoDefaultType()
+NotGiven = NotGivenType()
+
+########################################################################
+# Logging module-specific types
+########################################################################
 
 # Define types for info in logging calls
 type SysExcInfoType = (
@@ -40,64 +71,55 @@ type SysExcInfoType = (
 type ExcInfoType = bool | SysExcInfoType | BaseException | None
 type ArgsType = tuple[Any, ...] | Mapping[str, Any]
 
-# Define formatter spec
 
-# Define type alias for format string styles
-# (stolen from logging typeshed)
+########################################################################
+# Formatters
+########################################################################
+
+# Define valid format string styles (taken from logging typeshed)
 type FormatStyle = Literal["%", "{", "$"]
 
-# Define type alias for color mode
-type ColorMode = Literal["full", "partial", "level", "msg", "off"]
+# Formatter types
+########################################################################
 
-# Define type aliases for custom color maps and color spec
+# Color specifiers
+type ColorMode = Literal["full", "partial", "level", "msg", "off"]
 type ColorMap = Callable[[int], str] | Mapping[int, str]
 type ColorSpec = ColorMode | tuple[ColorMode, ColorMap]
 
 
-# Define typed dict for JSON formatter spec
 class JsonSpec(TypedDict, total=False):
+    """Specifiers for a `snaplog.JsonFormatter`."""
+
     fields: Sequence[str]
     indent: int | None
     ensure_ascii: bool
     sort_keys: bool
 
 
-# Define typed dict for CSV formatter spec
 class CsvSpec(TypedDict, total=False):
+    """Specifiers for a `snaplog.CsvFormatter`."""
+
     fields: Sequence[str]
     delimiter: str
     quoting: int
     header: bool
 
 
-# Define typed dict for logfmt formatter spec
 class LogfmtSpec(TypedDict, total=False):
+    """Specifiers for a `snaplog.LogfmtFormatter`."""
+
     fields: Sequence[str]
     sort_keys: bool
 
 
-# Define type alias for handler type discriminator
-type HandlerType = Literal[
-    "stream",
-    "file",
-    "watched_file",
-    "rotating_file",
-    "timed_rotating_file",
-    "queue_pair",
-    "queue_handler",
-    "queue_listener",
-    "memory",
-    "syslog",
-    "smtp",
-    "http",
-    "socket",
-    "datagram",
-    "nt_event",
-]
+# Formatter specification
+########################################################################
 
 
-# Define typed dict for specifying formatter keyword arguments
-class FormatterKwargs(TypedDict, total=False):
+class FormatterOpts(TypedDict, total=False):
+    """Options for creating a `logging.Formatter`."""
+
     fmt: str | None
     datefmt: str | None
     style: FormatStyle
@@ -110,21 +132,27 @@ class FormatterKwargs(TypedDict, total=False):
     logfmt: bool | LogfmtSpec
 
 
-# Define type alias for valid formatter specs
+# Define valid formatter specs
 type FormatterSpec = (
-    str  # Format string
+    str  # Just format string
     | logging.Formatter  # Pre-configured formatter
-    | FormatterKwargs  # Keyword arguments for logging.Formatter
-    | None  # Default formatter
+    | FormatterOpts  # Options to specify a formatter
+    | DefaultType  # Default formatter
 )
 
-# Define filter spec
+
+########################################################################
+# Filters
+########################################################################
+
+# Definitions for SupportsFilter, FilterLike and FilterType
+# were taken from the logging typeshed
 
 
-# Define type alias for filter-like (stolen from logging typeshed)
+# In 3.12+, a filter can be any object that supports the filter protocol
+# The filter attribute/method must exist and have the correct signature
 @runtime_checkable
 class SupportsFilter(Protocol):  # pylint: disable=too-few-public-methods
-    # The filter attribute must exist and have the correct signature
     def filter(
         self, record: logging.LogRecord, /
     ) -> bool | logging.LogRecord: ...
@@ -140,7 +168,7 @@ type FilterLike = (
 # or be a callable that matches the filter type signature
 type FilterType = logging.Filter | FilterLike
 
-# Define type alias for valid filter specs
+# Define valid filter specs
 # (name of filter or object supporting filter)
 type FilterSpec = (
     str  # Filter creation argument
@@ -149,25 +177,88 @@ type FilterSpec = (
     | FilterLike  # Non-logging.Filter objects that can be used as filters
 )
 
-# Define handler spec
+
+########################################################################
+# Handlers
+########################################################################
 
 
-# Define typed dict for specifying handler
-class FileHandlerKwargs(TypedDict, total=False):
+# Define alias for str/pathlike arguments
+type StrOrPathLike = str | os.PathLike[str] | os.PathLike[bytes]
+
+# Define alias for TextIO-like arguments
+type TextIOLike = TextIO | TextIOBase
+
+
+# Define valid names for handler types
+type HandlerType = Literal[
+    "stream",
+    "file",
+    "watched_file",
+    "rotating_file",
+    "timed_file",
+    "queue_pair",
+    "queue_handler",
+    "queue_listener",
+    "memory",
+    "syslog",
+    "smtp",
+    "http",
+    "socket",
+    "datagram",
+    "nt_eventlog",
+    "null",
+]
+
+
+class HandlerOpts(TypedDict, total=False):
+    """Base options for creating a `logging.Handler`."""
+
+    core: StrOrPathLike | TextIOLike | logging.Handler | DefaultType | None
+    # Special keywords
+    formatter: FormatterSpec | DefaultType
+    filters: FilterSpec | Sequence[FilterSpec]
+    # Other configurations
+    level: int | None
+    name: str | None
+    copy: bool
+    queued: bool
+    buffered: bool
+    handler_type: HandlerType
+
+
+# Basic handlers
+########################################################################
+
+
+class StreamHandlerOpts(HandlerOpts, total=False):
+    """Options for creating a `logging.StreamHandler`."""
+
+    core: StrOrPathLike | TextIOLike | logging.Handler | DefaultType
+    handler_type: Literal["stream"]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+
+
+class FileHandlerOpts(HandlerOpts, total=False):
+    """Options for creating a `logging.FileHandler`."""
+
+    handler_type: Literal["file"]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
     mode: str
     encoding: str | None
     delay: bool
     errors: str | None
 
 
-# Define type alias for str/pathlike arguments
-type StrOrPathLike = str | os.PathLike[str] | os.PathLike[bytes]
+class NullHandlerOpts(HandlerOpts, total=False):
+    """Options for creating a `logging.NullHandler`."""
 
-# Define type alias for TextIO-like arguments
-type TextIOLike = TextIO | TextIOBase
+    handler_type: Required[Literal["null"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
 
-# Define allowed queue-like objects
-# (stolen from logging.handlers typeshed)
+
+# Wrapper handlers
+########################################################################
+
+# Define allowed queue-like objects for queue handlers/listeners
+# (taken from logging.handlers typeshed)
 T = TypeVar("T")
 
 
@@ -177,43 +268,115 @@ class QueueLike(Protocol[T]):
     def put_nowait(self, item: T, /) -> None: ...
 
 
-logging.handlers.QueueHandler()
-logging.handlers.QueueListener()
-logging.handlers.MemoryHandler()
+class QueuePairOpts(HandlerOpts, total=False):
+    """
+    Options for creating a `logging.handlers.QueueHandler`/
+    `logging.handlers.QueueListener` pair.
+    """
 
-
-# Define typed dict for specifying handler config using keyword args
-class HandlerKwargs(TypedDict, total=False):
-    # Special keywords
-    formatter: FormatterSpec | NoDefaultType
-    filters: FilterSpec | Sequence[FilterSpec]
-    # Other configurations
-    level: int | None
-    name: str | None
-    copy: bool
-    queued: bool
-    buffered: bool
-    handler_type: HandlerType
-    # Ignored unless creating queue handler/listener or wrapping in pair
-    queue: QueueLike[Any] | NoDefaultType
-    # Ignored unless creating queue handler
-    handler_queue: QueueLike[Any] | NoDefaultType
-    # Ignored unless creating queue listener or wrapping in pair
-    listener_queue: QueueLike[Any] | NoDefaultType
-    listener_handlers: (
-        logging.Handler | Sequence[logging.Handler] | NoDefaultType
-    )
+    handler_type: Required[Literal["queue_pair"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+    queue: QueueLike[Any] | DefaultType
     respect_handler_level: bool
-    # Ignored unless creating/wrapping with memory handler
+
+
+class QueueHandlerOpts(HandlerOpts, total=False):
+    """Options for creating a `logging.handlers.QueueHandler`."""
+
+    handler_type: Required[Literal["queue_handler"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+    queue: QueueLike[Any] | DefaultType
+
+
+class QueueListenerKwargs(HandlerOpts, total=False):
+    """Options for creating a `logging.handlers.QueueListener`."""
+
+    handler_type: Required[Literal["queue_listener"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+    queue: QueueLike[Any] | NoDefaultType
+    listener_handlers: logging.Handler | Sequence[logging.Handler]
+
+
+class MemoryHandlerOpts(HandlerOpts, total=False):
+    """Options for creating a `logging.handlers.MemoryHandler`."""
+
+    handler_type: Required[Literal["memory"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
     capacity: int
     flush_level: int | str
-    target: logging.Handler | NoDefaultType | None
+    target: logging.Handler | None
     flush_on_close: bool
-    # Ignored unless creating file handler
-    mode: str
-    encoding: str | None
-    delay: bool
-    errors: str | None
+
+
+# File handlers
+########################################################################
+
+
+class WatchedFileHandlerOpts(FileHandlerOpts, total=False):
+    """Options for creating a `logging.WatchedFileHandler`."""
+
+    handler_type: Required[Literal["watched"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+
+
+class RotatingFileHandlerOpts(FileHandlerOpts, total=False):
+    """Options for creating a `logging.handlers.RotatingFileHandler`."""
+
+    handler_type: Required[Literal["rotating_file"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+    max_bytes: int
+    backup_count: int
+
+
+class TimedRotatingFileHandlerOpts(FileHandlerOpts, total=False):
+    """Kwargs for creating a `TimedRotatingFileHandler`."""
+
+    handler_type: Required[Literal["timed_file"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+    when: str
+    interval: int
+    backup_count: int
+    utc: bool
+    at_time: datetime.time | None
+    namer: Callable[[str], str] | None
+    rotator: Callable[[str, str], None] | None
+
+
+class SysLogHandlerOpts(HandlerOpts, total=False):
+    """Kwargs for creating a `logging.handlers.SysLogHandler`."""
+
+    handler_type: Required[Literal["syslog"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+    address: str | tuple[str, int]
+    facility: str | int
+    socktype: SocketKind | None
+    timeout: float | None
+
+
+class SMTPHandlerOpts(HandlerOpts, total=False):
+    """Kwargs for creating a `logging.handlers.SMTPHandler`."""
+
+    handler_type: Required[Literal["smtp"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+    logging.handlers.SMTPHandler()
+
+
+class HTTPHandlerOpts(HandlerOpts, total=False):
+    """Kwargs for creating a `logging.handlers.HTTPHandler`."""
+
+    handler_type: Required[Literal["http"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+
+
+class SocketHandlerOpts(HandlerOpts, total=False):
+    """Kwargs for creating a `logging.handlers.SocketHandler`."""
+
+    handler_type: Required[Literal["socket"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+
+
+class DatagramHandlerOpts(HandlerOpts, total=False):
+    """Kwargs for creating a `logging.handlers.DatagramHandler`."""
+
+    handler_type: Required[Literal["datagram"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+
+
+class NTEventLogHandlerOpts(HandlerOpts, total=False):
+    """Kwargs for creating a `logging.handlers.NTEventHandler`."""
+
+    handler_type: Required[Literal["nt_event"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+
+
+class A:
     # Ignored unless creating syslog handler
     address: str | tuple[str, int]
     facility: int | str
@@ -239,95 +402,24 @@ class HandlerKwargs(TypedDict, total=False):
     port: int | None
 
 
-class QueueHandlerKwargs(HandlerKwargs, total=False):
-    """Kwargs for creating a `logging.handlers.MemoryHandler`."""
-
-    handler_type: Required[Literal["queue_pair", "queue_handler"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
-    queue: QueueLike[Any]
-
-
-class MemoryHandlerKwargs(HandlerKwargs, total=False):
-    """Kwargs for creating a `logging.handlers.MemoryHandler`."""
-
-    handler_type: Required[Literal["memory"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
-    capacity: Required[int]  # type: ignore[misc] # pyright: ignore[reportGeneralTypeIssues]
-
-
-class RotatingFileHandlerKwargs(HandlerKwargs, total=False):
-    """Kwargs for creating a `logging.handlers.RotatingFileHandler`."""
-
-    handler_type: Required[Literal["rotating_file"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
-    max_bytes: int
-    backup_count: int
-
-
-class TimedRotatingFileHandlerKwargs(HandlerKwargs, total=False):
-    """Kwargs for creating a `TimedRotatingFileHandler`."""
-
-    handler_type: Required[Literal["timed_rotating_file"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
-    when: str
-    interval: int
-    backup_count: int
-    utc: bool
-    at_time: datetime.time | None
-    namer: Callable[[str], str] | None
-    rotator: Callable[[str, str], None] | None
-
-
-class SysLogHandlerKwargs(HandlerKwargs, total=False):
-    """Kwargs for creating a `logging.handlers.SysLogHandler`."""
-
-    handler_type: Required[Literal["syslog"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
-
-
-class SMTPHandlerKwargs(HandlerKwargs, total=False):
-    """Kwargs for creating a `logging.handlers.SMTPHandler`."""
-
-    handler_type: Required[Literal["smtp"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
-
-
-class HTTPHandlerKwargs(HandlerKwargs, total=False):
-    """Kwargs for creating a `logging.handlers.HTTPHandler`."""
-
-    handler_type: Required[Literal["http"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
-
-
-class SocketHandlerKwargs(HandlerKwargs, total=False):
-    """Kwargs for creating a `logging.handlers.SocketHandler`."""
-
-    handler_type: Required[Literal["socket"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
-
-
-class DatagramHandlerKwargs(HandlerKwargs, total=False):
-    """Kwargs for creating a `logging.handlers.DatagramHandler`."""
-
-    handler_type: Required[Literal["datagram"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
-
-
-class NTEventLogHandlerKwargs(HandlerKwargs, total=False):
-    """Kwargs for creating a `logging.handlers.NTEventHandler`."""
-
-    handler_type: Required[Literal["nt_event"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
-
-
-# Define type alias for valid handler specs
+# Define valid handler specs
 type HandlerSpec = (
     StrOrPathLike  # File path, special string, or existing handler name
     | TextIOLike  # Stream for stream handler
     | logging.Handler  # Pre-configured handler
     # Handler specifier plus additional configurations
-    | tuple[StrOrPathLike | TextIOLike | logging.Handler, HandlerKwargs]
-    | tuple[StrOrPathLike, RotatingFileHandlerKwargs]
-    | tuple[StrOrPathLike, TimedRotatingFileHandlerKwargs]
+    | tuple[StrOrPathLike | TextIOLike | logging.Handler, HandlerOpts]
+    | tuple[StrOrPathLike, RotatingFileHandlerOpts]
+    | tuple[StrOrPathLike, TimedRotatingFileHandlerOpts]
     | tuple[
-        StrOrPathLike | TextIOLike | logging.Handler | None, MemoryHandlerKwargs
+        StrOrPathLike | TextIOLike | logging.Handler | None, MemoryHandlerOpts
     ]
-    | tuple[None, SysLogHandlerKwargs]
-    | tuple[None, SMTPHandlerKwargs]
-    | tuple[None, HTTPHandlerKwargs]
-    | tuple[None, SocketHandlerKwargs]
-    | tuple[None, DatagramHandlerKwargs]
-    | tuple[None, NTEventLogHandlerKwargs]
+    | tuple[None, SysLogHandlerOpts]
+    | tuple[None, SMTPHandlerOpts]
+    | tuple[None, HTTPHandlerOpts]
+    | tuple[None, SocketHandlerOpts]
+    | tuple[None, DatagramHandlerOpts]
+    | tuple[None, NTEventLogHandlerOpts]
     | None  # Default stderr handler
 )
 
@@ -349,7 +441,7 @@ class LoggerKwargs(TypedDict, total=False):
     logfmt: bool | LogfmtSpec
 
 
-# Define type alias for valid logger specs
+# Define valid logger specs
 type LoggerSpec = (
     str  # Name only
     | int  # Level only

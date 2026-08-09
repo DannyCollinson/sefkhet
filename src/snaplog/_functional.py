@@ -1051,8 +1051,8 @@ def _wrap_handler_in_memory(
 def get_handler(  # noqa: PLR0913
     core: "_StrOrPathLike | _TextIOLike | logging.Handler | None" = None,
     *,
-    name: str | None = None,
     level: int | None = 20,
+    name: str | None = None,
     formatter: "_FormatterSpec | _NoDefaultType" = _NoDefault,
     filters: "_FilterSpec | Sequence[_FilterSpec]" = (),
     handler_type: "_HandlerType" = "file",
