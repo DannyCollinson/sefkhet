@@ -10,16 +10,16 @@ import pytest
 
 from sefkhet._color import ColorFormatter
 from sefkhet._object_oriented import Scribe
-from sefkhet._typing import _HandlerKwargs
+from sefkhet._typing import HandlerOpts
 
 
 class TestScribeInit:
     """Tests for `Scribe.__init__`."""
 
     @staticmethod
-    def test_auto_name_nodefault() -> None:
+    def test_auto_nameNoDefault() -> None:
         """
-        _NoDefault name produces 'log0'
+        NoDefault name produces 'log0'
         when counter is reset to 0.
         """
         scribe = Scribe()
@@ -28,7 +28,7 @@ class TestScribeInit:
     @staticmethod
     def test_auto_name_counter_increments() -> None:
         """
-        Each _NoDefault-named instance
+        Each NoDefault-named instance
         gets the next counter value.
         """
         scribe0 = Scribe()
@@ -61,9 +61,9 @@ class TestScribeInit:
         assert len(scribe.handlers) >= 1
 
     @staticmethod
-    def test_formatter_nodefault_is_none() -> None:
+    def test_formatterNoDefault_is_none() -> None:
         """
-        formatter=_NoDefault (default)
+        formatter=NoDefault (default)
         leaves self.formatter as None.
         """
         scribe = Scribe(name="test_oo_fmt_none")
@@ -171,7 +171,7 @@ class TestScribeSetFormatter:
         """force=True replaces a handler's existing formatter."""
         scribe = Scribe(
             name="test_oo_sf_force",
-            handlers=("null", _HandlerKwargs({"formatter": "%(message)s"})),
+            handlers=("null", HandlerOpts({"formatter": "%(message)s"})),
         )
         original_fmt = scribe.handlers[-1].formatter
         scribe.set_formatter("%(levelname)s %(message)s", force=True)
@@ -185,7 +185,7 @@ class TestScribeSetFormatter:
         """
         scribe = Scribe(
             name="test_oo_sf_no_force",
-            handlers=("null", _HandlerKwargs({"formatter": "%(message)s"})),
+            handlers=("null", HandlerOpts({"formatter": "%(message)s"})),
         )
         original_fmt = scribe.handlers[-1].formatter
         scribe.set_formatter("%(levelname)s %(message)s", force=False)
@@ -221,7 +221,7 @@ class TestScribeLog:
             level=logging.DEBUG,
             handlers=(
                 logging.StreamHandler(string_io_stream),
-                _HandlerKwargs({"level": logging.DEBUG}),
+                HandlerOpts({"level": logging.DEBUG}),
             ),
             formatter="%(message)s",
         )
@@ -236,7 +236,7 @@ class TestScribeLog:
             level=logging.DEBUG,
             handlers=(
                 logging.StreamHandler(string_io_stream),
-                _HandlerKwargs({"level": logging.DEBUG}),
+                HandlerOpts({"level": logging.DEBUG}),
             ),
             formatter="%(message)s",
         )
@@ -255,7 +255,7 @@ class TestScribeRecord:
             level=logging.DEBUG,
             handlers=(
                 logging.StreamHandler(string_io_stream),
-                _HandlerKwargs({"level": logging.DEBUG}),
+                HandlerOpts({"level": logging.DEBUG}),
             ),
             formatter="%(message)s",
         )
@@ -270,7 +270,7 @@ class TestScribeRecord:
             level=logging.DEBUG,
             handlers=(
                 logging.StreamHandler(string_io_stream),
-                _HandlerKwargs({"level": logging.DEBUG}),
+                HandlerOpts({"level": logging.DEBUG}),
             ),
             formatter="%(message)s",
         )
@@ -292,7 +292,7 @@ class TestScribeRecord:
         scribe = Scribe(
             name="test_oo_rec_quiet",
             level=logging.DEBUG,
-            handlers=(handler, _HandlerKwargs({"level": logging.DEBUG})),
+            handlers=(handler, HandlerOpts({"level": logging.DEBUG})),
             formatter="%(message)s",
         )
         scribe.record("quiet msg", level="critical", quiet=True)
@@ -311,7 +311,7 @@ class TestScribeRec:  # pylint: disable=too-few-public-methods
             level=logging.DEBUG,
             handlers=(
                 logging.StreamHandler(string_io_stream),
-                _HandlerKwargs({"level": logging.DEBUG}),
+                HandlerOpts({"level": logging.DEBUG}),
             ),
             formatter="%(message)s",
         )
@@ -339,7 +339,7 @@ class TestScribeLoggingMethods:
             # Pass tuple spec so get_handler sets level=DEBUG on handler
             handlers=(
                 logging.StreamHandler(string_io_stream),
-                _HandlerKwargs({"level": logging.DEBUG}),
+                HandlerOpts({"level": logging.DEBUG}),
             ),
             formatter="%(message)s",
         )
@@ -658,7 +658,7 @@ class TestScribeMixedHandlers:
             name="test_oo_mixed_hdlr",
             handlers=[
                 "null",
-                ("stderr", _HandlerKwargs({"level": logging.ERROR})),
+                ("stderr", HandlerOpts({"level": logging.ERROR})),
             ],
         )
         assert len(scribe.handlers) == 2
@@ -735,7 +735,7 @@ class TestScribeExceptionExcInfo:
             level=logging.DEBUG,
             handlers=(
                 logging.StreamHandler(string_io_stream),
-                _HandlerKwargs({"level": logging.DEBUG}),
+                HandlerOpts({"level": logging.DEBUG}),
             ),
             formatter="%(message)s",
         )
@@ -760,7 +760,7 @@ class TestScribeExceptionExcInfo:
             level=logging.DEBUG,
             handlers=(
                 logging.StreamHandler(string_io_stream),
-                _HandlerKwargs({"level": logging.DEBUG}),
+                HandlerOpts({"level": logging.DEBUG}),
             ),
             formatter="%(message)s",
         )
@@ -787,7 +787,7 @@ class TestScribeLogEdgeCases:
             level=logging.DEBUG,
             handlers=(
                 logging.StreamHandler(string_io_stream),
-                _HandlerKwargs({"level": logging.DEBUG}),
+                HandlerOpts({"level": logging.DEBUG}),
             ),
             formatter="%(message)s",
         )
@@ -804,7 +804,7 @@ class TestScribeLogEdgeCases:
             level=logging.DEBUG,
             handlers=(
                 logging.StreamHandler(string_io_stream),
-                _HandlerKwargs({"level": logging.DEBUG}),
+                HandlerOpts({"level": logging.DEBUG}),
             ),
             formatter="%(user)s: %(message)s",
         )
@@ -819,7 +819,7 @@ class TestScribeLogEdgeCases:
             level=logging.DEBUG,
             handlers=(
                 logging.StreamHandler(string_io_stream),
-                _HandlerKwargs({"level": logging.DEBUG}),
+                HandlerOpts({"level": logging.DEBUG}),
             ),
             formatter="%(message)s",
         )
@@ -839,7 +839,7 @@ class TestScribeIntegration:  # pylint: disable=too-few-public-methods
             level=logging.DEBUG,
             handlers=(
                 log_file,
-                _HandlerKwargs(
+                HandlerOpts(
                     {
                         "queued": True,
                         "level": logging.DEBUG,

@@ -1,4 +1,4 @@
-"""Configuration file for the `Sphinx` documentation builder."""  # noqa: INP001
+"""Configuration file for the `Sphinx` documentation builder."""  # ruff: ignore[implicit-namespace-package]
 
 # For the full list of built-in configuration values, see documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
@@ -16,7 +16,7 @@ from sefkhet import __version__  # pylint: disable=wrong-import-position
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "sefkhet"
-copyright = (  # pylint: disable=redefined-builtin # noqa: A001
+copyright = (  # pylint: disable=redefined-builtin # ruff: ignore[builtin-variable-shadowing]
     "2026, Danny Collinson"
 )
 author = "Danny Collinson"

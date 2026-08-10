@@ -9,7 +9,7 @@ if _TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Mapping
     from typing import Any, Literal
 
-    from sefkhet._typing import _FormatStyle, _JsonSpec
+    from sefkhet._typing import FormatStyle, JsonSpec
 
 
 # Define fields to include for a default JSON formatter
@@ -23,15 +23,15 @@ _DEFAULT_JSON_FIELDS: tuple[str, ...] = (
 
 
 def _parse_json_spec(
-    spec: "Literal[True] | _JsonSpec",
+    spec: "Literal[True] | JsonSpec",
 ) -> "tuple[tuple[str, ...], int | None, bool, bool]":
     """
     Returns the result of parsing a JSON spec
     into resolved configuration values.
 
     Args:
-        spec (Literal[True] | _JsonSpec): Either `True` for defaults or
-            a `_JsonSpec` dict with optional keys `fields`, `indent`,
+        spec (Literal[True] | JsonSpec): Either `True` for defaults or
+            a `JsonSpec` dict with optional keys `fields`, `indent`,
             `ensure_ascii`, and `sort_keys`.
 
     Returns:
@@ -64,11 +64,11 @@ class JsonFormatter(_logging.Formatter):
         self,
         fmt: str | None = None,
         datefmt: str | None = None,
-        style: "_FormatStyle" = "%",
+        style: "FormatStyle" = "%",
         *,
         validate: bool = True,
         defaults: "Mapping[str, Any] | None" = None,
-        json: "Literal[True] | _JsonSpec",
+        json: "Literal[True] | JsonSpec",
     ) -> None:
         """
         A `logging.Formatter` subclass that outputs log records
@@ -85,15 +85,15 @@ class JsonFormatter(_logging.Formatter):
                 compatibility). Defaults to `None`.
             datefmt (str | None, optional): Date format string
                 used by `formatTime`. Defaults to `None`.
-            style (_FormatStyle, optional): Format style.
+            style (FormatStyle, optional): Format style.
                 Defaults to `"%"`.
             validate (bool, optional): If `True`, validates the
                 format string. Defaults to `True`.
             defaults (Mapping[str, Any] | None, optional): Default
                 values for string interpolation.
                 Defaults to `None`.
-            json (Literal[True] | _JsonSpec): JSON configuration. `True`
-                for defaults, or a `_JsonSpec` dict with optional
+            json (Literal[True] | JsonSpec): JSON configuration. `True`
+                for defaults, or a `JsonSpec` dict with optional
                 keys `fields`, `indent`, `ensure_ascii`, and
                 `sort_keys`.
         """

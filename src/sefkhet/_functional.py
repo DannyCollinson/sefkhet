@@ -3,7 +3,7 @@
 import logging as _logging
 from typing import TYPE_CHECKING as _TYPE_CHECKING
 
-from sefkhet._typing import _NoDefault
+from sefkhet._typing import DefaultType, NoDefault
 
 
 if _TYPE_CHECKING:  # pragma: no cover
@@ -11,26 +11,27 @@ if _TYPE_CHECKING:  # pragma: no cover
     import logging
     import logging.handlers  # ruff: ignore[runtime-import-in-type-checking-block]
     from collections.abc import Callable, Mapping, Sequence
+    from socket import SocketKind
     from typing import Any
 
     from sefkhet._typing import (
-        _ColorSpec,
-        _CsvSpec,
-        _FilterSpec,
-        _FormatStyle,
-        _FormatterSpec,
-        _HandlerSpec,
-        _HandlerType,
-        _JsonSpec,
-        _LogfmtSpec,
-        _LoggerSpec,
-        _NoDefaultType,
-        _StrOrPathLike,
-        _TextIOLike,
+        ColorSpec,
+        CsvSpec,
+        FilterSpec,
+        FormatStyle,
+        FormatterSpec,
+        HandlerSpec,
+        HandlerType,
+        JsonSpec,
+        LogfmtSpec,
+        LoggerSpec,
+        NoDefaultType,
+        StrOrPathLike,
+        TextIOLike,
     )
 
 
-type _HandlerCoreType = _StrOrPathLike | _TextIOLike | logging.Handler
+type _HandlerCoreType = StrOrPathLike | TextIOLike | logging.Handler
 
 _DEFAULT_FMT = "%(asctime)s | %(levelname)s | %(message)s"
 _DEFAULT_FMT_WITH_NAME = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
@@ -167,17 +168,17 @@ def _parse_log_level(level: str | int, *, quiet: bool = False) -> int:
 
 
 def get_formatter(  # ruff: ignore[too-many-arguments]
-    fmt: ("str | logging.Formatter | None") = _DEFAULT_FMT,
+    fmt: "str | logging.Formatter | None" = _DEFAULT_FMT,
     *,
     datefmt: str | None = None,
-    style: "_FormatStyle" = "%",
+    style: "FormatStyle" = "%",
     validate: bool = True,
     defaults: "Mapping[str, Any] | None" = None,
     copy: bool = False,
-    color: "_ColorSpec" = "level",
-    json: "bool | _JsonSpec" = False,
-    csv: "bool | _CsvSpec" = False,
-    logfmt: "bool | _LogfmtSpec" = False,
+    color: "ColorSpec" = "level",
+    json: "bool | JsonSpec" = False,
+    csv: "bool | CsvSpec" = False,
+    logfmt: "bool | LogfmtSpec" = False,
 ) -> "logging.Formatter":
     """
     Returns a `logging.Formatter` configured
@@ -203,7 +204,7 @@ def get_formatter(  # ruff: ignore[too-many-arguments]
         datefmt (str | None, optional): Date format string to pass
             to `logging.Formatter` constructor. Ignored if `fmt`
             is a `logging.Formatter`. Defaults to `None`.
-        style (_FormatStyle, optional): Style format used by the
+        style (FormatStyle, optional): Style format used by the
             format string. Ignored if `fmt` is a
             `logging.Formatter`. Defaults to `"%"`.
         validate (bool, optional): If `True`, the configuration is
@@ -217,23 +218,23 @@ def get_formatter(  # ruff: ignore[too-many-arguments]
             the original instance of `fmt`; otherwise, returns the
             original instance. Ignored if `fmt` is not a
             `logging.Formatter`. Defaults to `False`.
-        color (_ColorSpec, optional): Color mode for the
-            formatter. Either a bare `_ColorMode` string or a
-            tuple of `(_ColorMode, colormap)` for per-level color
+        color (ColorSpec, optional): Color mode for the
+            formatter. Either a bare `ColorMode` string or a
+            tuple of `(ColorMode, colormap)` for per-level color
             overrides. If the mode is not `"off"`, a
             `ColorFormatter` is returned. Ignored if `fmt` is a
             `logging.Formatter` or if `csv`, `json`, or `logfmt`
             is not `False`. Defaults to `"level"`.
-        json (bool | _JsonSpec, optional): JSON output mode. If
+        json (bool | JsonSpec, optional): JSON output mode. If
             not `False`, a `JsonFormatter` is returned and `color`
             is ignored. Ignored if `fmt` is a
             `logging.Formatter` or if `csv` is not `False`.
             Defaults to `False`.
-        csv (bool | _CsvSpec, optional): CSV output mode. If
+        csv (bool | CsvSpec, optional): CSV output mode. If
             not `False`, a `CsvFormatter` is returned and `json`,
             `logfmt`, and `color` are ignored. Ignored if `fmt`
             is a `logging.Formatter`. Defaults to `False`.
-        logfmt (bool | _LogfmtSpec, optional): Logfmt output
+        logfmt (bool | LogfmtSpec, optional): Logfmt output
             mode. If not `False`, a `LogfmtFormatter` is
             returned and `color` is ignored. Ignored if `fmt`
             is a `logging.Formatter` or if `csv` or `json` is
@@ -303,32 +304,32 @@ def get_formatter(  # ruff: ignore[too-many-arguments]
 
 
 def get_formatter_from_spec(
-    spec: "_FormatterSpec",
+    spec: "FormatterSpec | None",
     *,
-    color: "_ColorSpec" = "level",
-    json: "bool | _JsonSpec" = False,
-    csv: "bool | _CsvSpec" = False,
-    logfmt: "bool | _LogfmtSpec" = False,
+    color: "ColorSpec" = "level",
+    json: "bool | JsonSpec" = False,
+    csv: "bool | CsvSpec" = False,
+    logfmt: "bool | LogfmtSpec" = False,
 ) -> "logging.Formatter":
     """
     Returns a `logging.Formatter` configured using a
-    `_FormatterSpec`.
+    `FormatterSpec`.
 
     Args:
-        spec (_FormatterSpec): Specification of formatter
-        color (_ColorSpec, optional): Color mode for the
+        spec (FormatterSpec): Specification of formatter
+        color (ColorSpec, optional): Color mode for the
             formatter. Passed through to `get_formatter` when
             the dict spec does not already contain a `"color"`
             key. Defaults to `"level"`.
-        json (bool | _JsonSpec, optional): JSON output mode.
+        json (bool | JsonSpec, optional): JSON output mode.
             Passed through to `get_formatter` when the dict
             spec does not already contain a `"json"` key.
             Defaults to `False`.
-        csv (bool | _CsvSpec, optional): CSV output mode.
+        csv (bool | CsvSpec, optional): CSV output mode.
             Passed through to `get_formatter` when the dict
             spec does not already contain a `"csv"` key.
             Defaults to `False`.
-        logfmt (bool | _LogfmtSpec, optional): Logfmt output
+        logfmt (bool | LogfmtSpec, optional): Logfmt output
             mode. Passed through to `get_formatter` when the
             dict spec does not already contain a `"logfmt"`
             key. Defaults to `False`.
@@ -344,7 +345,10 @@ def get_formatter_from_spec(
         spec["csv"] = spec.get("csv", csv)
         spec["logfmt"] = spec.get("logfmt", logfmt)
         return get_formatter(**spec)
-    # If here, just pass spec as main argument
+    # If spec is Default, call with no fmt arg to use the default
+    if isinstance(spec, DefaultType):
+        return get_formatter(color=color, json=json, csv=csv, logfmt=logfmt)
+    # Otherwise, just pass spec as the fmt argument
     return get_formatter(
         fmt=spec, color=color, json=json, csv=csv, logfmt=logfmt
     )
@@ -381,12 +385,12 @@ def get_filter(
     return _logging.Filter(filt)
 
 
-def get_filter_from_spec(spec: "_FilterSpec") -> "logging.Filter":
+def get_filter_from_spec(spec: "FilterSpec") -> "logging.Filter":
     """
     Returns a `logging.Filter` configured according to `spec`.
 
     Args:
-        spec (_FilterSpec): Specification of filter
+        spec (FilterSpec): Specification of filter
 
     Returns:
         logging.Filter: The specified filter
@@ -479,11 +483,11 @@ def _maybe_create_special_string_handler(
 
 
 def _maybe_create_network_handler(  # ruff: ignore[too-many-arguments,too-many-return-statements]
-    handler_type: "_HandlerType",
+    handler_type: "HandlerType",
     *,
     address: str | tuple[str, int],
     facility: int,
-    socktype: int | None,
+    socktype: "int | SocketKind | None",
     syslog_timeout: float | None,
     host: str,
     port: int | None,
@@ -505,11 +509,12 @@ def _maybe_create_network_handler(  # ruff: ignore[too-many-arguments,too-many-r
     specifies a network handler; otherwise, returns `None`.
 
     Args:
-        handler_type (_HandlerType): Type of handler to create
+        handler_type (HandlerType): Type of handler to create
         address (str | tuple[str, int]): Address for `SysLogHandler`.
             Defaults to `("localhost", 514)`.
         facility (int): Facility code for `SysLogHandler`
-        socktype (int | None): Socket type for `SysLogHandler`
+        socktype (int | SocketKind | None): Socket type
+            for `SysLogHandler`
         syslog_timeout (float | None): Timeout for `SysLogHandler`.
             Ignored if Python version is not 3.14+.
         host (str): Host for `SocketHandler`, `DatagramHandler`,
@@ -536,6 +541,10 @@ def _maybe_create_network_handler(  # ruff: ignore[too-many-arguments,too-many-r
     Returns:
         logging.Handler | None: A network handler if `handler_type` is a
             network type; otherwise, `None`
+
+    Raises:
+        TypeError: Raised if an argument required for the specified
+            handler type is `None`
     """
     import logging.handlers
 
@@ -546,12 +555,16 @@ def _maybe_create_network_handler(  # ruff: ignore[too-many-arguments,too-many-r
 
             # Use timeout kwarg if python version supports it (3.14+)
             if sys.version_info >= (3, 14):
+                # If using Python < 3.14, this code will
+                # be marked as "structurally unreachable" by Pyright
                 return logging.handlers.SysLogHandler(
                     address=address,
                     facility=facility,
-                    socktype=socktype,
+                    socktype=socktype,  # pyright: ignore[reportArgumentType]
                     timeout=syslog_timeout,
                 )
+            # If using Python 3.14+, this code will
+            # be marked as "structurally unreachable" by Pyright
             return logging.handlers.SysLogHandler(
                 address=address, facility=facility, socktype=socktype
             )
@@ -560,16 +573,28 @@ def _maybe_create_network_handler(  # ruff: ignore[too-many-arguments,too-many-r
         case "datagram":
             return logging.handlers.DatagramHandler(host=host, port=port)
         case "smtp":
+            # Check that required arguments are valid
+            if mailhost is None or fromaddr is None or subject is None:
+                msg = (
+                    "All of mailhost, fromaddr, and subject must be provided; "
+                    f"got mailhost={mailhost}, "
+                    f"fromaddr={fromaddr}, subject={subject}"
+                )
+                raise TypeError(msg)
             return logging.handlers.SMTPHandler(
                 mailhost=mailhost,
                 fromaddr=fromaddr,
-                toaddrs=toaddrs,
+                toaddrs=toaddrs if isinstance(toaddrs, str) else list(toaddrs),
                 subject=subject,
                 credentials=smtp_credentials,
                 secure=smtp_secure,
                 timeout=smtp_timeout,
             )
         case "http":
+            # Check that required arguments are valid
+            if url is None:
+                msg = f"URL must be provided; got url={url}"
+                raise TypeError(msg)
             return logging.handlers.HTTPHandler(
                 host=host,
                 url=url,
@@ -586,7 +611,7 @@ def _maybe_create_network_handler(  # ruff: ignore[too-many-arguments,too-many-r
 def _maybe_create_handler(  # ruff: ignore[complex-structure,too-many-arguments]
     core: "_HandlerCoreType | None",
     *,
-    handler_type: "_HandlerType",
+    handler_type: "HandlerType",
     mode: str,
     encoding: str | None,
     delay: bool,
@@ -602,7 +627,7 @@ def _maybe_create_handler(  # ruff: ignore[complex-structure,too-many-arguments]
     copy: bool,
     address: "str | tuple[str, int]" = ("localhost", 514),
     facility: int = 1,
-    socktype: int | None = None,
+    socktype: "int | SocketKind | None" = None,
     syslog_timeout: float | None = None,
     host: str | None = None,
     port: int | None = None,
@@ -626,7 +651,7 @@ def _maybe_create_handler(  # ruff: ignore[complex-structure,too-many-arguments]
 
     Args:
         core (_HandlerCoreType | None): Specification of the handler.
-        handler_type (_HandlerType): Type of handler to create.
+        handler_type (HandlerType): Type of handler to create.
             Ignored if not creating a file or network handler.
         mode (str): File open mode. Ignored for
             `TimedRotatingFileHandler` and non-file handlers.
@@ -665,7 +690,7 @@ def _maybe_create_handler(  # ruff: ignore[complex-structure,too-many-arguments]
             `("localhost", 514)`.
         facility (int): Facility code for `SysLogHandler`.
             Defaults to `1` (`LOG_USER`).
-        socktype (int | None): Socket type for
+        socktype (int | SocketKind | None): Socket type for
             `SysLogHandler`. Defaults to `None`.
         syslog_timeout (float | None): Timeout for `SysLogHandler`.
             Ignored if Python version is not 3.14+. Defaults to `None`.
@@ -723,17 +748,21 @@ def _maybe_create_handler(  # ruff: ignore[complex-structure,too-many-arguments]
 
     # Try to create a network handler before defaulting
     if handler is None:
+        # Note that we allow host and toaddrs to be None because
+        # we may not be creating those types of handlers,
+        # but if the specified handler type does need a variable
+        # to be non-None, we raise inside the function on discovery
         handler = _maybe_create_network_handler(
             handler_type=handler_type,
             address=address,
             facility=facility,
             socktype=socktype,
             syslog_timeout=syslog_timeout,
-            host=host,
+            host=host,  # pyright: ignore[reportArgumentType]
             port=port,
             mailhost=mailhost,
             fromaddr=fromaddr,
-            toaddrs=toaddrs,
+            toaddrs=toaddrs,  # pyright: ignore[reportArgumentType]
             subject=subject,
             smtp_credentials=smtp_credentials,
             smtp_secure=smtp_secure,
@@ -777,7 +806,7 @@ def _maybe_create_handler(  # ruff: ignore[complex-structure,too-many-arguments]
                     delay=delay,
                     errors=errors,
                 )
-            case "timed_rotating_file":
+            case "timed_rotating_file" | "timed_file":
                 timed_handler = logging.handlers.TimedRotatingFileHandler(
                     filename=filename,
                     when=when,
@@ -816,7 +845,7 @@ def set_formatter_for_handler(  # ruff: ignore[too-many-arguments]
     fmt: ("str | logging.Formatter | None") = _DEFAULT_FMT,
     *,
     datefmt: str | None = None,
-    style: "_FormatStyle" = "%",
+    style: "FormatStyle" = "%",
     validate: bool = True,
     defaults: "Mapping[str, Any] | None" = None,
     copy: bool = False,
@@ -845,7 +874,7 @@ def set_formatter_for_handler(  # ruff: ignore[too-many-arguments]
         datefmt (str | None, optional): Date format string to pass
             to `logging.Formatter` constructor. Ignored if `fmt` is
             a `logging.Formatter`. Defaults to `None`.
-        style (_FormatStyle, optional): Style format used by the
+        style (FormatStyle, optional): Style format used by the
             format string. Ignored if `fmt` is a
             `logging.Formatter`. Defaults to `"%"`.
         validate (bool, optional): If `True`, the configuration is
@@ -873,20 +902,24 @@ def set_formatter_for_handler(  # ruff: ignore[too-many-arguments]
 
 
 def _parse_filters_arg(
-    filters: "_FilterSpec | Sequence[_FilterSpec]",
-) -> "tuple[_FilterSpec, ...]":
+    filters: "FilterSpec | Sequence[FilterSpec]",
+) -> "tuple[FilterSpec, ...]":
     """
     Returns the raw `filters` argument as a
     `tuple` of filter specs to apply.
 
     Args:
-        filters (_FilterSpec | Sequence[_FilterSpec]): Raw `filters`
+        filters (FilterSpec | Sequence[FilterSpec]): Raw `filters`
             argument to parse
 
     Returns:
-        tuple[_FilterSpec, ...]: Tuple of filter specs
+        tuple[FilterSpec, ...]: Tuple of filter specs
+
+    Raises:
+        TypeError: Raised if `filters` includes a boolean item when not
+            in a tuple of length 2
     """
-    from sefkhet._typing import _SupportsFilter
+    from sefkhet._typing import SupportsFilter
 
     # Handle case of single string
     if isinstance(filters, str):
@@ -897,7 +930,7 @@ def _parse_filters_arg(
         return ((filters, False),)
 
     # Handle case of single filter-like
-    if callable(filters) or isinstance(filters, _SupportsFilter):
+    if callable(filters) or isinstance(filters, SupportsFilter):
         return (filters,)
 
     if (
@@ -906,15 +939,23 @@ def _parse_filters_arg(
         and isinstance(filters[0], _logging.Filter)
         and isinstance(filters[1], bool)
     ):
-        return (filters,)  # type: ignore[return-value]
+        return ((filters[0], filters[1]),)  # type: ignore[return-value]
 
     # If here, have a sequence of filters, so make sure it's a tuple
-    return tuple(filters)
+    # and no booleans are included
+    if any(isinstance(filt, bool) for filt in filters):
+        msg = (
+            "Expected only 'FilterSpec', but found a boolean; "
+            "booleans are only allowed as the second item of a tuple "
+            f"of length 2; got filters={filters}"
+        )
+        raise TypeError(msg)
+    return tuple(filters)  # pyright: ignore[reportReturnType]
 
 
 def add_filters_to_target(
     target: "logging.Handler | logging.Logger",
-    filters: "_FilterSpec | Sequence[_FilterSpec]",
+    filters: "FilterSpec | Sequence[FilterSpec]",
 ) -> None:
     """
     Adds the filters in `filters` to the `logging.Handler`
@@ -923,7 +964,7 @@ def add_filters_to_target(
     Args:
         target (logging.Handler | logging.Logger): Handler or logger to
             add filters to
-        filters (_FilterSpec | Sequence[_FilterSpec]): Filters to add
+        filters (FilterSpec | Sequence[FilterSpec]): Filters to add
             to target
     """
     # Standardize filters
@@ -1052,9 +1093,9 @@ def get_handler(  # ruff: ignore[too-many-arguments]
     *,
     level: int | None = 20,
     name: str | None = None,
-    formatter: "_FormatterSpec | _NoDefaultType" = _NoDefault,
-    filters: "_FilterSpec | Sequence[_FilterSpec]" = (),
-    handler_type: "_HandlerType" = "file",
+    formatter: "FormatterSpec | NoDefaultType" = NoDefault,
+    filters: "FilterSpec | Sequence[FilterSpec]" = (),
+    handler_type: "HandlerType" = "file",
     mode: str = "a",
     encoding: str | None = "utf-8",
     delay: bool = False,
@@ -1075,7 +1116,7 @@ def get_handler(  # ruff: ignore[too-many-arguments]
     flush_on_close: bool = True,
     address: "str | tuple[str, int]" = ("localhost", 514),
     facility: int = 1,
-    socktype: int | None = None,
+    socktype: "int | SocketKind | None" = None,
     host: str | None = None,
     port: int | None = None,
     mailhost: "str | tuple[str, int] | None" = None,
@@ -1120,7 +1161,7 @@ def get_handler(  # ruff: ignore[too-many-arguments]
         `logging.StreamHandler` is created for `sys.stderr`
     7.  If `core` is the string `"null"`, a default
         `logging.NullHandler` is created
-    8.  If `core` is a `_StrOrPathLike`, then a file handler is
+    8.  If `core` is a `StrOrPathLike`, then a file handler is
         created based on `handler_type`:
 
         a.  `"file"` (default):
@@ -1133,7 +1174,7 @@ def get_handler(  # ruff: ignore[too-many-arguments]
             `logging.handlers.TimedRotatingFileHandler(
             filename=core)`
 
-    9.  If `core` is a `_TextIOLike`, then
+    9.  If `core` is a `TextIOLike`, then
         `logging.StreamHandler(stream=core)` is created
     10. At this point, `core` should have matched one of the
         options above, so if it hasn't, a `ValueError` is
@@ -1157,7 +1198,7 @@ def get_handler(  # ruff: ignore[too-many-arguments]
         level (int | None, optional): Log level to assign to the created
             `logging.Handler`. If `None`, no level is assigned.
             Defaults to `20`.
-        formatter (_FormatterSpec | _NoDefaultType, optional):
+        formatter (FormatterSpec | NoDefaultType, default=NoDefault):
             Specification of a `logging.Formatter` to attach to the
             created handler. The specification is similar to using the
             `sefkhet.get_formatter` interface. If the value is a `str`
@@ -1167,9 +1208,9 @@ def get_handler(  # ruff: ignore[too-many-arguments]
             is `True` and otherwise the original handler is used; and if
             a `dict`, it must contain entries for all desired
             non-default arguments to `sefkhet.get_formatter`. If
-            `_NoDefault`, then no formatter is attached to the handler.
-            Defaults to `_NoDefault`.
-        filters (_FilterSpec | Sequence[_FilterSpec], optional):
+            `NoDefault`, then no formatter is attached to the handler.
+            Defaults to `NoDefault`.
+        filters (FilterSpec | Sequence[FilterSpec], optional):
             Specification of `logging.Filter`s to attach to the created
             handler. If more than one filter is specified, then they are
             all added to the handler in order. Specification of each
@@ -1186,7 +1227,7 @@ def get_handler(  # ruff: ignore[too-many-arguments]
             original filter is used; if a compatible `Callable` or class
             with `filter` method, it will be added as a filter directly.
             Defaults to `()` (no filters).
-        handler_type (_HandlerType, optional): Type of handler
+        handler_type (HandlerType, optional): Type of handler
             to create. One of `"file"`, `"watched_file"`,
             `"rotating_file"`, `"timed_rotating_file"`,
             `"memory"`, `"syslog"`, `"socket"`, `"datagram"`,
@@ -1277,7 +1318,7 @@ def get_handler(  # ruff: ignore[too-many-arguments]
         facility (int, optional): Syslog facility code.
             Only used for `"syslog"`. Defaults to `1`
             (`LOG_USER`).
-        socktype (int | None, optional): Socket type for
+        socktype (int | SocketKind | None, optional): Socket type for
             `SysLogHandler`. Only used for `"syslog"`.
             Defaults to `None`.
         host (str | None, optional): Host for
@@ -1331,7 +1372,7 @@ def get_handler(  # ruff: ignore[too-many-arguments]
         ValueError: Raised if `core` fails to specify a valid handler
 
     """
-    from sefkhet._typing import _NoDefaultType
+    from sefkhet._typing import NoDefaultType
 
     # Create the handler based on core
     handler = _maybe_create_handler(
@@ -1384,7 +1425,7 @@ def get_handler(  # ruff: ignore[too-many-arguments]
         handler.setLevel(level=level)
 
     # Add formatter if specified
-    if not isinstance(formatter, _NoDefaultType):
+    if not isinstance(formatter, NoDefaultType):
         handler.setFormatter(fmt=get_formatter_from_spec(spec=formatter))
 
     # Add filters if specified
@@ -1415,35 +1456,38 @@ def get_handler(  # ruff: ignore[too-many-arguments]
     return handler
 
 
-def get_handler_from_spec(spec: "_HandlerSpec") -> "logging.Handler":
+def get_handler_from_spec(spec: "HandlerSpec") -> "logging.Handler":
     """
     Returns a `logging.Handler` configured according to `spec`.
 
     Args:
-        spec (_HandlerSpec): Specification of handler
+        spec (HandlerSpec): Specification of handler
 
     Returns:
         logging.Handler: The specified handler
     """
     # Create using keyword arguments if present, otherwise just core
     if isinstance(spec, tuple):
-        return get_handler(core=spec[0], **spec[1])
+        return get_handler(
+            core=spec[0],
+            **spec[1],  # pyright: ignore[reportArgumentType]
+        )
     return get_handler(core=spec)
 
 
 def _parse_handlers_arg(
-    handlers: "_HandlerSpec | Sequence[_HandlerSpec]",
-) -> "tuple[_HandlerSpec, ...]":
+    handlers: "HandlerSpec | Sequence[HandlerSpec]",
+) -> "tuple[HandlerSpec, ...]":
     """
     Returns the raw `handlers` argument as a
     `tuple` of handler specs to apply.
 
     Args:
-        handlers (_HandlerSpec | Sequence[_HandlerSpec]): Raw `handlers`
+        handlers (HandlerSpec | Sequence[HandlerSpec]): Raw `handlers`
             argument to parse
 
     Returns:
-        tuple[_HandlerSpec, ...]: Tuple of handler specs
+        tuple[HandlerSpec, ...]: Tuple of handler specs
     """
     import os
     from io import TextIOBase
@@ -1470,14 +1514,14 @@ def _parse_handlers_arg(
 
 
 def add_handlers_to_logger(
-    logger: "logging.Logger", handlers: "_HandlerSpec | Sequence[_HandlerSpec]"
+    logger: "logging.Logger", handlers: "HandlerSpec | Sequence[HandlerSpec]"
 ) -> None:
     """
     Adds the handlers in `handlers` to the specified `logging.Logger`.
 
     Args:
         logger (logging.Logger): Logger to add handlers to
-        handlers (_HandlerSpec | Sequence[_HandlerSpec]): Handlers to
+        handlers (HandlerSpec | Sequence[HandlerSpec]): Handlers to
             add to logger
     """
     # Standardize the handlers argument
@@ -1489,10 +1533,10 @@ def add_handlers_to_logger(
 
 def set_formatter_for_logger(  # ruff: ignore[too-many-arguments]
     logger: "logging.Logger",
-    fmt: ("str | logging.Formatter | _NoDefaultType | None") = _NoDefault,
+    fmt: ("str | logging.Formatter | NoDefaultType | None") = NoDefault,
     *,
     datefmt: str | None = None,
-    style: "_FormatStyle" = "%",
+    style: "FormatStyle" = "%",
     validate: bool = True,
     defaults: "Mapping[str, Any] | None" = None,
     copy: bool = False,
@@ -1515,16 +1559,16 @@ def set_formatter_for_logger(  # ruff: ignore[too-many-arguments]
 
     Args:
         logger (logging.Logger): Logger to set formatter for
-        fmt (str | logging.Formatter | _NoDefaultType | None, optional):
+        fmt (str | logging.Formatter | NoDefaultType | None, optional):
             If a `logging.Formatter`, then the formatter to use a
             copy of; otherwise, the format string to pass to the
-            `logging.Formatter` constructor. If `_NoDefault`,
+            `logging.Formatter` constructor. If `NoDefault`,
             resolves to a name-aware default format string.
-            Defaults to `_NoDefault`.
+            Defaults to `NoDefault`.
         datefmt (str | None, optional): Date format string to pass
             to `logging.Formatter` constructor. Ignored if `fmt` is
             a `logging.Formatter`. Defaults to `None`.
-        style (_FormatStyle, optional): Style format used by the
+        style (FormatStyle, optional): Style format used by the
             format string. Ignored if `fmt` is a
             `logging.Formatter`. Defaults to `"%"`.
         validate (bool, optional): If `True`, the configuration is
@@ -1543,10 +1587,10 @@ def set_formatter_for_logger(  # ruff: ignore[too-many-arguments]
             otherwise, only handlers without a formatter already set
             will have their formatter set. Defaults to `False`.
     """
-    from sefkhet._typing import _NoDefaultType
+    from sefkhet._typing import NoDefaultType
 
     # Resolve default fmt based on logger name
-    if isinstance(fmt, _NoDefaultType):
+    if isinstance(fmt, NoDefaultType):
         fmt = _get_default_fmt(logger.name)
 
     # Get new formatter for logger
@@ -1569,13 +1613,13 @@ def get_logger(  # ruff: ignore[too-many-arguments]
     name: str | None = "log",
     level: str | int = 20,
     *,
-    handlers: "_HandlerSpec | Sequence[_HandlerSpec]" = (),
-    formatter: "_FormatterSpec | _NoDefaultType" = _NoDefault,
-    filters: "_FilterSpec | Sequence[_FilterSpec]" = (),
-    color: "_ColorSpec" = "level",
-    json: "bool | _JsonSpec" = False,
-    csv: "bool | _CsvSpec" = False,
-    logfmt: "bool | _LogfmtSpec" = False,
+    handlers: "HandlerSpec | Sequence[HandlerSpec]" = (),
+    formatter: "FormatterSpec | NoDefaultType" = NoDefault,
+    filters: "FilterSpec | Sequence[FilterSpec]" = (),
+    color: "ColorSpec" = "level",
+    json: "bool | JsonSpec" = False,
+    csv: "bool | CsvSpec" = False,
+    logfmt: "bool | LogfmtSpec" = False,
 ) -> "logging.Logger":
     """
     Returns a `logging.Logger` configured according
@@ -1595,7 +1639,7 @@ def get_logger(  # ruff: ignore[too-many-arguments]
             `sefkhet.get_log_levels()`, the `int` equivalents
             of those log levels as defined by the `logging`
             library, or any other `int`. Defaults to `20`.
-        handlers (_HandlerSpec | Sequence[_HandlerSpec], optional):
+        handlers (HandlerSpec | Sequence[HandlerSpec], optional):
             Specification of any `logging.Handler`s to add
             to the logger. Multiple handlers can be specified
             by providing a sequence of handler specifications.
@@ -1606,37 +1650,37 @@ def get_logger(  # ruff: ignore[too-many-arguments]
             a `tuple`, where the first item is the argument
             for `core`.
             Defaults to `()` (no handlers).
-        formatter (_FormatterSpec | _NoDefaultType, optional):
+        formatter (FormatterSpec | NoDefaultType, optional):
             Specification of a `logging.Formatter` to add to
             all handlers created for the logger that do not
             have an alternative formatter specified. If
-            `_NoDefault`, no formatters are added.
-            Defaults to `_NoDefault`.
-        filters (_FilterSpec | Sequence[_FilterSpec], optional):
+            `NoDefault`, no formatters are added.
+            Defaults to `NoDefault`.
+        filters (FilterSpec | Sequence[FilterSpec], optional):
             Specification of any `logging.Filter`s to add to
             the logger. Multiple filters can be specified by
             providing a sequence of filter specifications.
             Specification of each filter is the same as when
             using the `sefkhet.get_handler` inteface.
             Defaults to `()` (no filters).
-        color (_ColorSpec, optional): Color mode to apply to
-            the formatter. Either a bare `_ColorMode` string or
-            a tuple of `(_ColorMode, colormap)` for per-level
-            color overrides. When `formatter` is `_NoDefault`
+        color (ColorSpec, optional): Color mode to apply to
+            the formatter. Either a bare `ColorMode` string or
+            a tuple of `(ColorMode, colormap)` for per-level
+            color overrides. When `formatter` is `NoDefault`
             and the mode is not `"off"`, a `ColorFormatter` is
             created. When `formatter` is a spec, `color` is
             passed through to `get_formatter_from_spec`.
             Ignored if `csv`, `json`, or `logfmt` is not
             `False`. Defaults to `"level"`.
-        json (bool | _JsonSpec, optional): JSON output mode.
+        json (bool | JsonSpec, optional): JSON output mode.
             If not `False`, a `JsonFormatter` is created and
             `color` is ignored. Ignored if `csv` is not
             `False`. Defaults to `False`.
-        csv (bool | _CsvSpec, optional): CSV output mode.
+        csv (bool | CsvSpec, optional): CSV output mode.
             If not `False`, a `CsvFormatter` is created and
             `json`, `logfmt`, and `color` are ignored.
             Defaults to `False`.
-        logfmt (bool | _LogfmtSpec, optional): Logfmt output
+        logfmt (bool | LogfmtSpec, optional): Logfmt output
             mode. If not `False`, a `LogfmtFormatter` is
             created and `color` is ignored. Ignored if `csv`
             or `json` is not `False`. Defaults to `False`.
@@ -1644,11 +1688,11 @@ def get_logger(  # ruff: ignore[too-many-arguments]
     Returns:
         logging.Logger: The speficied `logging.Logger`
     """
-    from sefkhet._typing import _NoDefaultType
+    from sefkhet._typing import NoDefaultType
 
     # Resolve name, replacing default with "log"
     resolved_name: str | None = (
-        "log" if isinstance(name, _NoDefaultType) else name
+        "log" if isinstance(name, NoDefaultType) else name
     )
 
     # Get logger with specified name
@@ -1664,7 +1708,7 @@ def get_logger(  # ruff: ignore[too-many-arguments]
 
     # Get formatter if applicable
     resolved_formatter: _logging.Formatter | None
-    if isinstance(formatter, _NoDefaultType):
+    if isinstance(formatter, NoDefaultType):
         # Auto-create formatter: csv > json > logfmt > color
         if csv is not False:
             resolved_formatter = get_formatter(
@@ -1699,17 +1743,17 @@ def get_logger(  # ruff: ignore[too-many-arguments]
     return logger
 
 
-def get_logger_from_spec(spec: "_LoggerSpec") -> "logging.Logger":
+def get_logger_from_spec(spec: "LoggerSpec") -> "logging.Logger":
     """
     Returns a `logging.Logger` configured according to `spec`.
 
     Args:
-        spec (_LoggerSpec): Specification of logger
+        spec (LoggerSpec): Specification of logger
 
     Returns:
         logging.Logger: The specified logger
     """
-    from sefkhet._typing import _LoggerKwargs, _NoDefaultType
+    from sefkhet._typing import LoggerKwargs, NoDefaultType
 
     # Handle case of name only
     if spec is None or isinstance(spec, str):
@@ -1729,12 +1773,12 @@ def get_logger_from_spec(spec: "_LoggerSpec") -> "logging.Logger":
         name = spec[0]
         level = None
     else:
-        name = _NoDefault
+        name = NoDefault
         level = spec[0]
     # Check if second item is level or keyword args
     if isinstance(spec[1], int):
         level = spec[1]
-        kwargs: _LoggerKwargs = (
+        kwargs: LoggerKwargs = (
             spec[2] if len(spec) == 3 else {}  # ruff: ignore[magic-value-comparison]
         )
     else:
@@ -1744,7 +1788,7 @@ def get_logger_from_spec(spec: "_LoggerSpec") -> "logging.Logger":
     kwargs.pop("level", None)
 
     # Return based on tuple items
-    if isinstance(name, _NoDefaultType):
+    if isinstance(name, NoDefaultType):
         return get_logger(  # pyright: ignore[reportUnknownVariableType]
             level=level,  # type: ignore[arg-type,misc]
             **kwargs,  # pyright: ignore[reportCallIssue]

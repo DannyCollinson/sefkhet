@@ -9,7 +9,7 @@ if _TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Mapping
     from typing import Any, Literal
 
-    from sefkhet._typing import _CsvSpec, _FormatStyle
+    from sefkhet._typing import CsvSpec, FormatStyle
 
 
 # Define fields to include for a default CSV formatter
@@ -23,15 +23,15 @@ _DEFAULT_CSV_FIELDS: tuple[str, ...] = (
 
 
 def _parse_csv_spec(
-    spec: "Literal[True] | _CsvSpec",
+    spec: "Literal[True] | CsvSpec",
 ) -> "tuple[tuple[str, ...], str, int, bool]":
     """
     Returns the result of parsing a CSV spec
     into resolved configuration values.
 
     Args:
-        spec (Literal[True] | _CsvSpec): Either `True` for
-            defaults or a `_CsvSpec` dict with optional keys
+        spec (Literal[True] | CsvSpec): Either `True` for
+            defaults or a `CsvSpec` dict with optional keys
             `fields`, `delimiter`, `quoting`, and `header`.
 
     Returns:
@@ -66,11 +66,11 @@ class CsvFormatter(_logging.Formatter):
         self,
         fmt: str | None = None,
         datefmt: str | None = None,
-        style: "_FormatStyle" = "%",
+        style: "FormatStyle" = "%",
         *,
         validate: bool = True,
         defaults: "Mapping[str, Any] | None" = None,
-        csv: "Literal[True] | _CsvSpec",
+        csv: "Literal[True] | CsvSpec",
     ) -> None:
         """
         A `logging.Formatter` subclass that
@@ -87,15 +87,15 @@ class CsvFormatter(_logging.Formatter):
                 compatibility). Defaults to `None`.
             datefmt (str | None, optional): Date format string
                 used by `formatTime`. Defaults to `None`.
-            style (_FormatStyle, optional): Format style.
+            style (FormatStyle, optional): Format style.
                 Defaults to `"%"`.
             validate (bool, optional): If `True`, validates
                 the format string. Defaults to `True`.
             defaults (Mapping[str, Any] | None, optional):
                 Default values for string interpolation.
                 Defaults to `None`.
-            csv (Literal[True] | _CsvSpec): CSV configuration.
-                `True` for defaults, or a `_CsvSpec` dict with
+            csv (Literal[True] | CsvSpec): CSV configuration.
+                `True` for defaults, or a `CsvSpec` dict with
                 optional keys `fields`, `delimiter`, `quoting`,
                 and `header`.
         """

@@ -17,7 +17,6 @@ from typing import (
     TypeVar,
     TypedDict,
     runtime_checkable,
-    type_check_only,
 )
 
 
@@ -196,6 +195,7 @@ type HandlerType = Literal[
     "watched_file",
     "rotating_file",
     "timed_file",
+    "timed_rotating_file",
     "queue_pair",
     "queue_handler",
     "queue_listener",
@@ -261,7 +261,6 @@ class NullHandlerOpts(HandlerOpts, total=False):
 T = TypeVar("T")
 
 
-@type_check_only
 class QueueLike(Protocol[T]):
     def get(self) -> T: ...
     def put_nowait(self, item: T, /) -> None: ...
@@ -324,7 +323,7 @@ class RotatingFileHandlerOpts(FileHandlerOpts, total=False):
 class TimedRotatingFileHandlerOpts(FileHandlerOpts, total=False):
     """Kwargs for creating a `TimedRotatingFileHandler`."""
 
-    handler_type: Required[Literal["timed_file"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
+    handler_type: Required[Literal["timed_rotating_file", "timed_file"]]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
     when: str
     interval: int
     backup_count: int

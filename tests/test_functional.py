@@ -41,17 +41,17 @@ from sefkhet._functional import (
     set_formatter_for_logger,
 )
 from sefkhet._typing import (
-    _DatagramHandlerKwargs,
-    _HTTPHandlerKwargs,
-    _HandlerKwargs,
-    _LoggerKwargs,
-    _NoDefault,
-    _RotatingFileHandlerKwargs,
-    _SMTPHandlerKwargs,
-    _SocketHandlerKwargs,
-    _SupportsFilter,
-    _SysLogHandlerKwargs,
-    _TimedRotatingFileHandlerKwargs,
+    DatagramHandlerOpts,
+    HTTPHandlerOpts,
+    HandlerOpts,
+    LoggerKwargs,
+    NoDefault,
+    RotatingFileHandlerOpts,
+    SMTPHandlerOpts,
+    SocketHandlerOpts,
+    SupportsFilter,
+    SysLogHandlerOpts,
+    TimedRotatingFileHandlerOpts,
 )
 
 
@@ -758,11 +758,11 @@ class TestParseFiltersArg:
 
     @staticmethod
     def test_supports_filter_protocol_input(
-        protocol_filter: _SupportsFilter,
+        protocol_filter: SupportsFilter,
     ) -> None:
         """
-        A non-callable _SupportsFilter object covers the
-        `isinstance(filters, _SupportsFilter)` branch.
+        A non-callable SupportsFilter object covers the
+        `isinstance(filters, SupportsFilter)` branch.
         """
         assert not callable(protocol_filter)
         result = _parse_filters_arg(protocol_filter)
@@ -893,10 +893,10 @@ class TestGetHandler:
     @staticmethod
     def test_formatter_not_set_when_nodefault() -> None:
         """
-        Keyword argument formatter=_NoDefault
+        Keyword argument formatter=NoDefault
         leaves handler formatter as None.
         """
-        handler = get_handler(core="null", formatter=_NoDefault)
+        handler = get_handler(core="null", formatter=NoDefault)
         assert handler.formatter is None
 
     @staticmethod
@@ -1005,17 +1005,17 @@ class TestGetHandlerFromSpec:
         assert result.name == "h1"
 
     @staticmethod
-    def test_rotating_file_handler_kwargs_spec(log_file: str) -> None:
-        """Tuple with _RotatingFileHandlerKwargs creates handler."""
+    def test_rotating_file_handler_opts_spec(log_file: str) -> None:
+        """Tuple with RotatingFileHandlerOpts creates handler."""
         import logging.handlers
 
-        kwargs = _RotatingFileHandlerKwargs(
+        opts = RotatingFileHandlerOpts(
             handler_type="rotating_file",
             max_bytes=512,
             backup_count=1,
             delay=True,
         )
-        result = get_handler_from_spec((log_file, kwargs))
+        result = get_handler_from_spec((log_file, opts))
         try:
             assert isinstance(result, logging.handlers.RotatingFileHandler)
             assert result.maxBytes == 512
@@ -1023,18 +1023,18 @@ class TestGetHandlerFromSpec:
             result.close()
 
     @staticmethod
-    def test_timed_rotating_file_handler_kwargs_spec(log_file: str) -> None:
-        """Tuple with _TimedRotatingFileHandlerKwargs creates it."""
+    def test_timed_rotating_file_handler_opts_spec(log_file: str) -> None:
+        """Tuple with TimedRotatingFileHandlerOpts creates it."""
         import logging.handlers
 
-        kwargs = _TimedRotatingFileHandlerKwargs(
+        opts = TimedRotatingFileHandlerOpts(
             handler_type="timed_rotating_file",
             when="d",
             interval=1,
             backup_count=3,
             delay=True,
         )
-        result = get_handler_from_spec((log_file, kwargs))
+        result = get_handler_from_spec((log_file, opts))
         try:
             assert isinstance(result, logging.handlers.TimedRotatingFileHandler)
             assert result.backupCount == 3
@@ -1077,7 +1077,7 @@ class TestParseHandlersArg:
     @staticmethod
     def test_tuple_with_dict_input() -> None:
         """A (core, dict) tuple is wrapped in a single-element tuple."""
-        spec = ("null", _HandlerKwargs({"name": "h1"}))
+        spec = ("null", HandlerOpts({"name": "h1"}))
         result = _parse_handlers_arg(spec)
         assert result == (spec,)
 
@@ -1249,7 +1249,7 @@ class TestGetLogger:
         outer_fmt = "%(levelname)s %(message)s"
         logger = get_logger(
             name="test_gl_fmt_not_overwrite",
-            handlers=("null", _HandlerKwargs({"formatter": inner_fmt})),
+            handlers=("null", HandlerOpts({"formatter": inner_fmt})),
             formatter=outer_fmt,
         )
         handler = logger.handlers[-1]
@@ -1266,10 +1266,7 @@ class TestGetLogger:
         outer_fmt = "%(levelname)s %(message)s"
         logger = get_logger(
             name="test_gl_fmt_guard_mixed",
-            handlers=[
-                "null",
-                ("null", _HandlerKwargs({"formatter": inner_fmt})),
-            ],
+            handlers=["null", ("null", HandlerOpts({"formatter": inner_fmt}))],
             formatter=outer_fmt,
         )
         bare_handler = logger.handlers[-2]
@@ -1342,21 +1339,21 @@ class TestGetLoggerFromSpec:
     def test_tuple_str_dict() -> None:
         """(str, dict) covers the level is None return path."""
         result = get_logger_from_spec(
-            ("test_glfs_str_dict", _LoggerKwargs({"handlers": ()}))
+            ("test_glfs_str_dict", LoggerKwargs({"handlers": ()}))
         )
         assert result.name == "test_glfs_str_dict"
 
     @staticmethod
     def test_tuple_none_dict() -> None:
         """(None, dict) covers None name with kwargs."""
-        result = get_logger_from_spec((None, _LoggerKwargs({"handlers": ()})))
+        result = get_logger_from_spec((None, LoggerKwargs({"handlers": ()})))
         assert result is logging.root
 
     @staticmethod
     def test_tuple_int_dict() -> None:
-        """(int, dict) covers the name=_NoDefault branch."""
+        """(int, dict) covers the name=NoDefault branch."""
         result = get_logger_from_spec(
-            (logging.DEBUG, _LoggerKwargs({"handlers": ()}))
+            (logging.DEBUG, LoggerKwargs({"handlers": ()}))
         )
         assert result.level == logging.DEBUG
 
@@ -1558,7 +1555,7 @@ class TestGetLoggerColor:
     @staticmethod
     def test_color_full_with_nodefault_formatter_creates_formatter() -> None:
         """
-        color='full' + formatter=_NoDefault
+        color='full' + formatter=NoDefault
         auto-creates ColorFormatter.
         """
         logger = get_logger(
@@ -1582,7 +1579,7 @@ class TestGetLoggerColor:
     @staticmethod
     def test_color_off_with_nodefault_formatter_no_formatter() -> None:
         """
-        color='off' + formatter=_NoDefault:
+        color='off' + formatter=NoDefault:
         handlers have no formatter.
         """
         logger = get_logger(
@@ -2048,7 +2045,7 @@ class TestIntegrationCombinations:
                 "level": logging.DEBUG,
                 "handlers": [
                     "null",
-                    ("stderr", _HandlerKwargs({"level": logging.WARNING})),
+                    ("stderr", HandlerOpts({"level": logging.WARNING})),
                 ],
                 "filters": "test_integ_nested",
             }
@@ -2066,6 +2063,7 @@ _NET_DEFAULTS: dict[str, Any] = {
     "address": ("localhost", 514),
     "facility": 1,
     "socktype": None,
+    "syslog_timeout": None,
     "host": None,
     "port": None,
     "mailhost": None,
@@ -2201,7 +2199,7 @@ class TestMaybeCreateNetworkHandler:
             smtp_timeout=10.0,
         )
         assert isinstance(result, logging.handlers.SMTPHandler)
-        assert result.timeout == pytest.approx(10.0)  # pyright: ignore[reportUnknownMemberType]
+        assert result.timeout == pytest.approx(10.0)
 
     def test_http_handler(self) -> None:
         """HTTPHandler created with host and url."""
@@ -2421,7 +2419,7 @@ class TestGetHandlerFromSpecNetwork:
     @staticmethod
     def test_syslog_spec() -> None:
         """SysLogHandler via spec tuple."""
-        spec = (None, _SysLogHandlerKwargs(handler_type="syslog"))
+        spec = (None, SysLogHandlerOpts(handler_type="syslog"))
         result = get_handler_from_spec(spec=spec)
         assert isinstance(result, logging.handlers.SysLogHandler)
 
@@ -2430,7 +2428,7 @@ class TestGetHandlerFromSpecNetwork:
         """SocketHandler via spec tuple."""
         spec = (
             None,
-            _SocketHandlerKwargs(
+            SocketHandlerOpts(
                 handler_type="socket", host="localhost", port=9000
             ),
         )
@@ -2442,7 +2440,7 @@ class TestGetHandlerFromSpecNetwork:
         """DatagramHandler via spec tuple."""
         spec = (
             None,
-            _DatagramHandlerKwargs(
+            DatagramHandlerOpts(
                 handler_type="datagram", host="localhost", port=9001
             ),
         )
@@ -2454,7 +2452,7 @@ class TestGetHandlerFromSpecNetwork:
         """SMTPHandler via spec tuple."""
         spec = (
             None,
-            _SMTPHandlerKwargs(
+            SMTPHandlerOpts(
                 handler_type="smtp",
                 mailhost="smtp.example.com",
                 fromaddr="a@b.com",
@@ -2470,7 +2468,7 @@ class TestGetHandlerFromSpecNetwork:
         """HTTPHandler via spec tuple."""
         spec = (
             None,
-            _HTTPHandlerKwargs(
+            HTTPHandlerOpts(
                 handler_type="http", host="example.com", url="/log"
             ),
         )

@@ -9,7 +9,7 @@ if _TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Mapping
     from typing import Any, Literal
 
-    from sefkhet._typing import _FormatStyle, _LogfmtSpec
+    from sefkhet._typing import FormatStyle, LogfmtSpec
 
 
 # Define fields to include for a default logfmt formatter
@@ -23,15 +23,15 @@ _DEFAULT_LOGFMT_FIELDS: tuple[str, ...] = (
 
 
 def _parse_logfmt_spec(
-    spec: "Literal[True] | _LogfmtSpec",
+    spec: "Literal[True] | LogfmtSpec",
 ) -> "tuple[tuple[str, ...], bool]":
     """
     Returns the result of parsing a logfmt spec
     into resolved configuration values.
 
     Args:
-        spec (Literal[True] | _LogfmtSpec): Either `True`
-            for defaults or a `_LogfmtSpec` dict with
+        spec (Literal[True] | LogfmtSpec): Either `True`
+            for defaults or a `LogfmtSpec` dict with
             optional keys `fields` and `sort_keys`.
 
     Returns:
@@ -89,11 +89,11 @@ class LogfmtFormatter(_logging.Formatter):
         self,
         fmt: str | None = None,
         datefmt: str | None = None,
-        style: "_FormatStyle" = "%",
+        style: "FormatStyle" = "%",
         *,
         validate: bool = True,
         defaults: "Mapping[str, Any] | None" = None,
-        logfmt: "Literal[True] | _LogfmtSpec",
+        logfmt: "Literal[True] | LogfmtSpec",
     ) -> None:
         """
         A `logging.Formatter` subclass that outputs log
@@ -113,16 +113,16 @@ class LogfmtFormatter(_logging.Formatter):
             datefmt (str | None, optional): Date format
                 string used by `formatTime`.
                 Defaults to `None`.
-            style (_FormatStyle, optional): Format style.
+            style (FormatStyle, optional): Format style.
                 Defaults to `"%"`.
             validate (bool, optional): If `True`, validates
                 the format string. Defaults to `True`.
             defaults (Mapping[str, Any] | None, optional):
                 Default values for string interpolation.
                 Defaults to `None`.
-            logfmt (Literal[True] | _LogfmtSpec): Logfmt
+            logfmt (Literal[True] | LogfmtSpec): Logfmt
                 configuration. `True` for defaults, or a
-                `_LogfmtSpec` dict with optional keys
+                `LogfmtSpec` dict with optional keys
                 `fields` and `sort_keys`.
         """
         super().__init__(

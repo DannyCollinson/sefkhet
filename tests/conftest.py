@@ -10,7 +10,7 @@ import pytest
 
 import sefkhet._one_step as _one_step_module
 from sefkhet._object_oriented import Scribe
-from sefkhet._typing import _SupportsFilter
+from sefkhet._typing import SupportsFilter
 
 
 # Global-state isolation (autouse)
@@ -181,7 +181,7 @@ def callable_filter() -> logging.Filterer:  # pragma: no cover
         logging.Filterer: A `Callable` that always returns `True`
     """
 
-    # Return as Any so callers can pass it where _FilterSpec is expected
+    # Return as Any so callers can pass it where FilterSpec is expected
     def _filt(record: logging.LogRecord) -> bool:
         return True
 
@@ -189,16 +189,16 @@ def callable_filter() -> logging.Filterer:  # pragma: no cover
 
 
 @pytest.fixture
-def protocol_filter() -> _SupportsFilter:
+def protocol_filter() -> SupportsFilter:
     """
-    Return an object satisfying `_SupportsFilter` that is NOT callable.
+    Return an object satisfying `SupportsFilter` that is NOT callable.
 
-    `callable(result)` is `False`; `isinstance(result, _SupportsFilter)`
-    is `True`. Used to exercise the `isinstance(_, _SupportsFilter)`
+    `callable(result)` is `False`; `isinstance(result, SupportsFilter)`
+    is `True`. Used to exercise the `isinstance(_, SupportsFilter)`
     branch of `_parse_filters_arg` when `callable()` is `False`.
 
     Returns:
-        _SupportsFilter: A class instance satisfying `_SupportsFilter`
+        SupportsFilter: A class instance satisfying `SupportsFilter`
             that is NOT callable
     """
 

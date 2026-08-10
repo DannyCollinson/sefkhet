@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING as _TYPE_CHECKING
 from typing import ParamSpec as _ParamSpec
 from typing import TypeVar as _TypeVar
 
-from sefkhet._typing import _NoDefault
+from sefkhet._typing import NoDefault
 
 
 if _TYPE_CHECKING:  # pragma: no cover
@@ -14,19 +14,19 @@ if _TYPE_CHECKING:  # pragma: no cover
     from typing import Any, Concatenate
 
     from sefkhet._typing import (
-        _ArgsType,
-        _ColorSpec,
-        _CsvSpec,
-        _ExcInfoType,
-        _FilterSpec,
-        _FilterType,
-        _FormatStyle,
-        _FormatterSpec,
-        _HandlerSpec,
-        _JsonSpec,
-        _LogfmtSpec,
-        _NoDefaultType,
-        _SysExcInfoType,
+        ArgsType,
+        ColorSpec,
+        CsvSpec,
+        ExcInfoType,
+        FilterSpec,
+        FilterType,
+        FormatStyle,
+        FormatterSpec,
+        HandlerSpec,
+        JsonSpec,
+        LogfmtSpec,
+        NoDefaultType,
+        SysExcInfoType,
     )
 
 
@@ -55,16 +55,16 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
 
     def __init__(  # ruff: ignore[too-many-arguments]
         self,
-        name: "str | _NoDefaultType | None" = _NoDefault,
+        name: "str | NoDefaultType | None" = NoDefault,
         level: str | int = 20,
         *,
-        handlers: "_HandlerSpec | Sequence[_HandlerSpec]" = None,
-        formatter: "_FormatterSpec | _NoDefaultType" = _NoDefault,
-        filters: "_FilterSpec | Sequence[_FilterSpec]" = (),
-        color: "_ColorSpec" = "level",
-        json: "bool | _JsonSpec" = False,
-        csv: "bool | _CsvSpec" = False,
-        logfmt: "bool | _LogfmtSpec" = False,
+        handlers: "HandlerSpec | Sequence[HandlerSpec]" = None,
+        formatter: "FormatterSpec | NoDefaultType" = NoDefault,
+        filters: "FilterSpec | Sequence[FilterSpec]" = (),
+        color: "ColorSpec" = "level",
+        json: "bool | JsonSpec" = False,
+        csv: "bool | CsvSpec" = False,
+        logfmt: "bool | LogfmtSpec" = False,
     ) -> None:
         """
         The base logger class for `sefkhet`.
@@ -81,19 +81,19 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         respectively).
 
         Args:
-            name (str | _NoDefaultType | None, optional): Name to
+            name (str | NoDefaultType | None, optional): Name to
                 apply to the logger. If `None`, uses the root
-                logger. If `_NoDefault`, uses `"logX"`, where `X`
+                logger. If `NoDefault`, uses `"logX"`, where `X`
                 is the cumulative number of `Scribe` instances
                 created with a default name.
-                Defaults to `_NoDefault`.
+                Defaults to `NoDefault`.
             level (str | int, optional): Logging level to apply to
                 the logger. Valid log levels include a log level
                 string from the options provided by
                 `sefkhet.get_log_levels()`, the `int` equivalents
                 of those log levels as defined by the `logging`
                 library, or any other `int`. Defaults to `20`.
-            handlers (_HandlerSpec | Sequence[_HandlerSpec], optional):
+            handlers (HandlerSpec | Sequence[HandlerSpec], optional):
                 Specification of any `logging.Handler`s to add
                 to the logger. Multiple handlers can be specified
                 by providing a sequence of handler specs. Spec of
@@ -105,48 +105,48 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
                 for `core`. Note that if `None`, a default
                 `logging.StreamHandler` that logs to `sys.stderr`
                 is created. Defaults to `None`.
-            formatter (_FormatterSpec | _NoDefaultType, optional):
+            formatter (FormatterSpec | NoDefaultType, optional):
                 Specification of a `logging.Formatter` to add to
                 all handlers created for the logger that do not
                 have an alternative formatter specified. If
-                `_NoDefault`, no formatters are added.
-                Defaults to `_NoDefault`.
-            filters (_FilterSpec | Sequence[_FilterSpec], optional):
+                `NoDefault`, no formatters are added.
+                Defaults to `NoDefault`.
+            filters (FilterSpec | Sequence[FilterSpec], optional):
                 Specification of any `logging.Filter`s to add to
                 the logger. Multiple filters can be specified by
                 providing a sequence of filter specifications.
                 Specification of each filter is the same as when
                 using the `sefkhet.get_handler` inteface.
                 Defaults to `()` (no filters).
-            color (_ColorSpec, optional): Color mode for the
-                formatter. Either a bare `_ColorMode` string or a
-                tuple of `(_ColorMode, colormap)` for per-level
+            color (ColorSpec, optional): Color mode for the
+                formatter. Either a bare `ColorMode` string or a
+                tuple of `(ColorMode, colormap)` for per-level
                 color overrides. Passed through to `get_logger`.
                 If mode is not `"off"`, a `ColorFormatter` is
                 used. Ignored if `csv`, `json`, or `logfmt` is
                 not `False`. Defaults to `"level"`.
-            json (bool | _JsonSpec, optional): JSON output mode.
+            json (bool | JsonSpec, optional): JSON output mode.
                 If not `False`, a `JsonFormatter` is used and
                 `color` is ignored. Ignored if `csv` is not
                 `False`. Defaults to `False`.
-            csv (bool | _CsvSpec, optional): CSV output mode.
+            csv (bool | CsvSpec, optional): CSV output mode.
                 If not `False`, a `CsvFormatter` is used and
                 `json`, `logfmt`, and `color` are ignored.
                 Defaults to `False`.
-            logfmt (bool | _LogfmtSpec, optional): Logfmt
+            logfmt (bool | LogfmtSpec, optional): Logfmt
                 output mode. If not `False`, a
                 `LogfmtFormatter` is used and `color` is
                 ignored. Ignored if `csv` or `json` is not
                 `False`. Defaults to `False`.
         """
         from sefkhet._functional import get_formatter_from_spec, get_logger
-        from sefkhet._typing import _NoDefaultType
+        from sefkhet._typing import NoDefaultType
 
         # Call super init and create root logger
         super().__init__("root", level=0)
 
         # Set default name if none provided
-        if isinstance(name, _NoDefaultType):
+        if isinstance(name, NoDefaultType):
             # Use thread lock to ensure that only
             # one of each number can be created
             with Scribe._lock:
@@ -179,7 +179,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         # Save custom attributes
         self.formatter = (
             None
-            if isinstance(formatter, _NoDefaultType)
+            if isinstance(formatter, NoDefaultType)
             else get_formatter_from_spec(spec=formatter)
         )
 
@@ -240,7 +240,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
 
     @_update_logger_attributes_hook
     def add_handlers(
-        self, handlers: "_HandlerSpec | Sequence[_HandlerSpec]"
+        self, handlers: "HandlerSpec | Sequence[HandlerSpec]"
     ) -> None:
         """
         Adds the `logging.Handlers` specified
@@ -249,7 +249,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         If the logger has not yet been created, it will be created.
 
         Args:
-            handlers (_HandlerSpec | Sequence[_HandlerSpec]):
+            handlers (HandlerSpec | Sequence[HandlerSpec]):
                 Specification of `logging.Handlers` to add to logger
         """
         from sefkhet._functional import add_handlers_to_logger
@@ -264,7 +264,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         ) = "%(asctime)s | %(levelname)s | %(message)s",
         *,
         datefmt: str | None = None,
-        style: "_FormatStyle" = "%",
+        style: "FormatStyle" = "%",
         validate: bool = True,
         defaults: "Mapping[str, Any] | None" = None,
         copy: bool = False,
@@ -294,7 +294,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
             datefmt (str | None, optional): Date format string to pass
                 to `logging.Formatter` constructor. Ignored if `fmt` is
                 a `logging.Formatter`. Defaults to `None`.
-            style (_FormatStyle, optional): Style format used by the
+            style (FormatStyle, optional): Style format used by the
                 format string. Ignored if `fmt` is a
                 `logging.Formatter`. Defaults to `"%"`.
             validate (bool, optional): If `True`, the configuration is
@@ -331,9 +331,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         )
 
     @_update_logger_attributes_hook
-    def add_filters(
-        self, filters: "_FilterSpec | Sequence[_FilterSpec]"
-    ) -> None:
+    def add_filters(self, filters: "FilterSpec | Sequence[FilterSpec]") -> None:
         """
         Adds the `logging.Filters` specified
         by `filters` to the logger.
@@ -341,7 +339,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         If the logger has not yet been created, it will be created.
 
         Args:
-            filters (_FilterSpec | Sequence[_FilterSpec]):
+            filters (FilterSpec | Sequence[FilterSpec]):
                 Specification of `logging.Filters` to add to logger
         """
         from sefkhet._functional import add_filters_to_target
@@ -355,7 +353,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         level: str | int,
         msg: object,
         *args: "Any",
-        exc_info: "_ExcInfoType" = None,
+        exc_info: "ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
         extra: "Mapping[str, object] | None" = None,
@@ -374,7 +372,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
             *args (Any): Arguments other than `msg` to pass to the
                 `loggingLogger`'s `log` method. This might be used to
                 provide variables to interpolate into `msg`.
-            exc_info (_ExcInfoType, optional): See `logging.Logger`'s
+            exc_info (ExcInfoType, optional): See `logging.Logger`'s
                 method `log` for details. Defaults to `None`.
             stack_info (bool, optional): See `logging.Logger`'s
                 method `log` for details. Defaults to `False`.
@@ -405,7 +403,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         *args: "Any",
         level: str | int = "debug",
         quiet: bool = False,
-        exc_info: "_ExcInfoType" = None,
+        exc_info: "ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
         extra: "Mapping[str, object] | None" = None,
@@ -434,7 +432,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
             quiet (bool, optional): If `True`, forces the log to the
                 `logging.DEBUG` level; otherwise, the `level` argument
                 sets the log level. Defaults to `False`.
-            exc_info (_ExcInfoType, optional): See `logging.Logger`'s
+            exc_info (ExcInfoType, optional): See `logging.Logger`'s
                 method `log` for details. Defaults to `None`.
             stack_info (bool, optional): See `logging.Logger`'s
                 method `log` for details. Defaults to `False`.
@@ -465,7 +463,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         *args: "Any",
         level: str | int = "debug",
         quiet: bool = False,
-        exc_info: "_ExcInfoType" = None,
+        exc_info: "ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
         extra: "Mapping[str, object] | None" = None,
@@ -496,7 +494,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
             quiet (bool, optional): If `True`, forces the log to the
                 `logging.DEBUG` level; otherwise, the `level` argument
                 sets the log level. Defaults to `False`.
-            exc_info (_ExcInfoType, optional): See `logging.Logger`'s
+            exc_info (ExcInfoType, optional): See `logging.Logger`'s
                 method `log` for details. Defaults to `None`.
             stack_info (bool, optional): See `logging.Logger`'s
                 method `log` for details. Defaults to `False`.
@@ -523,7 +521,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: "_ExcInfoType" = None,
+        exc_info: "ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
         extra: "Mapping[str, object] | None" = None,
@@ -549,7 +547,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: "_ExcInfoType" = None,
+        exc_info: "ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
         extra: "Mapping[str, object] | None" = None,
@@ -575,7 +573,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: "_ExcInfoType" = None,
+        exc_info: "ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
         extra: "Mapping[str, object] | None" = None,
@@ -601,7 +599,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: "_ExcInfoType" = True,
+        exc_info: "ExcInfoType" = True,
         stack_info: bool = False,
         stacklevel: int = 1,
         extra: "Mapping[str, object] | None" = None,
@@ -629,7 +627,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: "_ExcInfoType" = None,
+        exc_info: "ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
         extra: "Mapping[str, object] | None" = None,
@@ -655,7 +653,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: "_ExcInfoType" = None,
+        exc_info: "ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
         extra: "Mapping[str, object] | None" = None,
@@ -681,7 +679,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: "_ExcInfoType" = None,
+        exc_info: "ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
         extra: "Mapping[str, object] | None" = None,
@@ -712,7 +710,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: "_ExcInfoType" = None,
+        exc_info: "ExcInfoType" = None,
         stack_info: bool = False,
         stacklevel: int = 1,
         extra: "Mapping[str, object] | None" = None,
@@ -763,7 +761,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
     @_update_logger_attributes_hook
     def addFilter(
         self,
-        filter: "_FilterType",  # ruff: ignore[builtin-argument-shadowing]
+        filter: "FilterType",  # ruff: ignore[builtin-argument-shadowing]
     ) -> None:
         """
         Adds the specified `logging.Filter` to the logger.
@@ -771,7 +769,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         See `logging.Logger`'s `addFilter` method for details.
 
         Args:
-            filter (_FilterType): Filter to add
+            filter (FilterType): Filter to add
         """
         self.add_filters(filters=filter)
 
@@ -790,7 +788,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
     @_update_logger_attributes_hook
     def removeFilter(
         self,
-        filter: "_FilterType",  # ruff: ignore[builtin-argument-shadowing]
+        filter: "FilterType",  # ruff: ignore[builtin-argument-shadowing]
     ) -> None:
         """
         Removes the specified `logging.Filter` from the logger.
@@ -798,7 +796,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         See `logging.Logger`'s `removeFilter` method for details.
 
         Args:
-            filter (_FilterType): Filter to remove
+            filter (FilterType): Filter to remove
         """
         self.logger.removeFilter(filter=filter)
 
@@ -950,8 +948,8 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         fn: str,
         lno: int,
         msg: object,
-        args: "_ArgsType",
-        exc_info: "_SysExcInfoType | None",
+        args: "ArgsType",
+        exc_info: "SysExcInfoType | None",
         func: str | None = None,
         extra: "Mapping[str, object] | None" = None,
         sinfo: str | None = None,
@@ -968,10 +966,10 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
             lno (int): Line number in the source file where the logging
                 call was made
             msg (object): Message to log
-            args (_ArgsType): Arguments to pass to the
+            args (ArgsType): Arguments to pass to the
                 `logging.LogRecord` constructor for interpolation
                 into `msg`
-            exc_info (_SysExcInfoType | None): Exception info to pass
+            exc_info (SysExcInfoType | None): Exception info to pass
                 to the `logging.LogRecord` constructor. If `None`, no
                 exception info is included in the record. If a tuple of
                 the form returned by `sys.exc_info()`, the tuple is

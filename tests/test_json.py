@@ -9,7 +9,7 @@ from sefkhet._functional import get_formatter, get_logger
 from sefkhet._json import _DEFAULT_JSON_FIELDS, JsonFormatter, _parse_json_spec
 from sefkhet._object_oriented import Scribe
 from sefkhet._one_step import configure_default_logger
-from sefkhet._typing import _HandlerKwargs
+from sefkhet._typing import HandlerOpts
 
 
 def _make_record(
@@ -396,7 +396,7 @@ class TestJsonFormatterEndToEnd:  # pylint: disable=too-few-public-methods
             level=logging.DEBUG,
             handlers=(
                 logging.StreamHandler(stream),
-                _HandlerKwargs({"level": logging.DEBUG}),
+                HandlerOpts({"level": logging.DEBUG}),
             ),
             formatter="%(message)s",
             json=True,
