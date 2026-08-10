@@ -12,6 +12,7 @@ import pytest
 
 import sefkhet
 from sefkhet._color import ColorFormatter
+from sefkhet._csv import CsvFormatter
 from sefkhet._functional import (
     _DEFAULT_FMT,
     _DEFAULT_FMT_WITH_NAME,
@@ -40,8 +41,11 @@ from sefkhet._functional import (
     set_formatter_for_handler,
     set_formatter_for_logger,
 )
+from sefkhet._json import JsonFormatter
+from sefkhet._logfmt import LogfmtFormatter
 from sefkhet._typing import (
     DatagramHandlerOpts,
+    Default,
     HTTPHandlerOpts,
     HandlerOpts,
     LoggerKwargs,
@@ -277,6 +281,38 @@ class TestGetFormatterFromSpec:
         """
         result = get_formatter_from_spec(simple_formatter)
         assert result is simple_formatter
+
+    @staticmethod
+    def test_default_spec_uses_default_fmt() -> None:
+        """A `Default` spec builds a formatter with the default fmt."""
+        result = get_formatter_from_spec(Default)
+        assert isinstance(result, logging.Formatter)
+        assert result._fmt == get_formatter()._fmt
+
+    @staticmethod
+    def test_default_spec_forwards_color() -> None:
+        """A `Default` spec forwards the `color` argument."""
+        result = get_formatter_from_spec(Default, color="full")
+        assert isinstance(result, ColorFormatter)
+        assert result._color_mode == "full"
+
+    @staticmethod
+    def test_default_spec_forwards_json() -> None:
+        """A `Default` spec forwards the `json` argument."""
+        result = get_formatter_from_spec(Default, json=True)
+        assert isinstance(result, JsonFormatter)
+
+    @staticmethod
+    def test_default_spec_forwards_csv() -> None:
+        """A `Default` spec forwards the `csv` argument."""
+        result = get_formatter_from_spec(Default, csv=True)
+        assert isinstance(result, CsvFormatter)
+
+    @staticmethod
+    def test_default_spec_forwards_logfmt() -> None:
+        """A `Default` spec forwards the `logfmt` argument."""
+        result = get_formatter_from_spec(Default, logfmt=True)
+        assert isinstance(result, LogfmtFormatter)
 
 
 class TestGetFilter:
@@ -783,6 +819,25 @@ class TestParseFiltersArg:
         """A list of specs is converted to a tuple."""
         result = _parse_filters_arg(["myapp", simple_filter])
         assert result == ("myapp", simple_filter)
+
+    @staticmethod
+    def test_bool_in_sequence_raises(simple_filter: logging.Filter) -> None:
+        """A boolean inside a sequence of specs raises TypeError."""
+        with pytest.raises(TypeError, match="found a boolean"):
+            _parse_filters_arg(
+                [simple_filter, True]  # type: ignore[list-item] # pyright: ignore[reportArgumentType]
+            )
+
+    @staticmethod
+    def test_bool_in_long_tuple_raises(simple_filter: logging.Filter) -> None:
+        """
+        A (Filter, bool) pair inside a longer
+        tuple is not treated as a copy pair.
+        """
+        with pytest.raises(TypeError, match="found a boolean"):
+            _parse_filters_arg(
+                (simple_filter, True, "myapp")  # type: ignore[arg-type] # pyright: ignore[reportArgumentType]
+            )
 
 
 class TestAddFiltersToTarget:
@@ -2081,7 +2136,7 @@ _NET_DEFAULTS: dict[str, Any] = {
 }
 
 
-class TestMaybeCreateNetworkHandler:
+class TestMaybeCreateNetworkHandler:  # ruff: ignore[too-many-public-methods]
     """Tests for `_maybe_create_network_handler`."""
 
     @staticmethod
@@ -2131,6 +2186,57 @@ class TestMaybeCreateNetworkHandler:
         result = self._call("syslog", socktype=socket.SOCK_DGRAM)
         assert isinstance(result, logging.handlers.SysLogHandler)
         assert result.socktype == socket.SOCK_DGRAM
+
+    def test_syslog_without_timeout_support(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """
+        On Python < 3.14, SysLogHandler is
+        created without the timeout kwarg.
+        """
+        import sys
+
+        monkeypatch.setattr(sys, "version_info", (3, 13, 0, "final", 0))
+        result = self._call("syslog", syslog_timeout=30.0)
+        assert isinstance(result, logging.handlers.SysLogHandler)
+
+    def test_smtp_missing_mailhost_raises(self) -> None:
+        """SMTPHandler with mailhost=None raises TypeError."""
+        with pytest.raises(TypeError, match="mailhost"):
+            self._call(
+                "smtp",
+                mailhost=None,
+                fromaddr="a@b.com",
+                toaddrs=["c@d.com"],
+                subject="Alert",
+            )
+
+    def test_smtp_missing_fromaddr_raises(self) -> None:
+        """SMTPHandler with fromaddr=None raises TypeError."""
+        with pytest.raises(TypeError, match="fromaddr"):
+            self._call(
+                "smtp",
+                mailhost="smtp.example.com",
+                fromaddr=None,
+                toaddrs=["c@d.com"],
+                subject="Alert",
+            )
+
+    def test_smtp_missing_subject_raises(self) -> None:
+        """SMTPHandler with subject=None raises TypeError."""
+        with pytest.raises(TypeError, match="subject"):
+            self._call(
+                "smtp",
+                mailhost="smtp.example.com",
+                fromaddr="a@b.com",
+                toaddrs=["c@d.com"],
+                subject=None,
+            )
+
+    def test_http_missing_url_raises(self) -> None:
+        """HTTPHandler with url=None raises TypeError."""
+        with pytest.raises(TypeError, match="URL must be provided"):
+            self._call("http", host="example.com", url=None)
 
     def test_socket_handler(self) -> None:
         """SocketHandler created with host and port."""

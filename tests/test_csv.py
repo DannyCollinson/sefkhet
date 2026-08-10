@@ -210,6 +210,43 @@ class TestCsvFormatter:  # ruff: ignore[too-many-public-methods]
         assert len(lines) == 1
 
     @staticmethod
+    def test_header_includes_exc_info_column() -> None:
+        """Header gains an exc_info column when the record has one."""  # ruff: ignore[docstring-missing-exception]
+        fmt = CsvFormatter(csv={"fields": ["message"], "header": True})
+        try:
+            msg = "boom"
+            raise ValueError(msg)  # ruff: ignore[raise-within-try]
+        except ValueError:
+            import sys
+
+            record = _make_record()
+            record.exc_info = sys.exc_info()
+        result = fmt.format(record)
+        lines = result.split("\n")
+        header_parts = next(csv.reader([lines[0]]))
+        assert header_parts == ["message", "exc_info"]
+
+    @staticmethod
+    def test_header_includes_stack_info_column() -> None:
+        """Header gains a stack_info column when the record has one."""
+        fmt = CsvFormatter(csv={"fields": ["message"], "header": True})
+        record = _make_record()
+        record.stack_info = "Stack trace here"
+        result = fmt.format(record)
+        lines = result.split("\n")
+        header_parts = next(csv.reader([lines[0]]))
+        assert header_parts == ["message", "stack_info"]
+
+    @staticmethod
+    def test_header_omits_exc_and_stack_columns_when_absent() -> None:
+        """Header omits exc_info/stack_info for a plain record."""
+        fmt = CsvFormatter(csv={"fields": ["message"], "header": True})
+        result = fmt.format(_make_record())
+        lines = result.split("\n")
+        header_parts = next(csv.reader([lines[0]]))
+        assert header_parts == ["message"]
+
+    @staticmethod
     def test_extra_fields_included() -> None:
         """Extra fields via extra={} are included."""
         fmt = CsvFormatter(csv={"fields": ["message"]})

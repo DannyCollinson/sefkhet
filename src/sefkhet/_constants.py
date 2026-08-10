@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING as _TYPE_CHECKING
 
 
-if _TYPE_CHECKING:
+if _TYPE_CHECKING:  # pragma: no cover
     import logging
 
 
