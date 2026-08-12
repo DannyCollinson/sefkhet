@@ -621,7 +621,7 @@ class TestScribeNameAwareFmt:
         assert fmt._fmt == "%(message)s"
 
 
-class TestScribeConcurrency:
+class TestScribeConcurrency:  # pylint: disable=too-few-public-methods
     """Tests for concurrent Scribe creation."""
 
     @staticmethod
@@ -648,7 +648,7 @@ class TestScribeConcurrency:
         assert len(set(results)) == 20
 
 
-class TestScribeMixedHandlers:
+class TestScribeMixedHandlers:  # pylint: disable=too-few-public-methods
     """Tests for Scribe with mixed handler specs."""
 
     @staticmethod

@@ -106,25 +106,25 @@ class LogfmtFormatter(_logging.Formatter):
         when present.
 
         Args:
-            fmt (str | None, optional): Format string
+            fmt (str | None, default=None): Format string
                 (unused in logfmt output but accepted for
                 interface compatibility).
                 Defaults to `None`.
-            datefmt (str | None, optional): Date format
+            datefmt (str | None, default=None): Date format
                 string used by `formatTime`.
                 Defaults to `None`.
-            style (FormatStyle, optional): Format style.
+            style (FormatStyle, default="%"): Format style.
                 Defaults to `"%"`.
-            validate (bool, optional): If `True`, validates
+            validate (bool, default=True): If `True`, validates
                 the format string. Defaults to `True`.
-            defaults (Mapping[str, Any] | None, optional):
+            defaults (Mapping[str, Any] | None, default=None):
                 Default values for string interpolation.
                 Defaults to `None`.
             logfmt (Literal[True] | LogfmtSpec): Logfmt
                 configuration. `True` for defaults, or a
                 `LogfmtSpec` dict with optional keys
                 `fields` and `sort_keys`.
-        """
+        """  # noqa: DOC105
         super().__init__(
             fmt=fmt,
             datefmt=datefmt,

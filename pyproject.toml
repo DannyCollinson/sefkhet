@@ -33,23 +33,31 @@ keywords = ["log", "logging", "logging-library", "logs"]
     Repository = "https://github.com/DannyCollinson/sefkhet"
 
 [dependency-groups]
+# Dependencies needed exclusively for development:
+# Testing, linting, type checking, building, and documentation
 dev = [
+    { include-group = "checks" },
+    { include-group = "dist" },
+    { include-group = "docs" },
+    { include-group = "test" },
+]
+checks = [
     "bandit[toml]>=1.9.4",
-    "build>=1.5.0",
-    "ipykernel>=7.3.0",
     "mypy>=2.3.0",
-    "myst-parser>=5.1.0",
-    "nbsphinx>=0.9.8",
     "pydoclint>=0.9.1",
     "pylint>=4.0.6",
-    "pyright>=1.1.408",
-    "pytest-cov>=7.1.0",
-    "pytest>=9.1.1",
+    "pyright>=1.1.411",
     "ruff>=0.16.2",
+]
+test = ["pytest-cov>=7.1.0", "pytest>=9.1.1"]
+docs = [
+    "ipykernel>=7.3.0",
+    "myst-parser>=5.1.0",
+    "nbsphinx>=0.9.8",
     "sphinx-rtd-theme>=3.1.0",
     "sphinx>=9.1.0",
-    "twine>=7.0.0",
 ]
+dist = ["build>=1.5.0", "setuptools>=84.0.0", "twine>=7.0.0", "wheel>=0.48.0"]
 
 
 # Build configuration
@@ -74,11 +82,11 @@ include-package-data = true
     version = { attr = "sefkhet._version.__version__" }
 
 
-# Dev tool config
-########################################################################
+    # Dev tool config
+    ########################################################################
 
 [tool.bandit]
-targets = ["*.ipynb", "*.py"]
+targets = ["docsrc/source/demos", "src/sefkhet", "tests"]
 skips = [
     "B101", # assert_used (need assert for pytest)
     "B105", # hardcoded_password_string
@@ -88,23 +96,30 @@ skips = [
 
 [tool.mypy]
 python_version = "3.12"
+namespace_packages = false
+follow_untyped_imports = true
+follow_imports_for_stubs = true
 disallow_any_generics = true
+disallow_subclassing_any = true
 disallow_untyped_calls = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
-disallow_untyped_decorators = true
 check_untyped_defs = true
+disallow_untyped_decorators = true
 warn_redundant_casts = true
-warn_unused_configs = true
 warn_unused_ignores = true
 warn_return_any = true
 warn_unreachable = true
+allow_redefinition_new = false
+local_partial_types = true
+extra_checks = true
 implicit_reexport = false
 strict_equality = true
 strict_equality_for_none = true
 strict_bytes = true
-local_partial_types = true
-allow_redefinition_new = true
+cache_fine_grained = true
+warn_incomplete_stub = true
+warn_unused_configs = true
 
 
 [tool.pydoclint]
@@ -112,8 +127,12 @@ baseline = ".pydoclint-baseline.txt"
 style = "google"
 exclude = '__pycache__|\.coverage|\.git|\.nox|\.pytest_cache|\.ruff_cache|\.tox|\.venv|data|htmlcov|local_data|uv.lock'
 allow-init-docstring = true
+ignore-underscore-args = false
+only-attrs-with-ClassVar-are-treated-as-class-attrs = true
 check-style-mismatch = true
-
+# The line below currently does nothing for google-style docstrings,
+# but is included for completeness and in case of future support
+check-arg-defaults = true
 
 [tool.pylint.main]
 jobs = 2
@@ -279,7 +298,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "--cov=sefkhet --cov-report=html --cov-branch"
+addopts = "--cov=sefkhet --cov-report=html --cov-report=term-missing:skip-covered --cov-branch"
 
 
 [tool.ruff]
@@ -393,6 +412,9 @@ extend-exclude = [
         "print",                                     # T201
         "suspicious-non-cryptographic-random-usage", # S311
     ]
+    external = [
+        "DOC", # pydoclint
+    ]
     preview = true
 
         [tool.ruff.lint.isort]
@@ -403,7 +425,7 @@ extend-exclude = [
 
         [tool.ruff.lint.per-file-ignores]
         "*.ipynb" = [
-            "T20",
+            "T20",                    # flake8-print
             "commented-out-code",     # ERA001
             "magic-value-comparison", # PLR2004
         ]
@@ -420,7 +442,7 @@ extend-exclude = [
             "unused-static-method-argument", # ARG004
         ]
         "scratch/**" = [
-            "D",
+            "D",                          # pydocstyle
             "commented-out-code",         # ERA001
             "implicit-namespace-package", # INP001
             "unused-import",              # F401

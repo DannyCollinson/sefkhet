@@ -12,7 +12,7 @@ if _TYPE_CHECKING:  # pragma: no cover
     import logging.handlers  # ruff: ignore[runtime-import-in-type-checking-block]
     from collections.abc import Callable, Mapping, Sequence
     from socket import SocketKind
-    from typing import Any
+    from typing import Any, Literal
 
     from sefkhet._typing import (
         ColorSpec,
@@ -139,7 +139,7 @@ def _parse_log_level(level: str | int, *, quiet: bool = False) -> int:
             provided by `sefkhet.get_log_levels()`, the `int`
             equivalents of those log levels as defined by the `logging`
             library, or any other `int`.
-        quiet (bool, optional): If `True`, forces the log level to
+        quiet (bool, default=False): If `True`, forces the log level to
             `logging.DEBUG`; otherwise, the `level` argument
             determines the log level. Defaults to `False`.
 
@@ -196,45 +196,45 @@ def get_formatter(  # ruff: ignore[too-many-arguments]
     details about the arguments.
 
     Args:
-        fmt (str | logging.Formatter | None, optional): If a
+        fmt (str | logging.Formatter | None, default=_DEFAULT_FMT): If a
             `logging.Formatter`, then the formatter to return a copy
             of; otherwise, the format string to pass to the
             `logging.Formatter` constructor.
             Defaults to `_DEFAULT_FMT`.
-        datefmt (str | None, optional): Date format string to pass
+        datefmt (str | None, default=None): Date format string to pass
             to `logging.Formatter` constructor. Ignored if `fmt`
             is a `logging.Formatter`. Defaults to `None`.
-        style (FormatStyle, optional): Style format used by the
+        style (FormatStyle, default="%"): Style format used by the
             format string. Ignored if `fmt` is a
             `logging.Formatter`. Defaults to `"%"`.
-        validate (bool, optional): If `True`, the configuration is
+        validate (bool, default=True): If `True`, the configuration is
             validated upon creation; otherwise, no validation
             occurs. Ignored if `fmt` is a `logging.Formatter`.
             Defaults to `True`.
-        defaults (Mapping[str, Any] | None, optional): Default
-            values for string variable interpolation. Ignored if
+        defaults (Mapping[str, Any] | None, default=None):
+            Default values for string variable interpolation. Ignored if
             `fmt` is a `logging.Formatter`. Defaults to `None`.
-        copy (bool, optional): If `True`, returns a deep copy of
+        copy (bool, default=False): If `True`, returns a deep copy of
             the original instance of `fmt`; otherwise, returns the
             original instance. Ignored if `fmt` is not a
             `logging.Formatter`. Defaults to `False`.
-        color (ColorSpec, optional): Color mode for the
+        color (ColorSpec, default="level"): Color mode for the
             formatter. Either a bare `ColorMode` string or a
             tuple of `(ColorMode, colormap)` for per-level color
             overrides. If the mode is not `"off"`, a
             `ColorFormatter` is returned. Ignored if `fmt` is a
             `logging.Formatter` or if `csv`, `json`, or `logfmt`
             is not `False`. Defaults to `"level"`.
-        json (bool | JsonSpec, optional): JSON output mode. If
+        json (bool | JsonSpec, default=False): JSON output mode. If
             not `False`, a `JsonFormatter` is returned and `color`
             is ignored. Ignored if `fmt` is a
             `logging.Formatter` or if `csv` is not `False`.
             Defaults to `False`.
-        csv (bool | CsvSpec, optional): CSV output mode. If
+        csv (bool | CsvSpec, default=False): CSV output mode. If
             not `False`, a `CsvFormatter` is returned and `json`,
             `logfmt`, and `color` are ignored. Ignored if `fmt`
             is a `logging.Formatter`. Defaults to `False`.
-        logfmt (bool | LogfmtSpec, optional): Logfmt output
+        logfmt (bool | LogfmtSpec, default=False): Logfmt output
             mode. If not `False`, a `LogfmtFormatter` is
             returned and `color` is ignored. Ignored if `fmt`
             is a `logging.Formatter` or if `csv` or `json` is
@@ -242,7 +242,7 @@ def get_formatter(  # ruff: ignore[too-many-arguments]
 
     Returns:
         logging.Formatter: The specified `logging.Formatter`
-    """
+    """  # noqa: DOC105
     from copy import deepcopy
 
     from sefkhet._color import ColorFormatter
@@ -317,26 +317,26 @@ def get_formatter_from_spec(
 
     Args:
         spec (FormatterSpec): Specification of formatter
-        color (ColorSpec, optional): Color mode for the
+        color (ColorSpec, default="level"): Color mode for the
             formatter. Passed through to `get_formatter` when
             the dict spec does not already contain a `"color"`
             key. Defaults to `"level"`.
-        json (bool | JsonSpec, optional): JSON output mode.
+        json (bool | JsonSpec, default=False): JSON output mode.
             Passed through to `get_formatter` when the dict
             spec does not already contain a `"json"` key.
             Defaults to `False`.
-        csv (bool | CsvSpec, optional): CSV output mode.
+        csv (bool | CsvSpec, default=False): CSV output mode.
             Passed through to `get_formatter` when the dict
             spec does not already contain a `"csv"` key.
             Defaults to `False`.
-        logfmt (bool | LogfmtSpec, optional): Logfmt output
+        logfmt (bool | LogfmtSpec, default=False): Logfmt output
             mode. Passed through to `get_formatter` when the
             dict spec does not already contain a `"logfmt"`
             key. Defaults to `False`.
 
     Returns:
         logging.Formatter: The specified formatter
-    """
+    """  # noqa: DOC105
     # If a dict, specify as keyword arguments
     if isinstance(spec, dict):
         # Dict's own keys take precedence; only inject if absent
@@ -366,16 +366,16 @@ def get_filter(
     filter created with the argument `filt` is returned.
 
     Args:
-        filt (str | logging.Filter, optional): Specification of
-            the filter
-        copy (bool, optional): If `True`, returns a deep copy of the
-            original instance of `filt`; otherwise, the original
+        filt (str | logging.Filter, default=""): Specification of
+            the filter. Defaults to an empty string (`""`).
+        copy (bool, default=False): If `True`, returns a deep copy of
+            the original instance of `filt`; otherwise, the original
             instance is returned. Ignored if `fmt` is not a
             `logging.Formatter`. Defaults to `False`.
 
     Returns:
         logging.Filter: The specified `logging.Filter`
-    """
+    """  # noqa: DOC105
     from copy import deepcopy
 
     # Return copy or original if the filter one is passed
@@ -566,7 +566,9 @@ def _maybe_create_network_handler(  # ruff: ignore[too-many-arguments,too-many-r
             # If using Python 3.14+, this code will
             # be marked as "structurally unreachable" by Pyright
             return logging.handlers.SysLogHandler(
-                address=address, facility=facility, socktype=socktype
+                address=address,
+                facility=facility,
+                socktype=socktype,  # type: ignore[arg-type]
             )
         case "socket":
             return logging.handlers.SocketHandler(host=host, port=port)
@@ -639,7 +641,7 @@ def _maybe_create_handler(  # ruff: ignore[complex-structure,too-many-arguments]
     smtp_secure: ("tuple[()] | tuple[str] | tuple[str, str] | None") = None,
     smtp_timeout: float = 5.0,
     url: str | None = None,
-    http_method: str = "GET",
+    http_method: "Literal['GET', 'POST']" = "GET",
     http_secure: bool = False,
     http_credentials: "tuple[str, str] | None" = None,
     http_context: "Any | None" = None,
@@ -716,8 +718,8 @@ def _maybe_create_handler(  # ruff: ignore[complex-structure,too-many-arguments]
         smtp_timeout (float): Timeout for `SMTPHandler`.
             Defaults to `5.0`.
         url (str): URL path for `HTTPHandler`. Defaults to `None`.
-        http_method (str): HTTP method for `HTTPHandler`.
-            Defaults to `"GET"`.
+        http_method (Literal["GET", "POST"]): HTTP method for
+            `HTTPHandler`. Defaults to `"GET"`.
         http_secure (bool): Whether to use HTTPS for
             `HTTPHandler`. Defaults to `False`.
         http_credentials (tuple[str, str] | None):
@@ -730,7 +732,7 @@ def _maybe_create_handler(  # ruff: ignore[complex-structure,too-many-arguments]
         logging.Handler | None: If a valid handler was
             specified, then a `logging.Handler`; otherwise,
             `None`
-    """
+    """  # noqa: DOC105
     import logging.handlers
     import os
     import sys
@@ -758,11 +760,11 @@ def _maybe_create_handler(  # ruff: ignore[complex-structure,too-many-arguments]
             facility=facility,
             socktype=socktype,
             syslog_timeout=syslog_timeout,
-            host=host,  # pyright: ignore[reportArgumentType]
+            host=host,  # type: ignore[arg-type] # pyright: ignore[reportArgumentType]
             port=port,
             mailhost=mailhost,
             fromaddr=fromaddr,
-            toaddrs=toaddrs,  # pyright: ignore[reportArgumentType]
+            toaddrs=toaddrs,  # type: ignore[arg-type] # pyright: ignore[reportArgumentType]
             subject=subject,
             smtp_credentials=smtp_credentials,
             smtp_secure=smtp_secure,
@@ -842,7 +844,7 @@ def _maybe_create_handler(  # ruff: ignore[complex-structure,too-many-arguments]
 
 def set_formatter_for_handler(  # ruff: ignore[too-many-arguments]
     handler: "logging.Handler",
-    fmt: ("str | logging.Formatter | None") = _DEFAULT_FMT,
+    fmt: "str | logging.Formatter | None" = _DEFAULT_FMT,
     *,
     datefmt: str | None = None,
     style: "FormatStyle" = "%",
@@ -866,29 +868,29 @@ def set_formatter_for_handler(  # ruff: ignore[too-many-arguments]
 
     Args:
         handler (logging.Handler): Handler to set formatter for
-        fmt (str | logging.Formatter | None, optional): If a
+        fmt (str | logging.Formatter | None, default=_DEFAULT_FMT): If a
             `logging.Formatter`, then the formatter to use a copy
             of; otherwise, the format string to pass to the
             `logging.Formatter` constructor.
             Defaults to `_DEFAULT_FMT`.
-        datefmt (str | None, optional): Date format string to pass
+        datefmt (str | None, default=None): Date format string to pass
             to `logging.Formatter` constructor. Ignored if `fmt` is
             a `logging.Formatter`. Defaults to `None`.
-        style (FormatStyle, optional): Style format used by the
+        style (FormatStyle, default="%"): Style format used by the
             format string. Ignored if `fmt` is a
             `logging.Formatter`. Defaults to `"%"`.
-        validate (bool, optional): If `True`, the configuration is
+        validate (bool, default=True): If `True`, the configuration is
             validated upon creation; otherwise, no validation
             occurs. Ignored if `fmt` is a `logging.Formatter`.
             Defaults to `True`.
-        defaults (Mapping[str, Any] | None, optional): Default
+        defaults (Mapping[str, Any] | None, default=None): Default
             values for string variable interpolation. Ignored if
             `fmt` is a `logging.Formatter`. Defaults to `None`.
-        copy (bool, optional): If `True`, uses a deep copy of the
+        copy (bool, default=False): If `True`, uses a deep copy of the
             original instance of `fmt`; otherwise, uses the
             original instance. Ignored if `fmt` is not a
             `logging.Formatter`. Defaults to `False`.
-    """
+    """  # noqa: DOC105
     handler.setFormatter(
         get_formatter(
             fmt=fmt,
@@ -939,7 +941,7 @@ def _parse_filters_arg(
         and isinstance(filters[0], _logging.Filter)
         and isinstance(filters[1], bool)
     ):
-        return ((filters[0], filters[1]),)  # type: ignore[return-value]
+        return ((filters[0], filters[1]),)
 
     # If here, have a sequence of filters, so make sure it's a tuple
     # and no booleans are included
@@ -1127,7 +1129,7 @@ def get_handler(  # ruff: ignore[too-many-arguments]
     smtp_secure: ("tuple[()] | tuple[str] | tuple[str, str] | None") = None,
     smtp_timeout: float = 5.0,
     url: str | None = None,
-    http_method: str = "GET",
+    http_method: "Literal['GET', 'POST']" = "GET",
     http_secure: bool = False,
     http_credentials: "tuple[str, str] | None" = None,
     http_context: "Any | None" = None,
@@ -1187,16 +1189,16 @@ def get_handler(  # ruff: ignore[too-many-arguments]
     `"null"`, and the name of any existing `logging.Handler`*
 
     Args:
-        core (_HandlerCoreType | None, optional): Specifies the core
+        core (_HandlerCoreType | None, default=None): Specifies the core
             logger configuration, including type and required arguments
             for that type, as applicable. The type of handler created
             can be determined by the process defined above.
             Defaults to `None`.
-        name (str | None, optional): Name to assign to the created
+        name (str | None, default=None): Name to assign to the created
             `logging.Handler`. If `None`, no name is assigned.
             Defaults to `None`.
-        level (int | None, optional): Log level to assign to the created
-            `logging.Handler`. If `None`, no level is assigned.
+        level (int | None, default=20): Log level to assign to the
+            created `logging.Handler`. If `None`, no level is assigned.
             Defaults to `20`.
         formatter (FormatterSpec | NoDefaultType, default=NoDefault):
             Specification of a `logging.Formatter` to attach to the
@@ -1210,7 +1212,7 @@ def get_handler(  # ruff: ignore[too-many-arguments]
             non-default arguments to `sefkhet.get_formatter`. If
             `NoDefault`, then no formatter is attached to the handler.
             Defaults to `NoDefault`.
-        filters (FilterSpec | Sequence[FilterSpec], optional):
+        filters (FilterSpec | Sequence[FilterSpec], default=()):
             Specification of `logging.Filter`s to attach to the created
             handler. If more than one filter is specified, then they are
             all added to the handler in order. Specification of each
@@ -1227,7 +1229,7 @@ def get_handler(  # ruff: ignore[too-many-arguments]
             original filter is used; if a compatible `Callable` or class
             with `filter` method, it will be added as a filter directly.
             Defaults to `()` (no filters).
-        handler_type (HandlerType, optional): Type of handler
+        handler_type (HandlerType, default="file"): Type of handler
             to create. One of `"file"`, `"watched_file"`,
             `"rotating_file"`, `"timed_rotating_file"`,
             `"memory"`, `"syslog"`, `"socket"`, `"datagram"`,
@@ -1240,128 +1242,128 @@ def get_handler(  # ruff: ignore[too-many-arguments]
             keyword arguments. File handler types are ignored
             if not creating a file handler.
             Defaults to `"file"`.
-        mode (str, optional): Mode used to open the log file. Ignored
+        mode (str, default="a"): Mode used to open the log file. Ignored
             if not creating a file handler or if using
             `"timed_rotating_file"`. Defaults to `"a"`.
-        encoding (str | None, optional): Encoding for the log file.
-            Ignored if not creating a file handler. Note that the
+        encoding (str | None, default="utf-8"): Encoding for the log
+            file. Ignored if not creating a file handler. Note that the
             default here does not match the `logging` default of
             `None`. Defaults to `"utf-8"`.
-        delay (bool, optional): If `True`, the log file is not opened
-            until a message is emitted; otherwise, the file is opened
-            immediately upon handler creation. Ignored if not creating
-            a file handler. Defaults to `False`.
-        errors (str | None, optional): Determines how encoding errors
-            are handled. Ignored if not creating a file handler.
+        delay (bool, default=False): If `True`, the log file is not
+            opened until a message is emitted; otherwise, the file is
+            opened immediately upon handler creation. Ignored if not
+            creating a file handler. Defaults to `False`.
+        errors (str | None, default=None): Determines how encoding
+            errors are handled. Ignored if not creating a file handler.
             Defaults to `None`.
-        max_bytes (int, optional): Maximum file size in bytes before
+        max_bytes (int, default=0): Maximum file size in bytes before
             rotation. Only used for `"rotating_file"`.
             Defaults to `0` (no limit).
-        backup_count (int, optional): Number of backup files to keep
+        backup_count (int, default=0): Number of backup files to keep
             after rotation. Only used for rotating file handlers.
             Defaults to `0`.
-        when (str, optional): Interval type for timed rotation (e.g.
+        when (str, default="h"): Interval type for timed rotation (e.g.
             `"h"`, `"d"`, `"midnight"`). Only used for
             `"timed_rotating_file"`. Defaults to `"h"`.
-        interval (int, optional): Interval count for timed rotation.
+        interval (int, default=1): Interval count for timed rotation.
             Only used for `"timed_rotating_file"`. Defaults to `1`.
-        utc (bool, optional): If `True`, UTC time is used for
+        utc (bool, default=False): If `True`, UTC time is used for
             rotation timing. Only used for
             `"timed_rotating_file"`. Defaults to `False`.
-        at_time (datetime.time | None, optional): Specific time of
+        at_time (datetime.time | None, default=None): Specific time of
             day for rotation. Only used for
             `"timed_rotating_file"`. Defaults to `None`.
-        namer (Callable[[str], str] | None, optional): Callable to
+        namer (Callable[[str], str] | None, default=None): Callable to
             generate rotated file names. Only used for
             `"timed_rotating_file"`. Defaults to `None`.
-        rotator (Callable[[str, str], None] | None, optional):
+        rotator (Callable[[str, str], None] | None, default=None):
             Callable to perform file rotation. Only used for
             `"timed_rotating_file"`. Defaults to `None`.
-        copy (bool, optional): If `True`, returns a deep copy of the
-            original instance of `core`; otherwise, the original
+        copy (bool, default=False): If `True`, returns a deep copy of
+            the original instance of `core`; otherwise, the original
             instance is returned. Ignored if `core` is not a
             `logging.Handler`. Defaults to `False`.
-        queued (bool, optional): If `True`, wraps the created handler
-            in a `logging.handlers.QueueHandler` /
+        queued (bool, default=False): If `True`, wraps the created
+            handler in a `logging.handlers.QueueHandler` /
             `logging.handlers.QueueListener` pair so that log I/O
             happens on a background thread. The `QueueHandler` is
             returned; the listener is started immediately and
             registered with `atexit` for clean shutdown. If `core` is
             already a `QueueHandler`, it is returned as-is.
             Defaults to `False`.
-        buffered (bool, optional): If `True`, wraps the created
+        buffered (bool, default=False): If `True`, wraps the created
             handler in a `logging.handlers.MemoryHandler` that
             buffers records and flushes them to the target when
             the buffer reaches `capacity` or a record at or
             above `flush_level` is emitted. If `core` is already
             a `MemoryHandler`, it is returned as-is.
             Defaults to `False`.
-        capacity (int, optional): Maximum number of records to
+        capacity (int, default=1024): Maximum number of records to
             buffer before flushing. Only used when `buffered`
             is `True` or `handler_type` is `"memory"`. Must be
             positive. Defaults to `1024`.
-        flush_level (int | str | None, optional): Log level
+        flush_level (int | str | None, default=None): Log level
             that triggers an immediate flush of the buffer.
             Accepts an integer level, a string (parsed via
             `_parse_log_level`), or `None` for the default of
             `logging.ERROR`. Only used when `buffered` is
             `True` or `handler_type` is `"memory"`.
             Defaults to `None`.
-        flush_on_close (bool, optional): Whether to flush
+        flush_on_close (bool, default=True): Whether to flush
             buffered records when the handler is closed. Only
             used when `buffered` is `True` or `handler_type`
             is `"memory"`. Defaults to `True`.
-        address (str | tuple[str, int], optional): Address
-            for `SysLogHandler`. Can be a Unix socket path
+        address (str | tuple[str, int], default=("localhost, 514)):
+            Address for `SysLogHandler`. Can be a Unix socket path
             or a `(host, port)` tuple. Only used for
             `"syslog"`. Defaults to `("localhost", 514)`.
-        facility (int, optional): Syslog facility code.
-            Only used for `"syslog"`. Defaults to `1`
-            (`LOG_USER`).
-        socktype (int | SocketKind | None, optional): Socket type for
-            `SysLogHandler`. Only used for `"syslog"`.
+        facility (int, default=1): Syslog facility code.
+            Only used for `"syslog"`.
+            Defaults to `1` (`LOG_USER`).
+        socktype (int | SocketKind | None, default=None): Socket type
+            for `SysLogHandler`. Only used for `"syslog"`.
             Defaults to `None`.
-        host (str | None, optional): Host for
+        host (str | None, default=None): Host for
             `SocketHandler`, `DatagramHandler`, or
             `HTTPHandler`. Defaults to `None`.
-        port (int | None, optional): Port for
+        port (int | None, default=None): Port for
             `SocketHandler` or `DatagramHandler`.
             Defaults to `None`.
-        mailhost (str | tuple[str, int] | None, optional):
+        mailhost (str | tuple[str, int] | None, default=None):
             Mail server host or `(host, port)` tuple for
             `SMTPHandler`. Defaults to `None`.
-        fromaddr (str | None, optional): Sender address
+        fromaddr (str | None, default=None): Sender address
             for `SMTPHandler`. Defaults to `None`.
-        toaddrs (str | Sequence[str] | None, optional):
+        toaddrs (str | Sequence[str] | None, default=None):
             Recipient address(es) for `SMTPHandler`.
             Defaults to `None`.
-        subject (str | None, optional): Email subject for
+        subject (str | None, default=None): Email subject for
             `SMTPHandler`. Defaults to `None`.
-        smtp_credentials (tuple[str, str] | None, optional):
+        smtp_credentials (tuple[str, str] | None, default=None):
             `(username, password)` tuple for SMTP
             authentication. Only used for `"smtp"`.
             Defaults to `None`.
-        smtp_secure (tuple | None, optional): TLS/SSL
-            settings for `SMTPHandler`. Accepts `()`,
-            `(keyfile,)`, or `(keyfile, certfile)`. Only
-            used for `"smtp"`. Defaults to `None`.
-        smtp_timeout (float, optional): Connection timeout
+        smtp_secure (tuple | None, default=None): TLS/SSL settings for
+            `SMTPHandler`. Accepts `()`, `(keyfile,)`, or
+            `(keyfile, certfile)`. Only used for `"smtp"`.
+            Defaults to `None`.
+        smtp_timeout (float, default=5.0): Connection timeout
             for `SMTPHandler`. Only used for `"smtp"`.
             Defaults to `5.0`.
-        url (str | None, optional): URL path for
+        url (str | None, default=None): URL path for
             `HTTPHandler`. Only used for `"http"`.
             Defaults to `None`.
-        http_method (str, optional): HTTP method for
-            `HTTPHandler`. Only used for `"http"`.
+        http_method (Literal["GET", "POST"], default="GET"): HTTP method
+            for `HTTPHandler`. Only used for `"http"`.
             Defaults to `"GET"`.
-        http_secure (bool, optional): If `True`, HTTPS is
+        http_secure (bool, default=False): If `True`, HTTPS is
             used for `HTTPHandler`. Only used for `"http"`.
             Defaults to `False`.
-        http_credentials (tuple[str, str] | None, optional):
+        http_credentials (tuple[str, str] | None, default=None):
             `(username, password)` tuple for HTTP
             authentication. Only used for `"http"`.
             Defaults to `None`.
-        http_context (Any | None, optional): SSL context
+        http_context (Any | None, default=None): SSL context
             for `HTTPHandler`. Only used for `"http"`.
             Defaults to `None`.
 
@@ -1371,7 +1373,7 @@ def get_handler(  # ruff: ignore[too-many-arguments]
     Raises:
         ValueError: Raised if `core` fails to specify a valid handler
 
-    """
+    """  # noqa: DOC105
     from sefkhet._typing import NoDefaultType
 
     # Create the handler based on core
@@ -1559,34 +1561,34 @@ def set_formatter_for_logger(  # ruff: ignore[too-many-arguments]
 
     Args:
         logger (logging.Logger): Logger to set formatter for
-        fmt (str | logging.Formatter | NoDefaultType | None, optional):
+        fmt (str | logging.Formatter | NoDefaultType | None, default=NoDefault):
             If a `logging.Formatter`, then the formatter to use a
             copy of; otherwise, the format string to pass to the
             `logging.Formatter` constructor. If `NoDefault`,
             resolves to a name-aware default format string.
             Defaults to `NoDefault`.
-        datefmt (str | None, optional): Date format string to pass
+        datefmt (str | None, default=None): Date format string to pass
             to `logging.Formatter` constructor. Ignored if `fmt` is
             a `logging.Formatter`. Defaults to `None`.
-        style (FormatStyle, optional): Style format used by the
+        style (FormatStyle, default="%"): Style format used by the
             format string. Ignored if `fmt` is a
             `logging.Formatter`. Defaults to `"%"`.
-        validate (bool, optional): If `True`, the configuration is
+        validate (bool, default=True): If `True`, the configuration is
             validated upon creation; otherwise, no validation
             occurs. Ignored if `fmt` is a `logging.Formatter`.
             Defaults to `True`.
-        defaults (Mapping[str, Any] | None, optional): Default
-            values for string variable interpolation. Ignored if
+        defaults (Mapping[str, Any] | None, default=None):
+            Default values for string variable interpolation. Ignored if
             `fmt` is a `logging.Formatter`. Defaults to `None`.
-        copy (bool, optional): If `True`, uses a deep copy of the
+        copy (bool, default=False): If `True`, uses a deep copy of the
             original instance of `fmt`; otherwise, uses the
             original instance. Ignored if `fmt` is not a
             `logging.Formatter`. Defaults to `False`.
-        force (bool, optional): If `True`, sets the formatter for
+        force (bool, default=False): If `True`, sets the formatter for
             handlers that already have a formatter configured;
             otherwise, only handlers without a formatter already set
             will have their formatter set. Defaults to `False`.
-    """
+    """  # noqa: DOC105 # ruff: ignore[doc-line-too-long]
     from sefkhet._typing import NoDefaultType
 
     # Resolve default fmt based on logger name
@@ -1630,16 +1632,16 @@ def get_logger(  # ruff: ignore[too-many-arguments]
     (`None` and `30`, respectively).
 
     Args:
-        name (str | None, optional): Name to apply to the
+        name (str | None, default="log"): Name to apply to the
             logger. If `None`, uses the root logger.
             Defaults to `"log"`.
-        level (str | int, optional): Logging level to use if
+        level (str | int, default=20): Logging level to use if
             `quiet` is `False`. Valid log levels include a log
             level string from the options provided by
             `sefkhet.get_log_levels()`, the `int` equivalents
             of those log levels as defined by the `logging`
             library, or any other `int`. Defaults to `20`.
-        handlers (HandlerSpec | Sequence[HandlerSpec], optional):
+        handlers (HandlerSpec | Sequence[HandlerSpec], default=()):
             Specification of any `logging.Handler`s to add
             to the logger. Multiple handlers can be specified
             by providing a sequence of handler specifications.
@@ -1650,20 +1652,20 @@ def get_logger(  # ruff: ignore[too-many-arguments]
             a `tuple`, where the first item is the argument
             for `core`.
             Defaults to `()` (no handlers).
-        formatter (FormatterSpec | NoDefaultType, optional):
+        formatter (FormatterSpec | NoDefaultType, default=NoDefault):
             Specification of a `logging.Formatter` to add to
             all handlers created for the logger that do not
             have an alternative formatter specified. If
             `NoDefault`, no formatters are added.
             Defaults to `NoDefault`.
-        filters (FilterSpec | Sequence[FilterSpec], optional):
+        filters (FilterSpec | Sequence[FilterSpec], default=()):
             Specification of any `logging.Filter`s to add to
             the logger. Multiple filters can be specified by
             providing a sequence of filter specifications.
             Specification of each filter is the same as when
             using the `sefkhet.get_handler` inteface.
             Defaults to `()` (no filters).
-        color (ColorSpec, optional): Color mode to apply to
+        color (ColorSpec, default="level"): Color mode to apply to
             the formatter. Either a bare `ColorMode` string or
             a tuple of `(ColorMode, colormap)` for per-level
             color overrides. When `formatter` is `NoDefault`
@@ -1672,22 +1674,22 @@ def get_logger(  # ruff: ignore[too-many-arguments]
             passed through to `get_formatter_from_spec`.
             Ignored if `csv`, `json`, or `logfmt` is not
             `False`. Defaults to `"level"`.
-        json (bool | JsonSpec, optional): JSON output mode.
+        json (bool | JsonSpec, default=False): JSON output mode.
             If not `False`, a `JsonFormatter` is created and
             `color` is ignored. Ignored if `csv` is not
             `False`. Defaults to `False`.
-        csv (bool | CsvSpec, optional): CSV output mode.
+        csv (bool | CsvSpec, default=False): CSV output mode.
             If not `False`, a `CsvFormatter` is created and
             `json`, `logfmt`, and `color` are ignored.
             Defaults to `False`.
-        logfmt (bool | LogfmtSpec, optional): Logfmt output
+        logfmt (bool | LogfmtSpec, default=False): Logfmt output
             mode. If not `False`, a `LogfmtFormatter` is
             created and `color` is ignored. Ignored if `csv`
             or `json` is not `False`. Defaults to `False`.
 
     Returns:
         logging.Logger: The speficied `logging.Logger`
-    """
+    """  # noqa: DOC105
     from sefkhet._typing import NoDefaultType
 
     # Resolve name, replacing default with "log"
@@ -1770,7 +1772,7 @@ def get_logger_from_spec(spec: "LoggerSpec") -> "logging.Logger":
     # If here, have tuple of name, level, and/or keyword args
     # Check if first item is name or level
     if spec[0] is None or isinstance(spec[0], str):
-        name = spec[0]
+        name: str | NoDefaultType | None = spec[0]
         level = None
     else:
         name = NoDefault

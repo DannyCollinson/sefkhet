@@ -24,9 +24,10 @@ def _make_record(
     Create a minimal LogRecord for testing.
 
     Args:
-        msg (str, optional): Log message. Defaults to `"hello"`.
-        level (int, optional): Log level. Defaults to `logging.INFO`.
-        args (tuple[object, ...] | None, optional): Format args.
+        msg (str, default="hello"): Log message. Defaults to `"hello"`.
+        level (int, default=logging.INFO): Log level.
+            Defaults to `logging.INFO`.
+        args (tuple[object, ...] | None, default=None): Format args.
             Defaults to `None`.
 
     Returns:

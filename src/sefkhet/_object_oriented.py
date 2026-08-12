@@ -34,6 +34,9 @@ if _TYPE_CHECKING:  # pragma: no cover
 P = _ParamSpec("P")
 R = _TypeVar("R")
 
+# Define the default message format string
+DEFAULT_FMT = "%(asctime)s | %(levelname)s | %(message)s"
+
 
 class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
     _logging.Logger
@@ -81,19 +84,19 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         respectively).
 
         Args:
-            name (str | NoDefaultType | None, optional): Name to
-                apply to the logger. If `None`, uses the root
+            name (str | NoDefaultType | None, default=NoDefault):
+                Name to apply to the logger. If `None`, uses the root
                 logger. If `NoDefault`, uses `"logX"`, where `X`
                 is the cumulative number of `Scribe` instances
                 created with a default name.
                 Defaults to `NoDefault`.
-            level (str | int, optional): Logging level to apply to
+            level (str | int, default=20): Logging level to apply to
                 the logger. Valid log levels include a log level
                 string from the options provided by
                 `sefkhet.get_log_levels()`, the `int` equivalents
                 of those log levels as defined by the `logging`
                 library, or any other `int`. Defaults to `20`.
-            handlers (HandlerSpec | Sequence[HandlerSpec], optional):
+            handlers (HandlerSpec | Sequence[HandlerSpec], default=None):
                 Specification of any `logging.Handler`s to add
                 to the logger. Multiple handlers can be specified
                 by providing a sequence of handler specs. Spec of
@@ -105,40 +108,40 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
                 for `core`. Note that if `None`, a default
                 `logging.StreamHandler` that logs to `sys.stderr`
                 is created. Defaults to `None`.
-            formatter (FormatterSpec | NoDefaultType, optional):
+            formatter (FormatterSpec | NoDefaultType, default=NoDefault):
                 Specification of a `logging.Formatter` to add to
                 all handlers created for the logger that do not
                 have an alternative formatter specified. If
                 `NoDefault`, no formatters are added.
                 Defaults to `NoDefault`.
-            filters (FilterSpec | Sequence[FilterSpec], optional):
+            filters (FilterSpec | Sequence[FilterSpec], default=()):
                 Specification of any `logging.Filter`s to add to
                 the logger. Multiple filters can be specified by
                 providing a sequence of filter specifications.
                 Specification of each filter is the same as when
                 using the `sefkhet.get_handler` inteface.
                 Defaults to `()` (no filters).
-            color (ColorSpec, optional): Color mode for the
+            color (ColorSpec, default="level"): Color mode for the
                 formatter. Either a bare `ColorMode` string or a
                 tuple of `(ColorMode, colormap)` for per-level
                 color overrides. Passed through to `get_logger`.
                 If mode is not `"off"`, a `ColorFormatter` is
                 used. Ignored if `csv`, `json`, or `logfmt` is
                 not `False`. Defaults to `"level"`.
-            json (bool | JsonSpec, optional): JSON output mode.
+            json (bool | JsonSpec, default=False): JSON output mode.
                 If not `False`, a `JsonFormatter` is used and
                 `color` is ignored. Ignored if `csv` is not
                 `False`. Defaults to `False`.
-            csv (bool | CsvSpec, optional): CSV output mode.
+            csv (bool | CsvSpec, default=False): CSV output mode.
                 If not `False`, a `CsvFormatter` is used and
                 `json`, `logfmt`, and `color` are ignored.
                 Defaults to `False`.
-            logfmt (bool | LogfmtSpec, optional): Logfmt
-                output mode. If not `False`, a
+            logfmt (bool | LogfmtSpec, default=False):
+                Logfmt output mode. If not `False`, a
                 `LogfmtFormatter` is used and `color` is
                 ignored. Ignored if `csv` or `json` is not
                 `False`. Defaults to `False`.
-        """
+        """  # noqa: DOC105 # ruff: ignore[doc-line-too-long]
         from sefkhet._functional import get_formatter_from_spec, get_logger
         from sefkhet._typing import NoDefaultType
 
@@ -236,7 +239,9 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
 
             return result
 
-        return wrapper
+        # We need to type ignore because Mypy doesn't recognize
+        # the quoted "Scribe" type annotation as the correct type
+        return wrapper  # type: ignore[return-value]
 
     @_update_logger_attributes_hook
     def add_handlers(
@@ -286,33 +291,34 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         `logging.Formatter` class for details about the arguments.
 
         Args:
-            fmt (str | logging.Formatter | None, optional): If a
-                `logging.Formatter`, then the formatter to use a copy
-                of; otherwise, the format string to pass to the
-                `logging.Formatter` constructor. Defaults to
-                `"%(asctime)s | %(levelname)s | %(message)s"`.
-            datefmt (str | None, optional): Date format string to pass
-                to `logging.Formatter` constructor. Ignored if `fmt` is
-                a `logging.Formatter`. Defaults to `None`.
-            style (FormatStyle, optional): Style format used by the
+            fmt (str | logging.Formatter | None, default=DEFAULT_FMT):
+                If a `logging.Formatter`, then the formatter to use a
+                copy of; otherwise, the format string to pass to the
+                `logging.Formatter` constructor.
+                Defaults to `DEFAULT_FMT`.
+            datefmt (str | None, default=None): Date format string to
+                pass to `logging.Formatter` constructor. Ignored if
+                `fmt` is a `logging.Formatter`. Defaults to `None`.
+            style (FormatStyle, default="%"): Style format used by the
                 format string. Ignored if `fmt` is a
                 `logging.Formatter`. Defaults to `"%"`.
-            validate (bool, optional): If `True`, the configuration is
-                validated upon creation; otherwise, no validation
+            validate (bool, default=True): If `True`, the configuration
+                is validated upon creation; otherwise, no validation
                 occurs. Ignored if `fmt` is a `logging.Formatter`.
                 Defaults to `True`.
-            defaults (Mapping[str, Any] | None, optional): Default
-                values for string variable interpolation. Ignored if
-                `fmt` is a `logging.Formatter`. Defaults to `None`.
-            copy (bool, optional): If `True`, uses a deep copy of the
-                original instance of `fmt`; otherwise, uses the
+            defaults (Mapping[str, Any] | None, default=None):
+                Default values for string variable interpolation.
+                Ignored if `fmt` is a `logging.Formatter`.
+                Defaults to `None`.
+            copy (bool, default=False): If `True`, uses a deep copy of
+                the original instance of `fmt`; otherwise, uses the
                 original instance. Ignored if `fmt` is not a
                 `logging.Formatter`. Defaults to `False`.
-            force (bool, optional): If `True`, sets the formatter for
-                handlers that already have a formatter configured;
+            force (bool, default=False): If `True`, sets the formatter
+                for handlers that already have a formatter configured;
                 otherwise, only handlers without a formatter already set
                 will have their formatter set. Defaults to `False`.
-        """
+        """  # noqa: DOC105
         from sefkhet._functional import get_formatter, set_formatter_for_logger
 
         # Set new formatter for logger
@@ -372,16 +378,16 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
             *args (Any): Arguments other than `msg` to pass to the
                 `loggingLogger`'s `log` method. This might be used to
                 provide variables to interpolate into `msg`.
-            exc_info (ExcInfoType, optional): See `logging.Logger`'s
+            exc_info (ExcInfoType, default=None): See `logging.Logger`'s
                 method `log` for details. Defaults to `None`.
-            stack_info (bool, optional): See `logging.Logger`'s
+            stack_info (bool, default=False): See `logging.Logger`'s
                 method `log` for details. Defaults to `False`.
-            stacklevel (int, optional): See `logging.Logger`'s
+            stacklevel (int, default=1): See `logging.Logger`'s
                 method `log` for details. Defaults to `1`.
-            extra (Mapping[str, object] | None, optional): See
-                `logging.Logger`'s method `log` for details.
+            extra (Mapping[str, object] | None, default=None):
+                See `logging.Logger`'s method `log` for details.
                 Defaults to `None`.
-        """
+        """  # noqa: DOC105
         from sefkhet._functional import _parse_log_level
 
         # Determine level
@@ -422,26 +428,26 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
             *args (Any): Arguments other than `msg` to pass to the
                 `loggingLogger`'s `log` method. This might be used to
                 provide variables to interpolate into `msg`.
-            level (str | int, optional): Logging level to use if
+            level (str | int, default="debug"): Logging level to use if
                 `quiet` is `False`. Valid log levels include a log level
                 string from the options provided by
                 `sefkhet.get_log_levels()`, the `int` equivalents of
                 those log levels as defined by the `logging` library, or
                 any other `int`. Overriden by the `quiet` argument if it
                 is `True`. Defaults to `"debug"`.
-            quiet (bool, optional): If `True`, forces the log to the
-                `logging.DEBUG` level; otherwise, the `level` argument
-                sets the log level. Defaults to `False`.
-            exc_info (ExcInfoType, optional): See `logging.Logger`'s
+            quiet (bool, default=False): If `True`, forces the log to
+                the `logging.DEBUG` level; otherwise, the `level`
+                argument sets the log level. Defaults to `False`.
+            exc_info (ExcInfoType, default=None): See `logging.Logger`'s
                 method `log` for details. Defaults to `None`.
-            stack_info (bool, optional): See `logging.Logger`'s
+            stack_info (bool, default=False): See `logging.Logger`'s
                 method `log` for details. Defaults to `False`.
-            stacklevel (int, optional): See `logging.Logger`'s
+            stacklevel (int, default=1): See `logging.Logger`'s
                 method `log` for details. Defaults to `1`.
-            extra (Mapping[str, object] | None, optional): See
+            extra (Mapping[str, object] | None, default=None): See
                 `logging.Logger`'s method `log` for details.
                 Defaults to `None`.
-        """
+        """  # noqa: DOC105
         from sefkhet._functional import _parse_log_level
 
         # Determine level
@@ -484,26 +490,26 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
             *args (Any): Arguments other than `msg` to pass to the
                 `loggingLogger`'s `log` method. This might be used to
                 provide variables to interpolate into `msg`.
-            level (str | int, optional): Logging level to use if
+            level (str | int, default="debug"): Logging level to use if
                 `quiet` is `False`. Valid log levels include a log level
                 string from the options provided by
                 `sefkhet.get_log_levels()`, the `int` equivalents of
                 those log levels as defined by the `logging` library, or
                 any other `int`. Overriden by the `quiet` argument if it
                 is `True`. Defaults to `"debug"`.
-            quiet (bool, optional): If `True`, forces the log to the
-                `logging.DEBUG` level; otherwise, the `level` argument
-                sets the log level. Defaults to `False`.
-            exc_info (ExcInfoType, optional): See `logging.Logger`'s
+            quiet (bool, default=False): If `True`, forces the log to
+                the `logging.DEBUG` level; otherwise, the `level`
+                argument sets the log level. Defaults to `False`.
+            exc_info (ExcInfoType, default=None): See `logging.Logger`'s
                 method `log` for details. Defaults to `None`.
-            stack_info (bool, optional): See `logging.Logger`'s
+            stack_info (bool, default=False): See `logging.Logger`'s
                 method `log` for details. Defaults to `False`.
-            stacklevel (int, optional): See `logging.Logger`'s
+            stacklevel (int, default=1): See `logging.Logger`'s
                 method `log` for details. Defaults to `1`.
-            extra (Mapping[str, object] | None, optional): See
-                `logging.Logger`'s method `log` for details.
+            extra (Mapping[str, object] | None, default=None):
+                See `logging.Logger`'s method `log` for details.
                 Defaults to `None`.
-        """
+        """  # noqa: DOC105
         self.record(
             msg,
             *args,
@@ -853,10 +859,10 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         See `logging.Logger`'s `findCaller` method for details.
 
         Args:
-            stack_info (bool, optional): If `True`, includes stack info
-                in the returned tuple; otherwise, stack info is not
+            stack_info (bool, default=False): If `True`, includes stack
+                info in the returned tuple; otherwise, stack info is not
                 included. Defaults to `False`.
-            stacklevel (int, optional): Number of stack frames to skip
+            stacklevel (int, default=1): Number of stack frames to skip
                 when determining the caller information.
                 Defaults to `1`.
 
@@ -974,19 +980,20 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
                 exception info is included in the record. If a tuple of
                 the form returned by `sys.exc_info()`, the tuple is
                 passed directly to the `logging.LogRecord` constructor.
-            func (str | None, optional): Function name to pass to the
-                `logging.LogRecord` constructor. If `None`, no function
-                name is included in the record. Defaults to `None`.
-            extra (Mapping[str, object] | None, optional): Extra
-                attributes to add to the `logging.LogRecord` instance
-                created by this function. Defaults to `None`.
-            sinfo (str | None, optional): Stack info to pass to the
+            func (str | None, default=None): Function name to pass to
+                the `logging.LogRecord` constructor. If `None`, no
+                function name is included in the record.
+                Defaults to `None`.
+            extra (Mapping[str, object] | None, default=None):
+                Extra attributes to add to the `logging.LogRecord`
+                instance created by this function. Defaults to `None`.
+            sinfo (str | None, default=None): Stack info to pass to the
                 `logging.LogRecord` constructor. If `None`, no stack
                 info is included in the record. Defaults to `None`.
 
         Returns:
             logging.LogRecord: Log record created from the arguments
-        """
+        """  # noqa: DOC105
         return self.logger.makeRecord(
             name=name,
             level=level,

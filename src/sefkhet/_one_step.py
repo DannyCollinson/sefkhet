@@ -55,24 +55,24 @@ def configure_default_logger(  # ruff: ignore[too-many-arguments]
     Configures the default logger used by `sefkhet`.
 
     Args:
-        name (str | NoDefaultType | None, optional): Name to
+        name (str | NoDefaultType | None, default=NoDefault): Name to
             assign to default logger. If `NoDefault`, uses
             `"scribe"`. Defaults to `NoDefault`.
-        level (int | NoDefaultType, optional): Logging level
+        level (int | NoDefaultType, default=NoDefault): Logging level
             to assign to default logger and/or handler. If
             `NoDefault`, uses `20`.
             Defaults to `NoDefault`.
-        handlers (_HandlersArgType, optional): Specification of any
-            `logging.Handler`s to add to the default logger. Multiple
-            handlers can be specified by providing a sequence of handler
-            specifications. Specification of each handler is similar to
-            when using the `sefkhet.get_handler` interface, except if
-            using keyword arguments, they must be wrapped into a `dict`
-            and provided as the second item of a `tuple`, where the
-            first item is the argument for `core`. If `NoDefault`, then
-            `sefkhet.get_handler` is called and its result used
+        handlers (_HandlersArgType, default=NoDefault): Specification of
+            any `logging.Handler`s to add to the default logger.
+            Multiple handlers can be specified by providing a sequence
+            of handler specifications. Specification of each handler is
+            similar to when using the `sefkhet.get_handler` interface,
+            except if using keyword arguments, they must be wrapped into
+            a `dict` and provided as the second item of a `tuple`, where
+            the first item is the argument for `core`. If `NoDefault`,
+            then `sefkhet.get_handler` is called and its result used
             as `handlers`. Defaults to `NoDefault`.
-        formatter (FormatterSpec | NoDefaultType, optional):
+        formatter (FormatterSpec | NoDefaultType, default=NoDefault):
             Specification of a `logging.Formatter` to add to
             all handlers created for the logger that do not
             have an alternative formatter specified. If
@@ -86,39 +86,39 @@ def configure_default_logger(  # ruff: ignore[too-many-arguments]
             when using the `sefkhet.get_handler` inteface. If
             `NoDefault`, then `sefkhet.get_filter` is called and its
             result used as `filters`. Defaults to `NoDefault`.
-        spec (LoggerSpec | NoDefaultType, optional): If not
+        spec (LoggerSpec | NoDefaultType, default=NoDefault): If not
             `NoDefault` and all other arguments are
             `NoDefault`, then the logger is created according
             to `spec`; otherwise, this parameter is ignored.
             Defaults to `NoDefault`.
-        force (bool, optional): If `True`, the default logger
+        force (bool, default=False): If `True`, the default logger
             will be reconfigured if it has already been
             configured; otherwise, the default logger will not
             be reconfigured. Ignored if the default logger has
             not already been configured. Defaults to `False`.
-        color (ColorSpec, optional): Color mode for the
+        color (ColorSpec, default="level"): Color mode for the
             formatter. Either a bare `ColorMode` string or a
             tuple of `(ColorMode, colormap)` for per-level
             color overrides. Passed through to `get_logger` in
             the non-spec path. Ignored if `csv`, `json`, or
             `logfmt` is not `False`. Defaults to `"level"`.
-        json (bool | JsonSpec, optional): JSON output mode.
+        json (bool | JsonSpec, default=False): JSON output mode.
             If not `False`, a `JsonFormatter` is used and
             `color` is ignored. Passed through to `get_logger`
             in the non-spec path. Ignored if `csv` is not
             `False`. Defaults to `False`.
-        csv (bool | CsvSpec, optional): CSV output mode. If
+        csv (bool | CsvSpec, default=False): CSV output mode. If
             not `False`, a `CsvFormatter` is used and `json`,
             `logfmt`, and `color` are ignored. Passed through
             to `get_logger` in the non-spec path.
             Defaults to `False`.
-        logfmt (bool | LogfmtSpec, optional): Logfmt output
+        logfmt (bool | LogfmtSpec, default=False): Logfmt output
             mode. If not `False`, a `LogfmtFormatter` is used
             and `color` is ignored. Passed through to
             `get_logger` in the non-spec path. Ignored if
             `csv` or `json` is not `False`.
             Defaults to `False`.
-    """
+    """  # noqa: DOC105
     from sefkhet._functional import (
         _get_default_fmt,
         get_formatter,
@@ -216,13 +216,13 @@ def log(  # ruff: ignore[too-many-arguments]
         *args (Any): Arguments other than `msg` to pass to the
             `loggingLogger`'s `log` method. This might be used to
             provide variables to interpolate into `msg`.
-        exc_info (ExcInfoType, optional): See `logging.Logger`'s
+        exc_info (ExcInfoType, default=None): See `logging.Logger`'s
             method `log` for details. Defaults to `None`.
-        stack_info (bool, optional): See `logging.Logger`'s
+        stack_info (bool, default=False): See `logging.Logger`'s
             method `log` for details. Defaults to `False`.
-        stacklevel (int, optional): See `logging.Logger`'s
+        stacklevel (int, default=1): See `logging.Logger`'s
             method `log` for details. Defaults to `1`.
-        extra (Mapping[str, object] | None, optional): See
+        extra (Mapping[str, object] | None, default=None): See
             `logging.Logger`'s method `log` for details.
             Defaults to `None`.
         logger (_LoggerArgType, default=NoDefault): Specification of
@@ -239,7 +239,7 @@ def log(  # ruff: ignore[too-many-arguments]
             is a `LoggerSpec`, a separate logger will be created
             according to the specification and used to log the message.
             Defaults to `NoDefault`.
-    """
+    """  # noqa: DOC105
     from sefkhet._functional import _parse_log_level, get_logger_from_spec
     from sefkhet._typing import NoDefaultType
 
@@ -301,13 +301,13 @@ def record(  # ruff: ignore[too-many-arguments]
         *args (Any): Arguments other than `msg` to pass to the
             `loggingLogger`'s `log` method. This might be used to
             provide variables to interpolate into `msg`.
-        level (str | int, optional): Logging level to log message at.
-            Valid log levels include a log level string from the options
-            provided by `sefkhet.get_log_levels()`, the `int`
+        level (str | int, default="debug"): Logging level to log message
+            at. Valid log levels include a log level string from the
+            options provided by `sefkhet.get_log_levels()`, the `int`
             equivalents of those log levels as defined by the `logging`
             library, or any other `int`. Overriden by the `quiet`
             argument if it is `True`. Defaults to `"debug"`.
-        quiet (bool, optional): If `True`, forces the log to the
+        quiet (bool, default=False): If `True`, forces the log to the
             `logging.DEBUG` level; otherwise, the `level` argument sets
             the log level. Defaults to `False`.
         logger (_LoggerArgType, default=NoDefault): Specification of
@@ -324,16 +324,16 @@ def record(  # ruff: ignore[too-many-arguments]
             is a `LoggerSpec`, a separate logger will be created
             according to the specification and used to log the message.
             Defaults to `NoDefault`.
-        exc_info (ExcInfoType, optional): See `logging.Logger`'s
+        exc_info (ExcInfoType, default=None): See `logging.Logger`'s
             method `log` for details. Defaults to `None`.
-        stack_info (bool, optional): See `logging.Logger`'s
+        stack_info (bool, default=False): See `logging.Logger`'s
             method `log` for details. Defaults to `False`.
-        stacklevel (int, optional): See `logging.Logger`'s
+        stacklevel (int, default=1): See `logging.Logger`'s
             method `log` for details. Defaults to `1`.
-        extra (Mapping[str, object] | None, optional): See
+        extra (Mapping[str, object] | None, default=None): See
             `logging.Logger`'s method `log` for details.
             Defaults to `None`.
-    """
+    """  # noqa: DOC105
     from sefkhet._functional import _parse_log_level
 
     # Parse provided level
@@ -378,22 +378,22 @@ def rec(  # ruff: ignore[too-many-arguments]
         *args (Any): Arguments other than `msg` to pass to the
             `loggingLogger`'s `log` method. This might be used to
             provide variables to interpolate into `msg`.
-        level (str | int, optional): Logging level to log message at.
-            Valid log levels include a log level string from the options
-            provided by `sefkhet.get_log_levels()`, the `int`
+        level (str | int, default="debug"): Logging level to log message
+            at. Valid log levels include a log level string from the
+            options provided by `sefkhet.get_log_levels()`, the `int`
             equivalents of those log levels as defined by the `logging`
             library, or any other `int`. Overriden by the `quiet`
             argument if it is `True`. Defaults to `"debug"`.
-        quiet (bool, optional): If `True`, forces the log to the
+        quiet (bool, default=False): If `True`, forces the log to the
             `logging.DEBUG` level; otherwise, the `level` argument sets
             the log level. Defaults to `False`.
-        exc_info (ExcInfoType, optional): See `logging.Logger`'s
+        exc_info (ExcInfoType, default=None): See `logging.Logger`'s
             method `log` for details. Defaults to `None`.
-        stack_info (bool, optional): See `logging.Logger`'s
+        stack_info (bool, default=False): See `logging.Logger`'s
             method `log` for details. Defaults to `False`.
-        stacklevel (int, optional): See `logging.Logger`'s
+        stacklevel (int, default=1): See `logging.Logger`'s
             method `log` for details. Defaults to `1`.
-        extra (Mapping[str, object] | None, optional): See
+        extra (Mapping[str, object] | None, default=None): See
             `logging.Logger`'s method `log` for details.
             Defaults to `None`.
         logger (_LoggerArgType, default=NoDefault): Specification of
@@ -410,7 +410,7 @@ def rec(  # ruff: ignore[too-many-arguments]
             is a `LoggerSpec`, a separate logger will be created
             according to the specification and used to log the message.
             Defaults to `NoDefault`.
-    """
+    """  # noqa: DOC105
     record(
         msg,
         *args,

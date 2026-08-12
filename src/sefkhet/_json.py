@@ -80,23 +80,23 @@ class JsonFormatter(_logging.Formatter):
         serialised as strings when present.
 
         Args:
-            fmt (str | None, optional): Format string (unused in
+            fmt (str | None, default=None): Format string (unused in
                 JSON output but accepted for interface
                 compatibility). Defaults to `None`.
-            datefmt (str | None, optional): Date format string
+            datefmt (str | None, default=None): Date format string
                 used by `formatTime`. Defaults to `None`.
-            style (FormatStyle, optional): Format style.
+            style (FormatStyle, default="%"): Format style.
                 Defaults to `"%"`.
-            validate (bool, optional): If `True`, validates the
+            validate (bool, default=True): If `True`, validates the
                 format string. Defaults to `True`.
-            defaults (Mapping[str, Any] | None, optional): Default
-                values for string interpolation.
+            defaults (Mapping[str, Any] | None, default=None):
+                Default values for string interpolation.
                 Defaults to `None`.
             json (Literal[True] | JsonSpec): JSON configuration. `True`
                 for defaults, or a `JsonSpec` dict with optional
                 keys `fields`, `indent`, `ensure_ascii`, and
                 `sort_keys`.
-        """
+        """  # noqa: DOC105
         super().__init__(
             fmt=fmt,
             datefmt=datefmt,

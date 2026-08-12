@@ -45,7 +45,7 @@ class NoDefaultType:  # pylint: disable=too-few-public-methods
     """
 
 
-class NotGivenType:
+class NotGivenType:  # pylint: disable=too-few-public-methods
     """
     Sentinel to denote that a value was not given for an argument.
 
@@ -233,7 +233,7 @@ class HandlerOpts(TypedDict, total=False):
 class StreamHandlerOpts(HandlerOpts, total=False):
     """Options for creating a `logging.StreamHandler`."""
 
-    core: StrOrPathLike | TextIOLike | logging.Handler | DefaultType  # pyright: ignore[reportIncompatibleVariableOverride]
+    core: StrOrPathLike | TextIOLike | logging.Handler | DefaultType  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
     handler_type: Literal["stream"]  # type: ignore[misc] # pyright: ignore[reportIncompatibleVariableOverride]
 
 
@@ -393,7 +393,7 @@ class NTEventLogHandlerOpts(HandlerOpts, total=False):
     logtype: str
 
 
-class A:
+class A:  # pylint: disable=too-few-public-methods
     # Ignored unless creating syslog handler
     address: str | tuple[str, int]
     facility: int | str

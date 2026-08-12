@@ -13,6 +13,10 @@ docs/
 .claude
 CLAUDE.md
 
+# run_tools.sh logs
+run_tools.log
+run_tools.log.prev
+
 
 ### Python template
 

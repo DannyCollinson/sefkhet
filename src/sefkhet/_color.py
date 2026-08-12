@@ -175,23 +175,24 @@ class ColorFormatter(_logging.Formatter):
         - `"partial"`: everything except the message is colored
 
         Args:
-            fmt (str | None, optional): Format string. Defaults to
-                `None`.
-            datefmt (str | None, optional): Date format string.
+            fmt (str | None, default=None): Format string.
                 Defaults to `None`.
-            style (FormatStyle, optional): Format style.
+            datefmt (str | None, default=None): Date format string.
+                Defaults to `None`.
+            style (FormatStyle, default="%"): Format style.
                 Defaults to `"%"`.
-            validate (bool, optional): If `True`, validates the format
-                string. Defaults to `True`.
-            defaults (Mapping[str, Any] | None, optional): Default
-                values for string interpolation. Defaults to `None`.
+            validate (bool, default=True): If `True`, validates the
+                format string. Defaults to `True`.
+            defaults (Mapping[str, Any] | None, default=None):
+                Default values for string interpolation.
+                Defaults to `None`.
             color (ColorSpec): Color mode controlling the scope of
                 colorization. Either a bare `ColorMode` string
                 (`"off"`, `"full"`, `"level"`, `"msg"`, or
                 `"partial"`) or a tuple of `(ColorMode, colormap)`
                 where `colormap` is a `Callable[[int], str]` or a
                 `Mapping[int, str]` for per-level color overrides.
-        """
+        """  # noqa: DOC105
         super().__init__(
             fmt=fmt,
             datefmt=datefmt,

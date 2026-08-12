@@ -469,8 +469,9 @@ class TestMaybeCreateHandler:
         Args:
             core (object): Used as `core` argument
                 to `sefkhet._functional._maybe_create_handler`
-            copy (bool, optional): Used as `copy` argument
-                to `sefkhet._functional._maybe_create_handler`
+            copy (bool, default=False): Used as `copy` argument
+                to `sefkhet._functional._maybe_create_handler`.
+                Defaults to `False`.
 
         Returns:
             logging.Handler | None: Returns the result of calling
@@ -563,10 +564,10 @@ class TestMaybeCreateHandler:
 
         Args:
             core (object): Used as `core` argument
-            handler_type (str, optional): Handler type discriminator.
-                Defaults to `"file"`.
-            delay (bool, optional): If `True`, file open is deferred.
-                Defaults to `True`.
+            handler_type (str, default="file"): Handler type
+                discriminator. Defaults to `"file"`.
+            delay (bool, default=True): If `True`, file open
+                is deferred. Defaults to `True`.
 
         Returns:
             logging.Handler | None: Result of `_maybe_create_handler`
@@ -596,7 +597,7 @@ class TestMaybeCreateHandler:
         try:
             assert isinstance(result, logging.FileHandler)
         finally:
-            if result is not None:  # type: ignore[comparison-overlap] # pragma: no branch
+            if result is not None:  # pragma: no branch
                 result.close()
 
     def test_pathlike_object_creates_file_handler(self, log_file: str) -> None:
@@ -606,7 +607,7 @@ class TestMaybeCreateHandler:
         try:
             assert isinstance(result, logging.FileHandler)
         finally:
-            if result is not None:  # type: ignore[comparison-overlap] # pragma: no branch
+            if result is not None:  # pragma: no branch
                 result.close()
 
     def test_watched_file_handler(self, log_file: str) -> None:
@@ -617,7 +618,7 @@ class TestMaybeCreateHandler:
         try:
             assert isinstance(result, logging.handlers.WatchedFileHandler)
         finally:
-            if result is not None:  # type: ignore[comparison-overlap] # pragma: no branch
+            if result is not None:  # pragma: no branch
                 result.close()
 
     @staticmethod
@@ -647,7 +648,7 @@ class TestMaybeCreateHandler:
             assert result.maxBytes == 1024
             assert result.backupCount == 3
         finally:
-            if result is not None:  # type: ignore[comparison-overlap] # pragma: no branch
+            if result is not None:  # pragma: no branch
                 result.close()
 
     @staticmethod
@@ -677,7 +678,7 @@ class TestMaybeCreateHandler:
             assert result.backupCount == 5
             assert result.utc is True
         finally:
-            if result is not None:  # type: ignore[comparison-overlap] # pragma: no branch
+            if result is not None:  # pragma: no branch
                 result.close()
 
     @staticmethod
@@ -713,7 +714,7 @@ class TestMaybeCreateHandler:
             assert result.namer is _namer
             assert result.rotator is _rotator
         finally:
-            if result is not None:  # type: ignore[comparison-overlap] # pragma: no branch
+            if result is not None:  # pragma: no branch
                 result.close()
 
     def test_textiobase_creates_stream_handler(
