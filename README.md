@@ -1,6 +1,6 @@
-# Sefkhet
+# `sefkhet`
 
-`sefkhet` is a Python package that provides simple setup for complex logging.
+Sefkhet is a Python package that provides simple setup for complex logging.
 
 ![PyPI](https://img.shields.io/pypi/v/my-package.svg)
 
@@ -82,6 +82,14 @@ If you have any questions about the package, you can refer to the [docs](https:/
 
 If you have questions that are still unanswered or run into any issues while using the package, please let us know by creating a new [GitHub Issue](https://github.com/DannyCollinson/sefkhet/issues).
 
+## Notes
+
+The package's name comes from the Egyptian goddess Seshat, who was alternatively known as Sefkhet-Abwy. According to [Wikipedia](https://en.wikipedia.org/wiki/Seshat):
+> Seshat (Ancient Egyptian: 𓋇𓏏𓁐, lit. 'Female Scribe') was the ancient Egyptian goddess of writing, wisdom, and knowledge. She was seen as a scribe and record keeper. She was also credited with inventing writing. She became identified as the goddess of measurement, accounting, architecture, science, astronomy, mathematics, geometry, history and surveying.
+
+She was typically depicted with a seven-pointed emblem above her head or on her headband, which also served as her emblem. This inspired the name Sefkhet-Abwy, which can be translated as "seven-horned".
+
+The package's logo (𓏞) is the [hieroglyphic for "scribe's equipment"](https://en.wikipedia.org/wiki/Scribe_equipment_(hieroglyph)). It depicts a tube-like case to hold reeds to write with, a leather bag for storing inks, and a wooden scribal palette to mix inks on. It is sign Y3 on [Gardiner's sign list](https://en.wikipedia.org/wiki/Gardiner%27s_sign_list), and its codepoint is `0x133DE`.
 
 ## Thanks for checking out `sefkhet`!
 ###
