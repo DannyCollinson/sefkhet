@@ -1,5 +1,7 @@
 """Defines constants used in `sefkhet`."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING as _TYPE_CHECKING
 
 
@@ -53,7 +55,7 @@ _STANDARD_RECORD_ATTRS: frozenset[str] = frozenset(
 
 
 def _extract_known_field(  # pyright: ignore[reportUnusedFunction]
-    field: str, record: "logging.LogRecord", formatter: "logging.Formatter"
+    field: str, record: logging.LogRecord, formatter: logging.Formatter
 ) -> object:
     """
     Extracts a known field value from a `LogRecord`.

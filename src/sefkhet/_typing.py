@@ -1,13 +1,13 @@
 """Typing definitions for `sefkhet`."""
 
-import datetime
+from __future__ import annotations
+
 import logging
 import os
 from collections.abc import Callable, Mapping, Sequence
 from io import TextIOBase
-from socket import SocketKind
-from ssl import SSLContext
 from types import TracebackType
+from typing import TYPE_CHECKING as _TYPE_CHECKING
 from typing import (
     Any,
     Literal,
@@ -18,6 +18,12 @@ from typing import (
     TypedDict,
     runtime_checkable,
 )
+
+
+if _TYPE_CHECKING:
+    import datetime
+    from socket import SocketKind
+    from ssl import SSLContext
 
 
 ########################################################################

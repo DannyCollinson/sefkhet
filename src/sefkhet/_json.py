@@ -1,5 +1,7 @@
 """JSON formatting utilities for `sefkhet`."""
 
+from __future__ import annotations
+
 import logging as _logging
 from typing import TYPE_CHECKING as _TYPE_CHECKING
 
@@ -23,8 +25,8 @@ _DEFAULT_JSON_FIELDS: tuple[str, ...] = (
 
 
 def _parse_json_spec(
-    spec: "Literal[True] | JsonSpec",
-) -> "tuple[tuple[str, ...], int | None, bool, bool]":
+    spec: Literal[True] | JsonSpec,
+) -> tuple[tuple[str, ...], int | None, bool, bool]:
     """
     Returns the result of parsing a JSON spec
     into resolved configuration values.
@@ -64,11 +66,11 @@ class JsonFormatter(_logging.Formatter):
         self,
         fmt: str | None = None,
         datefmt: str | None = None,
-        style: "FormatStyle" = "%",
+        style: FormatStyle = "%",
         *,
         validate: bool = True,
-        defaults: "Mapping[str, Any] | None" = None,
-        json: "Literal[True] | JsonSpec",
+        defaults: Mapping[str, Any] | None = None,
+        json: Literal[True] | JsonSpec,
     ) -> None:
         """
         A `logging.Formatter` subclass that outputs log records
@@ -113,7 +115,7 @@ class JsonFormatter(_logging.Formatter):
             self._json_sort_keys,
         ) = _parse_json_spec(json)
 
-    def format(self, record: "logging.LogRecord") -> str:
+    def format(self, record: logging.LogRecord) -> str:
         """
         Formats the log record as a JSON string.
 

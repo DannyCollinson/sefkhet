@@ -1,5 +1,7 @@
 """One-step logging interface for `sefkhet`."""
 
+from __future__ import annotations
+
 import logging as _logging
 import threading as _threading
 from typing import TYPE_CHECKING as _TYPE_CHECKING
@@ -38,18 +40,18 @@ _lock = _threading.Lock()
 
 
 def configure_default_logger(  # ruff: ignore[too-many-arguments]
-    name: "str | NoDefaultType | None" = NoDefault,
-    level: "int | NoDefaultType" = NoDefault,
+    name: str | NoDefaultType | None = NoDefault,
+    level: int | NoDefaultType = NoDefault,
     *,
-    handlers: "_HandlersArgType" = NoDefault,
-    formatter: "FormatterSpec | NoDefaultType" = NoDefault,
-    filters: "_FiltersArgType" = NoDefault,
-    spec: "LoggerSpec | NoDefaultType" = NoDefault,
+    handlers: _HandlersArgType = NoDefault,
+    formatter: FormatterSpec | NoDefaultType = NoDefault,
+    filters: _FiltersArgType = NoDefault,
+    spec: LoggerSpec | NoDefaultType = NoDefault,
     force: bool = False,
-    color: "ColorSpec" = "level",
-    json: "bool | JsonSpec" = False,
-    csv: "bool | CsvSpec" = False,
-    logfmt: "bool | LogfmtSpec" = False,
+    color: ColorSpec = "level",
+    json: bool | JsonSpec = False,
+    csv: bool | CsvSpec = False,
+    logfmt: bool | LogfmtSpec = False,
 ) -> None:
     """
     Configures the default logger used by `sefkhet`.
@@ -192,12 +194,12 @@ def configure_default_logger(  # ruff: ignore[too-many-arguments]
 def log(  # ruff: ignore[too-many-arguments]
     level: int | str,
     msg: object,
-    *args: "Any",
-    exc_info: "ExcInfoType" = None,
+    *args: Any,
+    exc_info: ExcInfoType = None,
     stack_info: bool = False,
     stacklevel: int = 1,
-    extra: "Mapping[str, object] | None" = None,
-    logger: "logging.Logger | LoggerSpec | NoDefaultType" = NoDefault,
+    extra: Mapping[str, object] | None = None,
+    logger: logging.Logger | LoggerSpec | NoDefaultType = NoDefault,
 ) -> None:
     """
     Log a message according to the `logging.log` API
@@ -276,14 +278,14 @@ def log(  # ruff: ignore[too-many-arguments]
 
 def record(  # ruff: ignore[too-many-arguments]
     msg: object,
-    *args: "Any",
+    *args: Any,
     level: str | int = "debug",
     quiet: bool = False,
-    logger: "logging.Logger | LoggerSpec | NoDefaultType" = NoDefault,
-    exc_info: "ExcInfoType" = None,
+    logger: logging.Logger | LoggerSpec | NoDefaultType = NoDefault,
+    exc_info: ExcInfoType = None,
     stack_info: bool = False,
     stacklevel: int = 1,
-    extra: "Mapping[str, object] | None" = None,
+    extra: Mapping[str, object] | None = None,
 ) -> None:
     """
     Log a message according to the `sefkhet` API
@@ -353,14 +355,14 @@ def record(  # ruff: ignore[too-many-arguments]
 
 def rec(  # ruff: ignore[too-many-arguments]
     msg: object,
-    *args: "Any",
+    *args: Any,
     level: str | int = "debug",
     quiet: bool = False,
-    exc_info: "ExcInfoType" = None,
+    exc_info: ExcInfoType = None,
     stack_info: bool = False,
     stacklevel: int = 1,
-    extra: "Mapping[str, object] | None" = None,
-    logger: "logging.Logger | LoggerSpec | NoDefaultType" = NoDefault,
+    extra: Mapping[str, object] | None = None,
+    logger: logging.Logger | LoggerSpec | NoDefaultType = NoDefault,
 ) -> None:
     """
     Log a message according to the `sefkhet` API

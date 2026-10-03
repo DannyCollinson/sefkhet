@@ -1,5 +1,7 @@
 """CSV formatting utilities for `sefkhet`."""
 
+from __future__ import annotations
+
 import logging as _logging
 from typing import TYPE_CHECKING as _TYPE_CHECKING
 
@@ -23,8 +25,8 @@ _DEFAULT_CSV_FIELDS: tuple[str, ...] = (
 
 
 def _parse_csv_spec(
-    spec: "Literal[True] | CsvSpec",
-) -> "tuple[tuple[str, ...], str, int, bool]":
+    spec: Literal[True] | CsvSpec,
+) -> tuple[tuple[str, ...], str, int, bool]:
     """
     Returns the result of parsing a CSV spec
     into resolved configuration values.
@@ -66,11 +68,11 @@ class CsvFormatter(_logging.Formatter):
         self,
         fmt: str | None = None,
         datefmt: str | None = None,
-        style: "FormatStyle" = "%",
+        style: FormatStyle = "%",
         *,
         validate: bool = True,
-        defaults: "Mapping[str, Any] | None" = None,
-        csv: "Literal[True] | CsvSpec",
+        defaults: Mapping[str, Any] | None = None,
+        csv: Literal[True] | CsvSpec,
     ) -> None:
         """
         A `logging.Formatter` subclass that
@@ -118,7 +120,7 @@ class CsvFormatter(_logging.Formatter):
         # Track if the header has been written
         self._csv_header_written = False
 
-    def format(self, record: "logging.LogRecord") -> str:
+    def format(self, record: logging.LogRecord) -> str:
         """
         Formats the log record as a CSV string.
 

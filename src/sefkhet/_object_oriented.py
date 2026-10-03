@@ -1,5 +1,7 @@
 """Object-oriented interface for `sefkhet`."""
 
+from __future__ import annotations
+
 import logging as _logging
 from typing import TYPE_CHECKING as _TYPE_CHECKING
 from typing import ParamSpec as _ParamSpec

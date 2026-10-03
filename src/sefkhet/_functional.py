@@ -1,5 +1,7 @@
 """Functional interface for `sefkhet`."""
 
+from __future__ import annotations
+
 import logging as _logging
 from typing import TYPE_CHECKING as _TYPE_CHECKING
 
@@ -31,7 +33,7 @@ if _TYPE_CHECKING:  # pragma: no cover
     )
 
 
-type _HandlerCoreType = StrOrPathLike | TextIOLike | logging.Handler
+type _HandlerCoreType = StrOrPathLike | TextIOLike | _logging.Handler
 
 _DEFAULT_FMT = "%(asctime)s | %(levelname)s | %(message)s"
 _DEFAULT_FMT_WITH_NAME = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
@@ -168,18 +170,18 @@ def _parse_log_level(level: str | int, *, quiet: bool = False) -> int:
 
 
 def get_formatter(  # ruff: ignore[too-many-arguments]
-    fmt: "str | logging.Formatter | None" = _DEFAULT_FMT,
+    fmt: str | logging.Formatter | None = _DEFAULT_FMT,
     *,
     datefmt: str | None = None,
-    style: "FormatStyle" = "%",
+    style: FormatStyle = "%",
     validate: bool = True,
-    defaults: "Mapping[str, Any] | None" = None,
+    defaults: Mapping[str, Any] | None = None,
     copy: bool = False,
-    color: "ColorSpec" = "level",
-    json: "bool | JsonSpec" = False,
-    csv: "bool | CsvSpec" = False,
-    logfmt: "bool | LogfmtSpec" = False,
-) -> "logging.Formatter":
+    color: ColorSpec = "level",
+    json: bool | JsonSpec = False,
+    csv: bool | CsvSpec = False,
+    logfmt: bool | LogfmtSpec = False,
+) -> logging.Formatter:
     """
     Returns a `logging.Formatter` configured
     according to the provided specifications.
@@ -304,13 +306,13 @@ def get_formatter(  # ruff: ignore[too-many-arguments]
 
 
 def get_formatter_from_spec(
-    spec: "FormatterSpec | None",
+    spec: FormatterSpec | None,
     *,
-    color: "ColorSpec" = "level",
-    json: "bool | JsonSpec" = False,
-    csv: "bool | CsvSpec" = False,
-    logfmt: "bool | LogfmtSpec" = False,
-) -> "logging.Formatter":
+    color: ColorSpec = "level",
+    json: bool | JsonSpec = False,
+    csv: bool | CsvSpec = False,
+    logfmt: bool | LogfmtSpec = False,
+) -> logging.Formatter:
     """
     Returns a `logging.Formatter` configured using a
     `FormatterSpec`.
@@ -355,8 +357,8 @@ def get_formatter_from_spec(
 
 
 def get_filter(
-    filt: "str | logging.Filter" = "", *, copy: bool = False
-) -> "logging.Filter":
+    filt: str | logging.Filter = "", *, copy: bool = False
+) -> logging.Filter:
     """
     Returns a `logging.Filter` configured
     according to the provided specifications.
@@ -385,7 +387,7 @@ def get_filter(
     return _logging.Filter(filt)
 
 
-def get_filter_from_spec(spec: "FilterSpec") -> "logging.Filter":
+def get_filter_from_spec(spec: FilterSpec) -> logging.Filter:
     """
     Returns a `logging.Filter` configured according to `spec`.
 
@@ -430,7 +432,7 @@ def get_filter_from_spec(spec: "FilterSpec") -> "logging.Filter":
 
 def _maybe_create_special_string_handler(
     core: str, *, copy: bool
-) -> "logging.Handler | None":
+) -> logging.Handler | None:
     """
     Returns the `logging.Handler` associated with the
     special string matched by `core`; if `core` does
@@ -483,17 +485,17 @@ def _maybe_create_special_string_handler(
 
 
 def _maybe_create_network_handler(  # ruff: ignore[too-many-arguments,too-many-return-statements]
-    handler_type: "HandlerType",
+    handler_type: HandlerType,
     *,
     address: str | tuple[str, int],
     facility: int,
-    socktype: "int | SocketKind | None",
+    socktype: int | SocketKind | None,
     syslog_timeout: float | None,
     host: str,
     port: int | None,
     mailhost: str | tuple[str, int] | None,
     fromaddr: str | None,
-    toaddrs: "str | Sequence[str]",
+    toaddrs: str | Sequence[str],
     subject: str | None,
     smtp_credentials: tuple[str, str] | None,
     smtp_secure: tuple[()] | tuple[str] | tuple[str, str] | None,
@@ -502,8 +504,8 @@ def _maybe_create_network_handler(  # ruff: ignore[too-many-arguments,too-many-r
     http_method: str,
     http_secure: bool,
     http_credentials: tuple[str, str] | None,
-    http_context: "Any | None",
-) -> "logging.Handler | None":
+    http_context: Any | None,
+) -> logging.Handler | None:
     """
     Returns a network `logging.Handler` if `handler_type`
     specifies a network handler; otherwise, returns `None`.
@@ -611,9 +613,9 @@ def _maybe_create_network_handler(  # ruff: ignore[too-many-arguments,too-many-r
 
 
 def _maybe_create_handler(  # ruff: ignore[complex-structure,too-many-arguments]
-    core: "_HandlerCoreType | None",
+    core: _HandlerCoreType | None,
     *,
-    handler_type: "HandlerType",
+    handler_type: HandlerType,
     mode: str,
     encoding: str | None,
     delay: bool,
@@ -623,29 +625,29 @@ def _maybe_create_handler(  # ruff: ignore[complex-structure,too-many-arguments]
     when: str,
     interval: int,
     utc: bool,
-    at_time: "datetime.time | None",
-    namer: "Callable[[str], str] | None",
-    rotator: "Callable[[str, str], None] | None",
+    at_time: datetime.time | None,
+    namer: Callable[[str], str] | None,
+    rotator: Callable[[str, str], None] | None,
     copy: bool,
-    address: "str | tuple[str, int]" = ("localhost", 514),
+    address: str | tuple[str, int] = ("localhost", 514),
     facility: int = 1,
-    socktype: "int | SocketKind | None" = None,
+    socktype: int | SocketKind | None = None,
     syslog_timeout: float | None = None,
     host: str | None = None,
     port: int | None = None,
-    mailhost: "str | tuple[str, int] | None" = None,
+    mailhost: str | tuple[str, int] | None = None,
     fromaddr: str | None = None,
-    toaddrs: "str | Sequence[str] | None" = None,
+    toaddrs: str | Sequence[str] | None = None,
     subject: str | None = None,
-    smtp_credentials: "tuple[str, str] | None" = None,
-    smtp_secure: ("tuple[()] | tuple[str] | tuple[str, str] | None") = None,
+    smtp_credentials: tuple[str, str] | None = None,
+    smtp_secure: tuple[()] | tuple[str] | tuple[str, str] | None = None,
     smtp_timeout: float = 5.0,
     url: str | None = None,
-    http_method: "Literal['GET', 'POST']" = "GET",
+    http_method: Literal["GET", "POST"] = "GET",
     http_secure: bool = False,
-    http_credentials: "tuple[str, str] | None" = None,
-    http_context: "Any | None" = None,
-) -> "logging.Handler | None":
+    http_credentials: tuple[str, str] | None = None,
+    http_context: Any | None = None,
+) -> logging.Handler | None:
     """
     Returns a `logging.Handler` if a valid handler is specified;
     otherwise, returns `None`. See `get_handler` for details
@@ -742,10 +744,10 @@ def _maybe_create_handler(  # ruff: ignore[complex-structure,too-many-arguments]
     from typing import TextIO
 
     # Create placeholder to track if handler is created
-    handler: _logging.Handler | None = None  # ruff: ignore[undefined-local]
+    handler: _logging.Handler | None = None
 
     # Handle case when a handler is provided
-    if isinstance(core, _logging.Handler):
+    if isinstance(core, _logging.Handler):  # ruff: ignore[undefined-local]
         handler = deepcopy(core) if copy else core
 
     # Try to create a network handler before defaulting
@@ -843,13 +845,13 @@ def _maybe_create_handler(  # ruff: ignore[complex-structure,too-many-arguments]
 
 
 def set_formatter_for_handler(  # ruff: ignore[too-many-arguments]
-    handler: "logging.Handler",
-    fmt: "str | logging.Formatter | None" = _DEFAULT_FMT,
+    handler: logging.Handler,
+    fmt: str | logging.Formatter | None = _DEFAULT_FMT,
     *,
     datefmt: str | None = None,
-    style: "FormatStyle" = "%",
+    style: FormatStyle = "%",
     validate: bool = True,
-    defaults: "Mapping[str, Any] | None" = None,
+    defaults: Mapping[str, Any] | None = None,
     copy: bool = False,
 ) -> None:
     """
@@ -904,8 +906,8 @@ def set_formatter_for_handler(  # ruff: ignore[too-many-arguments]
 
 
 def _parse_filters_arg(
-    filters: "FilterSpec | Sequence[FilterSpec]",
-) -> "tuple[FilterSpec, ...]":
+    filters: FilterSpec | Sequence[FilterSpec],
+) -> tuple[FilterSpec, ...]:
     """
     Returns the raw `filters` argument as a
     `tuple` of filter specs to apply.
@@ -956,8 +958,8 @@ def _parse_filters_arg(
 
 
 def add_filters_to_target(
-    target: "logging.Handler | logging.Logger",
-    filters: "FilterSpec | Sequence[FilterSpec]",
+    target: logging.Handler | logging.Logger,
+    filters: FilterSpec | Sequence[FilterSpec],
 ) -> None:
     """
     Adds the filters in `filters` to the `logging.Handler`
@@ -993,8 +995,8 @@ def add_filters_to_target(
 
 
 def _wrap_handler_in_queue(
-    handler: "logging.Handler",
-) -> "logging.handlers.QueueHandler":
+    handler: logging.Handler,
+) -> logging.handlers.QueueHandler:
     """
     Returns a `logging.handlers.QueueHandler` that has a `QueueListener`
     in a separate thread with the original handler attached.
@@ -1040,12 +1042,12 @@ def _wrap_handler_in_queue(
 
 
 def _wrap_handler_in_memory(
-    handler: "logging.Handler",
+    handler: logging.Handler,
     *,
     capacity: int,
     flush_level: int,
     flush_on_close: bool,
-) -> "logging.handlers.MemoryHandler":
+) -> logging.handlers.MemoryHandler:
     """
     Returns a `logging.handlers.MemoryHandler` that buffers
     records and flushes them to the original handler.
@@ -1091,13 +1093,13 @@ def _wrap_handler_in_memory(
 
 
 def get_handler(  # ruff: ignore[too-many-arguments]
-    core: "_HandlerCoreType | None" = None,
+    core: _HandlerCoreType | None = None,
     *,
     level: int | None = 20,
     name: str | None = None,
-    formatter: "FormatterSpec | NoDefaultType" = NoDefault,
-    filters: "FilterSpec | Sequence[FilterSpec]" = (),
-    handler_type: "HandlerType" = "file",
+    formatter: FormatterSpec | NoDefaultType = NoDefault,
+    filters: FilterSpec | Sequence[FilterSpec] = (),
+    handler_type: HandlerType = "file",
     mode: str = "a",
     encoding: str | None = "utf-8",
     delay: bool = False,
@@ -1107,33 +1109,33 @@ def get_handler(  # ruff: ignore[too-many-arguments]
     when: str = "h",
     interval: int = 1,
     utc: bool = False,
-    at_time: "datetime.time | None" = None,
-    namer: "Callable[[str], str] | None" = None,
-    rotator: "Callable[[str, str], None] | None" = None,
+    at_time: datetime.time | None = None,
+    namer: Callable[[str], str] | None = None,
+    rotator: Callable[[str, str], None] | None = None,
     copy: bool = False,
     queued: bool = False,
     buffered: bool = False,
     capacity: int = 1024,
-    flush_level: "int | str | None" = None,
+    flush_level: int | str | None = None,
     flush_on_close: bool = True,
-    address: "str | tuple[str, int]" = ("localhost", 514),
+    address: str | tuple[str, int] = ("localhost", 514),
     facility: int = 1,
-    socktype: "int | SocketKind | None" = None,
+    socktype: int | SocketKind | None = None,
     host: str | None = None,
     port: int | None = None,
-    mailhost: "str | tuple[str, int] | None" = None,
+    mailhost: str | tuple[str, int] | None = None,
     fromaddr: str | None = None,
-    toaddrs: "str | Sequence[str] | None" = None,
+    toaddrs: str | Sequence[str] | None = None,
     subject: str | None = None,
-    smtp_credentials: "tuple[str, str] | None" = None,
-    smtp_secure: ("tuple[()] | tuple[str] | tuple[str, str] | None") = None,
+    smtp_credentials: tuple[str, str] | None = None,
+    smtp_secure: (tuple[()] | tuple[str] | tuple[str, str] | None) = None,
     smtp_timeout: float = 5.0,
     url: str | None = None,
-    http_method: "Literal['GET', 'POST']" = "GET",
+    http_method: Literal["GET", "POST"] = "GET",
     http_secure: bool = False,
-    http_credentials: "tuple[str, str] | None" = None,
-    http_context: "Any | None" = None,
-) -> "logging.Handler":
+    http_credentials: tuple[str, str] | None = None,
+    http_context: Any | None = None,
+) -> logging.Handler:
     """
     Returns a `logging.Handler` configured
     according to the provided specifications.
@@ -1458,7 +1460,7 @@ def get_handler(  # ruff: ignore[too-many-arguments]
     return handler
 
 
-def get_handler_from_spec(spec: "HandlerSpec") -> "logging.Handler":
+def get_handler_from_spec(spec: HandlerSpec) -> logging.Handler:
     """
     Returns a `logging.Handler` configured according to `spec`.
 
@@ -1478,8 +1480,8 @@ def get_handler_from_spec(spec: "HandlerSpec") -> "logging.Handler":
 
 
 def _parse_handlers_arg(
-    handlers: "HandlerSpec | Sequence[HandlerSpec]",
-) -> "tuple[HandlerSpec, ...]":
+    handlers: HandlerSpec | Sequence[HandlerSpec],
+) -> tuple[HandlerSpec, ...]:
     """
     Returns the raw `handlers` argument as a
     `tuple` of handler specs to apply.
@@ -1516,7 +1518,7 @@ def _parse_handlers_arg(
 
 
 def add_handlers_to_logger(
-    logger: "logging.Logger", handlers: "HandlerSpec | Sequence[HandlerSpec]"
+    logger: logging.Logger, handlers: HandlerSpec | Sequence[HandlerSpec]
 ) -> None:
     """
     Adds the handlers in `handlers` to the specified `logging.Logger`.
@@ -1534,13 +1536,13 @@ def add_handlers_to_logger(
 
 
 def set_formatter_for_logger(  # ruff: ignore[too-many-arguments]
-    logger: "logging.Logger",
-    fmt: ("str | logging.Formatter | NoDefaultType | None") = NoDefault,
+    logger: logging.Logger,
+    fmt: str | logging.Formatter | NoDefaultType | None = NoDefault,
     *,
     datefmt: str | None = None,
-    style: "FormatStyle" = "%",
+    style: FormatStyle = "%",
     validate: bool = True,
-    defaults: "Mapping[str, Any] | None" = None,
+    defaults: Mapping[str, Any] | None = None,
     copy: bool = False,
     force: bool = False,
 ) -> None:
@@ -1615,14 +1617,14 @@ def get_logger(  # ruff: ignore[too-many-arguments]
     name: str | None = "log",
     level: str | int = 20,
     *,
-    handlers: "HandlerSpec | Sequence[HandlerSpec]" = (),
-    formatter: "FormatterSpec | NoDefaultType" = NoDefault,
-    filters: "FilterSpec | Sequence[FilterSpec]" = (),
-    color: "ColorSpec" = "level",
-    json: "bool | JsonSpec" = False,
-    csv: "bool | CsvSpec" = False,
-    logfmt: "bool | LogfmtSpec" = False,
-) -> "logging.Logger":
+    handlers: HandlerSpec | Sequence[HandlerSpec] = (),
+    formatter: FormatterSpec | NoDefaultType = NoDefault,
+    filters: FilterSpec | Sequence[FilterSpec] = (),
+    color: ColorSpec = "level",
+    json: bool | JsonSpec = False,
+    csv: bool | CsvSpec = False,
+    logfmt: bool | LogfmtSpec = False,
+) -> logging.Logger:
     """
     Returns a `logging.Logger` configured according
     to the provided specifications.
@@ -1745,7 +1747,7 @@ def get_logger(  # ruff: ignore[too-many-arguments]
     return logger
 
 
-def get_logger_from_spec(spec: "LoggerSpec") -> "logging.Logger":
+def get_logger_from_spec(spec: LoggerSpec) -> logging.Logger:
     """
     Returns a `logging.Logger` configured according to `spec`.
 

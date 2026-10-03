@@ -1,16 +1,22 @@
 """Tests for `sefkhet._object_oriented`."""
 
-import io
+from __future__ import annotations
+
 import logging
 import logging.handlers
 import threading
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from sefkhet._color import ColorFormatter
 from sefkhet._object_oriented import Scribe
 from sefkhet._typing import HandlerOpts
+
+
+if TYPE_CHECKING:
+    import io
 
 
 class TestScribeInit:

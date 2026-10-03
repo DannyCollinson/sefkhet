@@ -1,5 +1,7 @@
 """Color formatting utilities for `sefkhet`."""
 
+from __future__ import annotations
+
 import logging as _logging
 from typing import TYPE_CHECKING as _TYPE_CHECKING
 
@@ -92,8 +94,8 @@ def get_level_color(level: int) -> str:
 
 
 def _parse_color_spec(
-    color: "ColorSpec",
-) -> "tuple[ColorMode, Callable[[int], str]]":
+    color: ColorSpec,
+) -> tuple[ColorMode, Callable[[int], str]]:
     """
     Parses a `ColorSpec` into a color mode and a color function.
 
@@ -155,11 +157,11 @@ class ColorFormatter(_logging.Formatter):
         self,
         fmt: str | None = None,
         datefmt: str | None = None,
-        style: "FormatStyle" = "%",
+        style: FormatStyle = "%",
         *,
         validate: bool = True,
-        defaults: "Mapping[str, Any] | None" = None,
-        color: "ColorSpec",
+        defaults: Mapping[str, Any] | None = None,
+        color: ColorSpec,
     ) -> None:
         """
         A `logging.Formatter` subclass that applies ANSI color codes
@@ -202,7 +204,7 @@ class ColorFormatter(_logging.Formatter):
         )
         self._color_mode, self._color_fn = _parse_color_spec(color)
 
-    def format(self, record: "logging.LogRecord") -> str:
+    def format(self, record: logging.LogRecord) -> str:
         """
         Formats the log record with ANSI color codes applied
         according to `self._color_mode`.

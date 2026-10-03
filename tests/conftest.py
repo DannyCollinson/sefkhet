@@ -1,16 +1,22 @@
 """Shared fixtures for `sefkhet` tests."""
 
+from __future__ import annotations
+
 import io
 import logging
 import logging.handlers
-from collections.abc import Generator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
 import sefkhet._one_step as _one_step_module
 from sefkhet._object_oriented import Scribe
-from sefkhet._typing import SupportsFilter
+
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from sefkhet._typing import SupportsFilter
 
 
 # Global-state isolation (autouse)
