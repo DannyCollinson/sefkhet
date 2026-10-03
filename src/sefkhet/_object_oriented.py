@@ -60,16 +60,16 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
 
     def __init__(  # ruff: ignore[too-many-arguments]
         self,
-        name: "str | NoDefaultType | None" = NoDefault,
+        name: str | NoDefaultType | None = NoDefault,
         level: str | int = 20,
         *,
-        handlers: "HandlerSpec | Sequence[HandlerSpec]" = None,
-        formatter: "FormatterSpec | NoDefaultType" = NoDefault,
-        filters: "FilterSpec | Sequence[FilterSpec]" = (),
-        color: "ColorSpec" = "level",
-        json: "bool | JsonSpec" = False,
-        csv: "bool | CsvSpec" = False,
-        logfmt: "bool | LogfmtSpec" = False,
+        handlers: HandlerSpec | Sequence[HandlerSpec] = None,
+        formatter: FormatterSpec | NoDefaultType = NoDefault,
+        filters: FilterSpec | Sequence[FilterSpec] = (),
+        color: ColorSpec = "level",
+        json: bool | JsonSpec = False,
+        csv: bool | CsvSpec = False,
+        logfmt: bool | LogfmtSpec = False,
     ) -> None:
         """
         The base logger class for `sefkhet`.
@@ -190,8 +190,8 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
 
     @staticmethod
     def _update_logger_attributes_hook(
-        function: "Callable[Concatenate[Scribe, P], R]",
-    ) -> "Callable[Concatenate[Scribe, P], R]":
+        function: Callable[Concatenate[Scribe, P], R],
+    ) -> Callable[Concatenate[Scribe, P], R]:
         """
         Update the instance attributes to reflect the logger's
         current attributes after the function `function` is run.
@@ -206,7 +206,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         from functools import wraps
 
         @wraps(function)
-        def wrapper(self: "Scribe", *args: P.args, **kwargs: P.kwargs) -> R:
+        def wrapper(self: Scribe, *args: P.args, **kwargs: P.kwargs) -> R:
             """
             Returns the output of running the wrapped function with the
             given arguments and updates the logger's attributes after
@@ -247,7 +247,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
 
     @_update_logger_attributes_hook
     def add_handlers(
-        self, handlers: "HandlerSpec | Sequence[HandlerSpec]"
+        self, handlers: HandlerSpec | Sequence[HandlerSpec]
     ) -> None:
         """
         Adds the `logging.Handlers` specified
@@ -267,13 +267,13 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
     def set_formatter(  # ruff: ignore[too-many-arguments]
         self,
         fmt: (
-            "str | logging.Formatter | None"
+            str | logging.Formatter | None
         ) = "%(asctime)s | %(levelname)s | %(message)s",
         *,
         datefmt: str | None = None,
-        style: "FormatStyle" = "%",
+        style: FormatStyle = "%",
         validate: bool = True,
-        defaults: "Mapping[str, Any] | None" = None,
+        defaults: Mapping[str, Any] | None = None,
         copy: bool = False,
         force: bool = False,
     ) -> None:
@@ -339,7 +339,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         )
 
     @_update_logger_attributes_hook
-    def add_filters(self, filters: "FilterSpec | Sequence[FilterSpec]") -> None:
+    def add_filters(self, filters: FilterSpec | Sequence[FilterSpec]) -> None:
         """
         Adds the `logging.Filters` specified
         by `filters` to the logger.
@@ -360,11 +360,11 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self,
         level: str | int,
         msg: object,
-        *args: "Any",
-        exc_info: "ExcInfoType" = None,
+        *args: Any,
+        exc_info: ExcInfoType = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: "Mapping[str, object] | None" = None,
+        extra: Mapping[str, object] | None = None,
     ) -> None:
         """
         Log a message using the standard `logging` API
@@ -408,13 +408,13 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
     def record(  # ruff: ignore[too-many-arguments]
         self,
         msg: object,
-        *args: "Any",
+        *args: Any,
         level: str | int = "debug",
         quiet: bool = False,
-        exc_info: "ExcInfoType" = None,
+        exc_info: ExcInfoType = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: "Mapping[str, object] | None" = None,
+        extra: Mapping[str, object] | None = None,
     ) -> None:
         """
         Log/record a message using the `sefkhet` API.
@@ -468,13 +468,13 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
     def rec(  # ruff: ignore[too-many-arguments]
         self,
         msg: object,
-        *args: "Any",
+        *args: Any,
         level: str | int = "debug",
         quiet: bool = False,
-        exc_info: "ExcInfoType" = None,
+        exc_info: ExcInfoType = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: "Mapping[str, object] | None" = None,
+        extra: Mapping[str, object] | None = None,
     ) -> None:
         """
         Log/record a message using the `sefkhet` API.
@@ -529,11 +529,11 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: "ExcInfoType" = None,
+        exc_info: ExcInfoType = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: "Mapping[str, object] | None" = None,
-        **kwargs: "Any",
+        extra: Mapping[str, object] | None = None,
+        **kwargs: Any,
     ) -> None:
         """
         Log a message with level `CRITICAL` on this logger.
@@ -555,11 +555,11 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: "ExcInfoType" = None,
+        exc_info: ExcInfoType = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: "Mapping[str, object] | None" = None,
-        **kwargs: "Any",
+        extra: Mapping[str, object] | None = None,
+        **kwargs: Any,
     ) -> None:
         """
         Log a message with level `DEBUG` on this logger.
@@ -581,11 +581,11 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: "ExcInfoType" = None,
+        exc_info: ExcInfoType = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: "Mapping[str, object] | None" = None,
-        **kwargs: "Any",
+        extra: Mapping[str, object] | None = None,
+        **kwargs: Any,
     ) -> None:
         """
         Log a message with level `ERROR` on this logger.
@@ -607,11 +607,11 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: "ExcInfoType" = True,
+        exc_info: ExcInfoType = True,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: "Mapping[str, object] | None" = None,
-        **kwargs: "Any",
+        extra: Mapping[str, object] | None = None,
+        **kwargs: Any,
     ) -> None:
         """
         Log a message with level `ERROR` on this logger.
@@ -635,11 +635,11 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: "ExcInfoType" = None,
+        exc_info: ExcInfoType = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: "Mapping[str, object] | None" = None,
-        **kwargs: "Any",
+        extra: Mapping[str, object] | None = None,
+        **kwargs: Any,
     ) -> None:
         """
         Log a message with level `FATAL` on this logger.
@@ -661,11 +661,11 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: "ExcInfoType" = None,
+        exc_info: ExcInfoType = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: "Mapping[str, object] | None" = None,
-        **kwargs: "Any",
+        extra: Mapping[str, object] | None = None,
+        **kwargs: Any,
     ) -> None:
         """
         Log a message with level `INFO` on this logger.
@@ -687,11 +687,11 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: "ExcInfoType" = None,
+        exc_info: ExcInfoType = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: "Mapping[str, object] | None" = None,
-        **kwargs: "Any",
+        extra: Mapping[str, object] | None = None,
+        **kwargs: Any,
     ) -> None:
         """
         Log a message with level `WARNING` on this logger.
@@ -718,11 +718,11 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self,
         msg: object,
         *args: object,
-        exc_info: "ExcInfoType" = None,
+        exc_info: ExcInfoType = None,
         stack_info: bool = False,
         stacklevel: int = 1,
-        extra: "Mapping[str, object] | None" = None,
-        **kwargs: "Any",
+        extra: Mapping[str, object] | None = None,
+        **kwargs: Any,
     ) -> None:
         """
         Log a message with level `WARNING` on this logger.
@@ -740,7 +740,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
             **kwargs,
         )
 
-    def filter(self, record: "logging.LogRecord") -> "bool | logging.LogRecord":
+    def filter(self, record: logging.LogRecord) -> bool | logging.LogRecord:
         """
         Returns the result of filtering the specified
         record using the logger's filters.
@@ -755,7 +755,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         """
         return self.logger.filter(record=record)
 
-    def handle(self, record: "logging.LogRecord") -> None:
+    def handle(self, record: logging.LogRecord) -> None:
         """
         Handles the specified record using the logger's handlers.
 
@@ -769,7 +769,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
     @_update_logger_attributes_hook
     def addFilter(
         self,
-        filter: "FilterType",  # ruff: ignore[builtin-argument-shadowing]
+        filter: FilterType,  # ruff: ignore[builtin-argument-shadowing]
     ) -> None:
         """
         Adds the specified `logging.Filter` to the logger.
@@ -782,7 +782,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self.add_filters(filters=filter)
 
     @_update_logger_attributes_hook
-    def addHandler(self, hdlr: "logging.Handler") -> None:
+    def addHandler(self, hdlr: logging.Handler) -> None:
         """
         Adds the specified `logging.Handler` to the logger.
 
@@ -796,7 +796,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
     @_update_logger_attributes_hook
     def removeFilter(
         self,
-        filter: "FilterType",  # ruff: ignore[builtin-argument-shadowing]
+        filter: FilterType,  # ruff: ignore[builtin-argument-shadowing]
     ) -> None:
         """
         Removes the specified `logging.Filter` from the logger.
@@ -809,7 +809,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         self.logger.removeFilter(filter=filter)
 
     @_update_logger_attributes_hook
-    def removeHandler(self, hdlr: "logging.Handler") -> None:
+    def removeHandler(self, hdlr: logging.Handler) -> None:
         """
         Removes the specified `logging.Handler` from the logger.
 
@@ -837,7 +837,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         level = _parse_log_level(level=level, quiet=False)
         self.logger.setLevel(level=level)
 
-    def callHandlers(self, record: "logging.LogRecord") -> None:
+    def callHandlers(self, record: logging.LogRecord) -> None:
         """
         Calls the handlers for the specified record.
 
@@ -880,7 +880,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
 
     def getChild(  # type: ignore[override]
         self, suffix: str
-    ) -> "logging.Logger":
+    ) -> logging.Logger:
         """
         Returns a logger which is a child of this logger,
         with the name of this logger as a prefix.
@@ -898,7 +898,7 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         """
         return self.logger.getChild(suffix=suffix)
 
-    def getChildren(self) -> "set[logging.Logger]":
+    def getChildren(self) -> set[logging.Logger]:
         """
         Returns a set of all child loggers of this logger.
 
@@ -956,12 +956,12 @@ class Scribe(  # ruff: ignore[too-many-public-methods]  # pylint: disable=R0902
         fn: str,
         lno: int,
         msg: object,
-        args: "ArgsType",
-        exc_info: "SysExcInfoType | None",
+        args: ArgsType,
+        exc_info: SysExcInfoType | None,
         func: str | None = None,
-        extra: "Mapping[str, object] | None" = None,
+        extra: Mapping[str, object] | None = None,
         sinfo: str | None = None,
-    ) -> "logging.LogRecord":
+    ) -> logging.LogRecord:
         """
         Returns a `logging.LogRecord` instance created
         using the specified arguments.
